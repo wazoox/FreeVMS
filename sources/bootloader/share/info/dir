@@ -1,0 +1,32 @@
+Ceci est le fichier .../info/dir, lequel contient le noeud 
+le plus haut dans la hiérarchie Info, noeud appelé (dir)Top.
+La première fois que Info est invoqué, vous démarrez la recherche 
+à partir de ce noeud.
+
+File: dir,	Node: Top	Ceci est le haut de l'arborescence INFO
+
+  Ceci (le noeud Répertoire) fournit un menu des sujets majeurs.
+  Taper « q » pour quitter, « ? » pour lister toutes les commandes Info,
+  « d » pour revenir à cet endroit,
+  « h » fournit un guide d'initiation pour les nouveaux venus,
+  « mEmacs<Return> » démarre une consultation du manuel Emacs, etc.
+
+  En Emacs, vous pouvez cliquer avec le bouton-2 de la souris sur un item menu 
+  ou sur une référence croisée pour le sélectionner.
+
+* Menu:
+
+Kernel
+* Multiboot Specification: (multiboot).
+                                Multiboot Specification.
+* grub-install: (grub)Invoking grub-install.
+                                Install GRUB on your drive
+* grub-md5-crypt: (grub)Invoking grub-md5-crypt.
+                                Encrypt a password in MD5 format
+* grub-set-default: (grub)Invoking grub-set-default.
+                                Set a default boot entry
+* grub-terminfo: (grub)Invoking grub-terminfo.
+                                Generate a terminfo command from a terminfo 
+                                  name
+* GRUB: (grub).                 The GRand Unified Bootloader
+* mbchk: (grub)Invoking mbchk.  Check for the format of a Multiboot kernel

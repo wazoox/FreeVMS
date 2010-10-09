@@ -1,0 +1,28 @@
+diff -Naur grub-0.91.orig/docs/menu.lst grub-0.91/docs/menu.lst
+--- grub-0.91.orig/docs/menu.lst	Sat Feb 26 19:48:49 2000
++++ grub-0.91/docs/menu.lst	Thu Apr  4 16:18:56 2002
+@@ -14,8 +14,9 @@
+ # For booting the GNU Hurd
+ title  GNU/Hurd
+ root   (hd0,0)
+-kernel /boot/gnumach.gz root=hd0s1
+-module /boot/serverboot.gz
++kernel /boot/gnumach.gz root=device:hd0s1
++module /hurd/ext2fs.static --multiboot-command-line=${kernel-command-line} --host-priv-port=${host-port} --device-master-port=${device-port} --exec-server-task=${exec-task} -T typed ${root} $(task-create) $(task-resume)
++module /lib/ld.so.1 /hurd/exec $(exec-task=task-create)
+ 
+ # For booting Linux
+ title  GNU/Linux
+--- grub-0.93+cvs20031021/docs/menu.lst.orig	2003-10-21 16:10:01.000000000 +0000
++++ grub-0.93+cvs20031021/docs/menu.lst	2003-10-21 16:10:40.000000000 +0000
+@@ -11,8 +11,8 @@
+ # Fallback to the second entry.
+ fallback 1
+ 
+-# For booting GNU/Hurd
+-title  GNU/Hurd
++# For booting GNU (also known as GNU/Hurd)
++title  GNU (also known as GNU/Hurd)
+ root   (hd0,0)
+ kernel /boot/gnumach.gz root=device:hd0s1
+ module /hurd/ext2fs.static --multiboot-command-line=${kernel-command-line} --host-priv-port=${host-port} --device-master-port=${device-port} --exec-server-task=${exec-task} -T typed ${root} $(task-create) $(task-resume)

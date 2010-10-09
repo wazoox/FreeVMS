@@ -1,0 +1,8 @@
+debian/update-grub	usr/sbin
+debian/grub-floppy	usr/sbin
+debian/grub-reboot	usr/sbin
+debian/mkbimage		usr/bin
+debian/presubj		usr/share/bug/grub
+debian/script		usr/share/bug/grub
+debian/kernel/zz-update-grub	etc/kernel/postinst.d
+debian/kernel/zz-update-grub	etc/kernel/postrm.d

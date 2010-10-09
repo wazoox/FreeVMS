@@ -1,0 +1,54 @@
+Index: current/docs/help2man
+===================================================================
+--- current/docs/help2man	(revision 414)
++++ current/docs/help2man	(working copy)
+@@ -455,7 +455,9 @@
+     $include{$sect} .= <<EOT;
+ The full documentation for
+ .B $program
+-is maintained as a Texinfo manual.  If the
++is maintained as a Texinfo manual in the
++.B grub-legacy-doc
++package.  If the
+ .B info
+ and
+ .B $program
+Index: current/docs/Makefile.am
+===================================================================
+--- current/docs/Makefile.am	(revision 414)
++++ current/docs/Makefile.am	(working copy)
+@@ -37,14 +37,14 @@
+ 	$(SHELL) $(srcdir)/$(SRC2TEXI) $(srcdir) $< $@
+ 
+ if MAINTAINER_MODE
+-$(srcdir)/grub.8: ../grub/grub $(srcdir)/$(HELP2MAN)
++$(srcdir)/grub.8: ../grub/grub $(srcdir)/$(HELP2MAN) $(srcdir)/grub.8.additions
+ 	$(PERL) $(srcdir)/$(HELP2MAN) --name="the grub shell" \
+-		--section=8 --output=$@ $<
++		--section=8 --include=$@.additions --output=$@ $<
+ 
+-$(srcdir)/grub-install.8: ../util/grub-install $(srcdir)/$(HELP2MAN)
++$(srcdir)/grub-install.8: ../util/grub-install $(srcdir)/$(HELP2MAN)  $(srcdir)/grub-install.8.additions
+ 	chmod 755 $<
+ 	$(PERL) $(srcdir)/$(HELP2MAN) --name="install GRUB on your drive" \
+-		--section=8 --output=$@ $<
++		--section=8 --include=$@.additions --output=$@ $<
+ 
+ $(srcdir)/mbchk.1: ../util/mbchk $(srcdir)/$(HELP2MAN)
+ 	$(PERL) $(srcdir)/$(HELP2MAN) \
+Index: current/docs/grub.8.additions
+===================================================================
+--- current/docs/grub.8.additions	(revision 0)
++++ current/docs/grub.8.additions	(revision 0)
+@@ -0,0 +1,3 @@
++[SEE ALSO]
++.BR update-grub (8),
++.BR grub-install (8).
+Index: current/docs/grub-install.8.additions
+===================================================================
+--- current/docs/grub-install.8.additions	(revision 0)
++++ current/docs/grub-install.8.additions	(revision 0)
+@@ -0,0 +1,3 @@
++[SEE ALSO]
++.BR grub (8),
++.BR update-grub (8).

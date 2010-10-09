@@ -1,0 +1,274 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+#
+# Modified to make a template file for a multi-binary package with separated
+# build-arch and build-indep targets  by Bill Allombert 2001
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+SHELL = bash
+
+CFLAGS = -Wall -g
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
+ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+	INSTALL_PROGRAM += -s
+endif
+
+
+# These are used for cross-compiling and for saving the configure script
+# from having to guess our platform (since we know it already)
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+DEB_BUILD_GNU_CPU  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_CPU)
+DEB_BUILD_GNU_SYSTEM  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_SYSTEM)
+
+# Add backward compatibility to allow backport to stable
+ifeq ($(DEB_HOST_GNU_SYSTEM), linux)
+DEB_HOST_GNU_SYSTEM=linux-gnu
+endif
+ifeq ($(DEB_BUILD_GNU_SYSTEM), linux)
+DEB_BUILD_GNU_SYSTEM=linux-gnu
+endif
+
+GRUB_VERSION=0.97
+GRUB_DISK_IMAGE=grub-${GRUB_VERSION}-$(DEB_BUILD_GNU_CPU)-pc
+
+ifeq ($(DEB_BUILD_GNU_SYSTEM),linux-gnu)
+filesystems=e2fs jfs minix reiserfs xfs fat
+endif
+ifeq ($(DEB_BUILD_GNU_SYSTEM),gnu)
+filesystems=e2fs ffs minix
+endif
+
+ifeq ($(DEB_BUILD_GNU_CPU),x86_64)
+  LDFLAGS=-static
+endif
+
+# We didn't test GRUB Legacy with GCC 4.4, and it's not worth
+# the risk since it's being replaced by GRUB 2.
+CC=gcc-4.3
+
+patch: patch-stamp
+patch-stamp:
+	dh_testdir
+
+	# Add here commands to patch the source..
+	set -e ; for i in `cat debian/patches/00list | grep -v ^#` ; \
+	do \
+	echo "--- $$i ---" ; patch -p1 < debian/patches/$$i ; \
+	done
+
+	touch patch-stamp
+
+unpatch:
+	dh_testdir
+
+	# Add here commands to reverse patchs to the source.
+	if [ -f patch-stamp ] ; then \
+	set -e ; for i in `tac debian/patches/00list | grep -v ^#` ; \
+	do \
+	echo "--- $$i ---" ; patch -R -p1 < debian/patches/$$i ; \
+	done ; \
+	fi \
+
+	if [ -f patch-stamp ] ; then \
+	rm patch-stamp ; \
+	fi
+
+configure: configure-stamp
+configure-stamp: patch-stamp
+	dh_testdir
+
+	# Add here commands to configure the package.
+	aclocal-1.9 && automake-1.9 && autoconf
+	CC=$(CC) LDFLAGS=$(LDFLAGS) ./configure \
+		--host=$(DEB_HOST_GNU_TYPE) \
+		--build=$(DEB_BUILD_GNU_TYPE) \
+		--prefix=/usr \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--disable-auto-linux-mem-opt
+
+	touch configure-stamp
+
+build: build-arch
+
+build-arch: build-arch-stamp
+build-arch-stamp: configure-stamp
+	dh_testdir
+
+	# Add here commands to compile the package.
+	$(MAKE)
+
+	chmod +x docs/help2man
+
+	## the creation of these manpages here is temporary,
+	## when building grub finally works with the version
+	## of autoconf in debian we can use MAINTAINER_MODE_TRUE
+	# create man page for grub
+	( cd docs && ./help2man \
+	--name="the grub shell" \
+	--include=grub.8.additions \
+	--section=8 --output=grub.8 \
+	../grub/grub )
+
+	# create man page for grub-install
+	( cd util && chmod 755 grub-install )
+	( cd docs && ./help2man \
+	--name="install GRUB on your drive" \
+	--include=grub-install.8.additions \
+	--section=8 --output=grub-install.8 \
+	../util/grub-install )
+
+	# create man page for mbchk
+	( cd docs && ./help2man \
+	--name="check the format of a Multiboot kernel" \
+	--section=1 --output=mbchk.1 \
+	../util/mbchk )
+
+	# create man page for grub-md5-crypt
+	( cd util && chmod 755 grub-md5-crypt )
+	( cd docs && ./help2man \
+	--name="Encrypt a password in MD5 format" \
+	--section=8 --output=grub-md5-crypt.8 \
+	../util/grub-md5-crypt )
+
+	touch build-arch-stamp
+
+build-indep: build-indep-stamp
+build-indep-stamp: configure-stamp
+	dh_testdir
+
+	# create html documentation from texi files
+	( cd docs && texi2html -split_chapter --output=grub grub.texi )
+
+	touch build-indep-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-arch-stamp build-indep-stamp configure-stamp config.log
+	chmod +x debian/script debian/kernel/*
+
+	# Add here commands to clean up after the build process.
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+	# The Makefile doesn't clean up the generated info files so we will do
+	# it here so the doco is uptodate.
+	-( cd docs && rm -f *.info* )
+
+	# clean up generated html documentation
+	-( cd docs && rm -f *.html )
+
+	# clean up documentation directory removing created dirs.
+	-( cd docs && rm -rf grub multiboot )
+
+	# remove files that will be change due our automake and autoconf rebuilding
+	-rm -f $(shell find . -name 'Makefile.in' -o \
+                    -name 'aclocal.m4' -o \
+                    -name 'configure')
+
+	# reverse patches we applied. this has to happen after make distclean
+	-$(MAKE) -s -f debian/rules unpatch
+
+#	debconf-updatepo
+
+	dh_clean
+
+install: install-indep install-arch
+install-indep: install-arch
+	dh_testdir
+	dh_testroot
+	dh_clean -k -i 
+	dh_installdirs -i
+
+	# Add here commands to install the indep part of the package into
+	# debian/<package>-doc.
+	#INSTALLDOC#
+
+	dh_install -i
+
+install-arch:
+	dh_testdir
+	dh_testroot
+	dh_clean -k -s 
+	dh_installdirs -s
+
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/grub-legacy/
+
+	# make install puts the info files in the grub package but we want them
+	# in the grub-legacy-doc package so lets clean shop and
+	# let dh_installinfo do the work
+	rm -rf debian/grub-legacy/usr/share/info
+
+	# Cleanup filesystems not used natively in Debian.
+	# (non-native filesystems are supported via stage2)
+	mkdir debian/grub-legacy/usr/lib/grub/tmp/
+	mv debian/grub-legacy/usr/lib/grub/{*-*/*_stage1_5,tmp}
+	for i in $(filesystems) ; do \
+		mv debian/grub-legacy/usr/lib/grub/tmp/$${i}_stage1_5 \
+		debian/grub-legacy/usr/lib/grub/*-*/ ; \
+	done
+	rm -rf debian/grub-legacy/usr/lib/grub/tmp/
+
+	mkdir -p $(CURDIR)/debian/grub-legacy/usr/share/lintian/overrides
+	cd $(CURDIR)/debian/grub-legacy && find ./usr/bin/ -name mbchk \
+		| sed -e "s%.*%grub-legacy: statically-linked-binary &%g" \
+	> $(CURDIR)/debian/grub-legacy/usr/share/lintian/overrides/grub-legacy
+	cd $(CURDIR)/debian/grub-legacy && find ./usr/sbin/ -name grub \
+		| sed -e "s%.*%grub-legacy: statically-linked-binary &%g" \
+	>> $(CURDIR)/debian/grub-legacy/usr/share/lintian/overrides/grub-legacy
+
+	dh_install -s
+
+# Must not depend on anything. This is to be called by
+# binary-arch/binary-indep
+# in another 'make' thread.
+binary-common:
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs ChangeLog
+	dh_installdocs
+	dh_installexamples
+#	dh_installmenu
+	dh_installdebconf
+#	dh_installlogrotate	
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installmime
+#	dh_installinit
+#	dh_installcron
+	cp docs/grub{,-legacy}.info && dh_installinfo
+	dh_installman
+#	dh_link
+	dh_strip
+	dh_compress 
+	dh_fixperms
+#	dh_perl
+#	dh_python
+	dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+# Build architecture independant packages using the common target.
+binary-indep: build-indep install-indep
+	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
+
+# Build architecture dependant packages using the common target.
+binary-arch: build-arch install-arch
+	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
+
+binary: binary-arch binary-indep
+.PHONY: build clean binary-indep binary-arch binary install install-indep install-arch configure patch unpatch

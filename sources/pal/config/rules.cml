@@ -1,0 +1,430 @@
+######################################################################
+##                
+## Copyright (C) 1999-2010,  Karlsruhe University
+## Copyright (C) 2008-2009,  Volkmar Uhlig, IBM Corporation
+##                
+## File path:     config/rules.cml
+## Description:   
+##                
+## Redistribution and use in source and binary forms, with or without
+## modification, are permitted provided that the following conditions
+## are met:
+## 1. Redistributions of source code must retain the above copyright
+##    notice, this list of conditions and the following disclaimer.
+## 2. Redistributions in binary form must reproduce the above copyright
+##    notice, this list of conditions and the following disclaimer in the
+##    documentation and/or other materials provided with the distribution.
+## 
+## THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+## ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+## IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+## ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+## FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+## DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+## OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+## HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+## LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+## OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+## SUCH DAMAGE.
+##                
+## $Id$
+##                
+######################################################################
+
+prefix "CONFIG_"	# Stripped at read time, prepended at save time
+
+# symbol definitions
+symbols
+
+
+#
+# main menu
+#
+main          'Pistachio Kernel Configuration System'
+
+
+#
+# hardware menu
+#
+arch            'Basic Architecture'
+
+SMP		'Multiprocessor Support'
+SMP_MAX_PROCS	'Maximum number of CPUs'
+SMP_IDLE_POLL	'Poll XCPU queue on idle'
+
+IOAPIC		'Use APIC+IOAPIC'
+MAX_IOAPICS	'Maximum number of supported IO APICs'
+APIC_TIMER_TICK 'Timer tick length for APIC'
+
+BOOTMEM_PAGES	'The number of pages to reserve for the kernel' text
+
+The kernel reserves an ammount of physical memory to use for kernel
+data structures including TCBs, page tables and the MDB. This option
+allows you to select the number of 4k pages to reserve for the kernel.
+.
+
+#
+# kernel menu
+#
+IPC_FASTPATH	'Fast IPC path'
+DEBUG		'Enable Debugging mode'
+PERFMON         'Enable Performance Monitoring'
+
+SPIN_WHEELS	'Enable Spin Wheels' text
+
+The Spin Wheels are characters displayed by the kernel on the top right
+corner of the screen. On certain events such as interrupts or context
+switches, the kernel displays a new character. This is helpful to identify
+whether the kernel has crashed or not. However, it introduces a certain
+performance penalty.
+.
+NEW_MDB		'New mapping database' text
+
+A new more generic mapping database that supports other mappings than
+page frames, a new rights delegataion scheme, and path compression to
+save memory footprint and lookup costs.  The mapping database is not
+heavily tested yet, though.
+.
+STATIC_TCBS	'Use a non-virtual linear array for TCB management' text
+.
+experimental	'Experimental Features'
+EXPERIMENTAL	'Enable experimental features' text
+
+The kernel supports a set of experimental features which are for
+testing purposes and certain software relies on it.  However, those
+features are sometimes a work-arounds for upcoming API changes and
+therefore not stable and may disappear in the future.
+.
+
+X_PAGER_EXREGS	'Pager ExchangeRegisters' text
+
+The kernel supports an experimental API feature (indicated by a kernel
+feature string "pagerexregs") that allows a thread to perform the
+ExchangeRegister system call on another thread if it is the pager of
+that thread.
+.
+
+
+X_CTRLXFER_MSG 'CtrlXfer Message Prococol' text
+
+Enable support for control transfer items sent along with kernel-generated
+messages
+.
+
+scheduler	'Kernel scheduling policy'
+
+SCHED_RR	'Round-Robin' text
+Priority-based round-robin scheduling
+.
+
+X_SCHED_HS	'Hierarchical Stride Scheduling' text
+Hierarchical Stride Scheduling
+.
+
+X_X86_HVM 'Support for full virtualization on x86-processors' text
+Support for Intel Vanderpool Virtualization Extensions / AMD Secure
+Virtual Mode 
+.
+
+X_PPC_SOFTHVM 'Full virtualization on PPC processors' text
+Support for full virtualization on BookE PPC processors
+.
+
+X_EVT_LOGGING	'Event Logging features' text
+
+Enables kernel event logging and kernel performance counters.
+.
+
+
+#
+# debugger menu
+#
+KDB_BOOT_CONS	'Kernel Debugger console used at boot time' 
+KDB_CONS_COM	'Serial Port'
+KDB_CONS_KBD	'Keyboard'
+KDB_COMPORT	'Kernel Debugger Serial Port' text
+The port to use for serial I/O. Directly enter the comport or
+use the predefined placeholders 0..3. 
+For x86, the placeholders denote ports as follows:
+  Port 0 - 0x3f8 
+  Port 1 - 0x2f8
+  Port 2 - 0x3e8
+  Port 3 - 0x2e8
+For powerpc, the placeholders denote ports as follows:
+  Port 0 - Retrieve via FDT 
+  Port 1 - Use PSIM debug comport 
+.
+KDB_COMSPEED	'Kernel Debugger Serial Port Speed'
+KDB_ON_STARTUP	'Enter kernel debugger on startup'
+KDB_BREAKIN	'Kernel Debugger breakin'
+KDB_BREAKIN_BREAK	'  > Breakin via the break signal'
+KDB_BREAKIN_ESCAPE	'  > Breakin via the escape key'
+KDB_INPUT_HLT	'Use hlt while waiting for console input' text
+Use interruptible hlt while waiting for console input in the debugger,
+to reduce CPU load and power. Note that interrupts are enabled while waiting.
+.
+
+DEBUG_SYMBOLS	'Include debugging symbols in binary'
+
+KDB_DISAS	'Enable Disassembler [GPL license]' text
+
+The disassembler is implemented by code distributed under the terms of the
+GPL license.  The disassembler code is statically linked to the kernel,
+and thus subjects the entire kernel binary to the constraints of the GPL.
+If you are dissatisfied with the terms of the GPL, answer no.
+.
+
+KDB_NO_ASSERTS 'Disable all ASSERT, WARNING, TRACE, etc.' text
+
+By default, if the kernel debugger is enabled, numerous internal
+run-time checks are performed through ASSERT(...) macros.  There are
+also places in the code where a warning is emitted (WARNING) or other
+output is generated (TRACE).  While these checks may allow to catch
+kernel bugs early, they induce a non negligible overhead.
+
+For benchmarking one would normally disable the kernel debugger
+completely.  There may, however, be certain situations, where the
+kernel debugger comes in handy during benchmarks.
+
+If you want to run benchmarks and still need the kernel debugger, say
+Yes here. If unsure, say No.
+.
+
+
+#
+# trace submenu
+#
+VERBOSE_INIT	'Verbose initialization'
+TRACEPOINTS	'Enable Tracepoints'
+KMEM_TRACE	'Enable tracing of kernel memory'
+TRACEBUFFER	'Enable Tracebuffer' text
+
+.
+TBUF_PERFMON	'Tracebuffer perfmon counters' text
+
+Also log performance monitoring counters on tracebuffer events.
+.
+
+TBUF_PERFMON_ENERGY	'Tracebuffer energy perfmon counters' text
+
+Estimate energy via performance monitoring counters on tracebuffer events.
+.
+
+#
+# codegen menu
+#
+
+
+# menus
+hardware	'Hardware' text
+
+Select the hardware you want to build the kernel for.  This may include
+the architecture, the processor family and model, the platform, whether
+to support multiple processors, etc.
+.
+
+
+kernel		'Kernel' text
+
+Enable or disable various kernel features (alternative implementations,
+performance tweaks, etc.), or enable debugging or tracing modes.
+.
+
+
+debugger	'Debugger' text
+
+Configure the kernel debugger (KDB).  Select KDB's input/output device
+and invocation method, and enable or disable features of the debugger.
+
+KDB is not a part of the actual kernel.  It is meant as a debugging aid
+for the kernel developer, but sometimes user application developers find
+it useful, too.  Enabling KDB can result in severe performance hits.  
+Do not use it for benchmarking unless you exactly know what you're doing.
+.
+
+kdb_console     'Kernel Debugger Console'
+trace		'Trace Settings'
+codegen		'Code Generator Options'
+hardware_misc	'Miscellaneous'
+
+menu hardware
+	arch
+	x86_arch
+	x86_type
+	x86_platform
+	powerpc_type
+	powerpc_platform
+	powerpc_subplatform
+	powerpc64_platform
+	powerpc64_type
+	hardware_misc
+	SMP { SMP_MAX_PROCS% SMP_IDLE_POLL}
+
+	
+choices arch    # Basic architecture
+	ARCH_X86
+	ARCH_POWERPC
+	ARCH_POWERPC64
+	default ARCH_X86
+
+unless ARCH_X86 or ARCH_POWERPC suppress dependent SMP
+unless ARCH_X86 and SMP suppress dependent SMP_IDLE_POLL
+
+
+menu hardware_misc
+	IOAPIC { MAX_IOAPICS% APIC_TIMER_TICK% }
+	PPC_EXPOSE_OPIC
+	BOOTMEM_PAGES%
+	CPU_X86_SIMICS_SPEED%
+
+default MAX_IOAPICS from 2
+default APIC_TIMER_TICK from 1000
+when ARCH_POWERPC or ARCH_POWERPC64 suppress IOAPIC
+default BOOTMEM_PAGES from 1024
+unless ARCH_POWERPC64 suppress BOOTMEM_PAGES
+default SMP_MAX_PROCS from 4
+default CPU_X86_SIMICS_SPEED from 100
+unless CPU_X86_SIMICS suppress CPU_X86_SIMICS_SPEED
+
+choices scheduler    # Kernel scheduling policy
+	SCHED_RR
+        X_SCHED_HS
+	default SCHED_RR
+
+menu experimental
+	X_PAGER_EXREGS
+        X_CTRLXFER_MSG
+        X_X86_HVM
+	X_PPC_SOFTHVM
+	X_EVT_LOGGING
+	scheduler
+
+
+default X_PAGER_EXREGS from n
+default X_CTRLXFER_MSG from n
+
+unless (ARCH_X86 and SUBARCH_X32) or ARCH_POWERPC suppress X_CTRLXFER_MSG
+default X_X86_HVM from n
+unless X86_HVM suppress X_X86_HVM
+unless X_CTRLXFER_MSG suppress X_X86_HVM
+
+default X_EVT_LOGGING from n
+unless (ARCH_X86 and SUBARCH_X32) suppress X_EVT_LOGGING
+
+menu kernel
+	EXPERIMENTAL
+	experimental
+	IPC_FASTPATH
+	DEBUG
+	DEBUG_SYMBOLS
+	K8_FLUSHFILTER
+        PERFMON
+	SPIN_WHEELS
+	NEW_MDB
+        STATIC_TCBS
+	PPC_BAT_SYSCALLS
+	PPC64_TRASH_OF
+	X86_SMALL_SPACES
+	X86_COMPATIBILITY_MODE
+	X86_IO_FLEXPAGES
+
+default EXPERIMENTAL from n
+default IPC_FASTPATH from n
+default PPC_BAT_SYSCALLS from y
+default NEW_MDB from n
+default STATIC_TCBS from n
+unless EXPERIMENTAL suppress dependent experimental
+unless ARCH_POWERPC suppress PPC_BAT_SYSCALLS
+unless ARCH_POWERPC64 suppress PPC64_TRASH_OF
+unless CPU_X86_I686 or CPU_X86_P4 or CPU_X86_K8 suppress dependent PERFMON
+when  X_EVT_LOGGING suppress PERFMON
+unless ARCH_X86 suppress SPIN_WHEELS
+unless ARCH_X86 suppress NEW_MDB
+unless NEW_MDB suppress X86_IO_FLEXPAGES
+
+menu kdb_console
+	KDB_CONS_BGP_JTAG
+	KDB_CONS_BGP_TREE
+        KDB_CONS_COM {	KDB_COMPORT@ KDB_COMSPEED% }
+        KDB_CONS_KBD 
+	KDB_CONS_OF1275
+	KDB_CONS_PSIM_COM
+	KDB_CONS_RTAS
+        KDB_BOOT_CONS%
+
+unless ARCH_X86 suppress KDB_CONS_KBD 
+unless ARCH_X86 or ARCH_POWERPC suppress KDB_CONS_COM 
+default KDB_CONS_COM from y
+default KDB_COMPORT from 0
+default KDB_COMSPEED from 115200 range 115200 57600 38400 19200 9600 4800 2400 1200 300
+
+
+default KDB_BOOT_CONS from 0 range 0 1 2
+unless DEBUG suppress dependent kdb_console
+
+menu debugger
+	kdb_console
+	KDB_DISAS
+	KDB_ON_STARTUP
+	KDB_BREAKIN { KDB_BREAKIN_BREAK KDB_BREAKIN_ESCAPE }
+	KDB_INPUT_HLT
+        KDB_NO_ASSERTS
+	trace
+
+default DEBUG from y
+unless DEBUG suppress dependent debugger
+unless ARCH_X86 suppress dependent KDB_INPUT_HLT KDB_BREAKIN_BREAK
+default KDB_BREAKIN_ESCAPE from y
+default KDB_BREAKIN_BREAK from y
+
+menu trace
+	VERBOSE_INIT
+	TRACEPOINTS
+	KMEM_TRACE
+        TRACEBUFFER
+	TBUF_PERFMON
+	TBUF_PERFMON_ENERGY
+	X86_KEEP_LAST_BRANCHES
+
+when   X_EVT_LOGGING suppress TBUF_PERFMON TBUF_PERFMON_ENERGY
+unless TRACEBUFFER and PERFMON suppress TBUF_PERFMON
+unless TBUF_PERFMON and SUBARCH_X32 and CPU_X86_P4 suppress TBUF_PERFMON_ENERGY
+default TBUF_PERFMON from PERFMON
+
+menu codegen
+	SYSV_ABI
+	PPC_SEGMENT_LOOP
+	PPC_MULTIWORD_INSTR
+
+default SYSV_ABI from y
+default PPC_MULTIWORD_INSTR from y
+unless ARCH_POWERPC suppress SYSV_ABI PPC_SEGMENT_LOOP PPC_MULTIWORD_INSTR
+
+menu main       # Configure the Pistachio kernel
+	hardware
+	kernel
+	debugger
+	codegen
+
+
+
+derive IS_32BIT from SUBARCH_X32 or ARCH_POWERPC
+derive IS_64BIT from SUBARCH_X64 or ARCH_POWERPC64
+derive BIGENDIAN from ARCH_POWERPC or ARCH_POWERPC64
+derive HAVE_MEMORY_CONTROL from ARCH_POWERPC64
+
+
+source "powerpc.cml"
+source "powerpc64.cml"
+source "x86.cml"
+
+#
+# here comes the real stuff
+#
+start main			# Start with the menu named 'main'
+#condition nohelp on EXPERT	# Only make undocumented symbols visible when this is on
+#warndepend EXPERIMENTAL	# Append (EXPERIMENTAL) to dependent queries
+#warndepend DANGEROUS
+#warndepend OBSOLETE
+
+# End

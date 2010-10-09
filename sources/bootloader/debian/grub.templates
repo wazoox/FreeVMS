@@ -1,0 +1,13 @@
+Template: grub/migrate_from_legacy
+Type: note
+Description: Upgrading from GRUB Legacy.
+ GRUB 0.97, the Legacy version of GNU GRUB, is from now on considered a
+ deprecated option.  Your system is now being upgraded to GRUB 2.
+ .
+ GRUB 2 features a more advanced architecture, it's much more robust, and
+ provides a number of new features.  However, not all features provided by
+ GRUB Legacy are implemented in GRUB 2.
+ .
+ If for some reason you want to continue using GRUB Legacy, it is now provided
+ in the `grub-legacy' package.  It will continue being supported at least up
+ until the Squeeze release.
