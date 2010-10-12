@@ -1,3 +1,24 @@
+/*
+================================================================================
+  FreeVMS (R)
+  Copyright (C) 2010 Dr. BERTRAND Joël and all.
+
+  This file is part of FreeVMS
+
+  FreeVMS is free software; you can redistribute it and/or modify it
+  under the terms of the CeCILL V2 License as published by the french
+  CEA, CNRS and INRIA.
+ 
+  FreeVMS is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE.  See the CeCILL V2 License
+  for more details.
+ 
+  You should have received a copy of the CeCILL License
+  along with FreeVMS. If not, write to info@cecill.info.
+================================================================================
+*/
+
 #include "freevms.h"
 
 static L4_KernelInterfacePage_t *kip;
@@ -7,7 +28,9 @@ main(void)
 {
     char                        *CommandLine;
     char                        *ptr;
-    char                        RootDevice[80];
+
+#   define                      RootDeviceLength 80
+    char                        RootDevice[RootDeviceLength];
 
     L4_BootRec_t                *BootRecord;
 
@@ -48,12 +71,12 @@ main(void)
     for(page_bits = 0; !((1 << page_bits) & L4_PageSizeMask(kip)); page_bits++);
     page_size = (1 << page_bits);
     notice(SYSBOOT_I_SYSBOOT "computing page size: %d bytes\n",
-            page_size);
+            (int) page_size);
 
     roottid = L4_Myself();
     notice(SYSBOOT_I_SYSBOOT "launching kernel\n");
     notice(RUN_S_PROC_ID "identification of created process is %08X\n",
-            roottid);
+            (unsigned int) roottid.global.raw);
     s0tid = L4_GlobalId(kip->ThreadInfo.X.UserBase, 1);
 
     NumProcessors = L4_NumProcessors((void *) kip);
@@ -65,12 +88,12 @@ main(void)
 
         case 1:
             notice(SYSBOOT_I_SYSBOOT "booting %d secondary processor\n",
-                    NumProcessors - 1);
+                    (int) (NumProcessors - 1));
             break;
 
         default:
             notice(SYSBOOT_I_SYSBOOT "booting %d secondary processors\n",
-                    NumProcessors - 1);
+                    (int) (NumProcessors - 1));
             break;
     }
 
@@ -78,8 +101,8 @@ main(void)
     {
         MainProcDesc = L4_ProcDesc((void *) kip, i);
         notice(SYSBOOT_I_SYSBOOT "CPU%d EXTFREQ=%d MHz, INTFREQ=%d MHz\n",
-                i, MainProcDesc->X.ExternalFreq / 1000,
-                MainProcDesc->X.InternalFreq / 1000);
+                (int) i, (int) (MainProcDesc->X.ExternalFreq / 1000),
+                (int) (MainProcDesc->X.InternalFreq / 1000));
     }
 
     L4_Sigma0_GetPage(L4_nilthread, L4_Fpage(L4_BootInfo(kip),
@@ -91,11 +114,7 @@ main(void)
 
     for(i = 2; i < NumBootInfoEntries; i++)
     {
-        if (L4_BootRec_Type(BootRecord) != L4_BootInfo_SimpleExec)
-        {
-            PANIC;
-        }
-
+        PANIC(L4_BootRec_Type(BootRecord) != L4_BootInfo_SimpleExec);
         CommandLine = L4_SimpleExec_Cmdline(BootRecord);
 
         if (strstr(CommandLine, "vmskernel.sys") != NULL)
@@ -106,41 +125,12 @@ main(void)
         BootRecord = L4_BootRec_Next(BootRecord);
     }
 
-    if (L4_BootRec_Type(BootRecord) != L4_BootInfo_SimpleExec)
-    {
-        PANIC;
-    }
+    PANIC(L4_BootRec_Type(BootRecord) != L4_BootInfo_SimpleExec);
 
     CommandLine = L4_SimpleExec_Cmdline(BootRecord);
     notice(SYSBOOT_I_SYSBOOT "parsing command line: %s\n", CommandLine);
-
-    for(j = 0; j < 80; RootDevice[j++] = 0);
-
-    if ((ptr = strstr(CommandLine, " root")) == NULL)
-    {
-        PANIC;
-    }
-
-    while((*ptr) != '=') ptr++;
-    ptr++;
-    while((*ptr) == ' ') ptr++;
-
-    j = 0;
-    while(((*ptr) != ' ') && ((*ptr != 0))) RootDevice[j++] = *ptr++;
-
-    ptr = RootDevice;
-    while(*ptr)
-    {
-        if (((*ptr) >= 'a') && (*ptr <= 'z'))
-            (*ptr) = (*ptr) - ('a' - 'A');
-        ptr++;
-    }
-
+    parsing(CommandLine, " root", RootDevice, RootDeviceLength);
     notice(SYSBOOT_I_SYSBOOT "selecting root device: %s\n", RootDevice);
-
-    /*
-     * lancement du serveur idoine.
-     */
 
     switch(NumBootInfoEntries - 3)
     {
@@ -149,29 +139,26 @@ main(void)
 
         case 1:
             notice(SYSBOOT_I_SYSBOOT "trying to load %d driver\n",
-                    NumBootInfoEntries - 3);
+                    (int) (NumBootInfoEntries - 3));
             break;
 
         default:
             notice(SYSBOOT_I_SYSBOOT "trying to load %d drivers\n",
-                    NumBootInfoEntries - 3);
+                    (int) (NumBootInfoEntries - 3));
             break;
     }
 
     for(; i < NumBootInfoEntries; i++)
     {
         BootRecord = L4_BootRec_Next(BootRecord);
-
-        if (L4_BootRec_Type(BootRecord) != L4_BootInfo_Module)
-        {
-            PANIC;
-        }
-
+        PANIC(L4_BootRec_Type(BootRecord) != L4_BootInfo_Module);
+        notice(SYSBOOT_I_SYSBOOT "loading %s\n", L4_Module_Cmdline(BootRecord));
         /*
-        printf("Start %016lX\n", L4_Module_Start(BootRecord));
-        printf("Size %016lX\n", L4_Module_Size(BootRecord));
-        */
-        printf(SYSBOOT_I_SYSBOOT "loading %s\n", L4_Module_Cmdline(BootRecord));
+        elf_loader();
+        notice(SYSBOOT_I_SYSBOOT "address %016lX:%016lX\n",
+                (long unsigned int) L4_Module_Start(BootRecord),
+                (long unsigned int) L4_Module_Size(BootRecord));
+                */
     }
 
     kip_area = L4_FpageLog2((L4_Word_t) kip, L4_KipAreaSizeLog2 (kip));
@@ -190,6 +177,7 @@ main(void)
 
     /*
      * Chargement des modules
+     * start_task()
      */
 
     notice("\n");

@@ -5,11 +5,12 @@ CFLAGS=-Wall -fno-stack-protector -nostdinc -O2 -g -Wall -Wshadow \
 INCLUDES=-I. -I./lib \
 		-I$(DESTDIR)/../kernel \
 		-I$(DESTDIR)/../kernel/build/include \
-		-I$(DESTDIR)/../kernel/build/include/l4 \
+		-I$(DESTDIR)/../kernel/build/include \
 		-I/usr/lib/gcc/x86_64-linux-gnu/4.4.5/include
 
 OBJ=$(DESTDIR)/root/boot.o \
 	$(DESTDIR)/root/init.o \
+	$(DESTDIR)/root/parsing.o \
 	$(DESTDIR)/lib/amd64.o \
 	$(DESTDIR)/lib/get_hex.o \
 	$(DESTDIR)/lib/print.o
@@ -31,6 +32,9 @@ directories:
 # ./root
 
 $(DESTDIR)/root/init.o: root/init.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/root/parsing.o: root/parsing.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/root/boot.o: root/boot.S
