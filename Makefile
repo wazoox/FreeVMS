@@ -80,7 +80,7 @@ image:
 	cp -f build/pal/x86-kernel ../mnt/boot
 	cp -f build/kernel/build/libexec/l4/sigma0 ../mnt/boot
 	cp -f build/kernel/build/lib/l4/* ../mnt
-	cp -f build/freevms/vmskernel ../mnt/boot
+	cp -f build/freevms/vmskernel.sys ../mnt/boot
 
 userland:
 	@echo "Nothing to do, but you can write it ;-)"

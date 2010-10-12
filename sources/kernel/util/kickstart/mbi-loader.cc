@@ -399,10 +399,10 @@ L4_Word_t mbi_init (void)
                  "Reserving %d%sB for kernel memory\n",
                  additional_kmem_size &= ~(kip.get_min_pagesize()-1));
 
-	PARSEBOOL ("bootinfo", use_bootinfo, "generic bootinfo");
-	PARSEBOOL ("mbi", use_mbi, "multiboot info");
-	PARSEBOOL ("decode-all", decode_all_executables,
-		   "decoding of all executables");
+		PARSEBOOL ("bootinfo", use_bootinfo, "generic bootinfo");
+		PARSEBOOL ("mbi", use_mbi, "multiboot info");
+		PARSEBOOL ("decode-all", decode_all_executables,
+			   "decoding of all executables");
     }
 
     if (mbi->flags.mods)
