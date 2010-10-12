@@ -17,4 +17,4 @@
 
 char *strstr(const char *, const char *);
 
-#define PANIC	printf("Panic !\n"); while(1);
+#define PANIC   printf("Panic !\n"); while(1);
