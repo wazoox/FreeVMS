@@ -19,15 +19,12 @@
 ================================================================================
 */
 
-#include "freevms.h"
-
-static L4_KernelInterfacePage_t *kip;
+#include "freevms/freevms.h"
 
 int
 main(void)
 {
     char                        *CommandLine;
-    char                        *ptr;
 
 #   define                      RootDeviceLength 80
     char                        RootDevice[RootDeviceLength];
@@ -39,8 +36,11 @@ main(void)
     L4_Fpage_t                  kip_area;
     L4_Fpage_t                  utcb_area;
 
+	L4_KernelInterfacePage_t 	*kip;
+
     L4_ProcDesc_t               *MainProcDesc;
 
+    L4_ThreadId_t               pagerid;
     L4_ThreadId_t               roottid;
     L4_ThreadId_t               s0tid;
 
@@ -49,15 +49,15 @@ main(void)
     L4_Word_t                   utcb_size;
 
     L4_Word_t                   ApiFlags;
+    L4_Word_t                   BootInfo;
     L4_Word_t                   i;
-    L4_Word_t                   j;
     L4_Word_t                   KernelId;
     L4_Word_t                   KernelInterface;
     L4_Word_t                   NumBootInfoEntries;
     L4_Word_t                   NumProcessors;
     L4_Word_t                   RunningSystem;
 
-    void                        *BootInfo;
+	struct vms$meminfo			MemInfo;
 
     notice("\n");
     notice(">>> FreeVMS %s (TM)\n", FREEVMS_VERSION);
@@ -76,7 +76,7 @@ main(void)
     roottid = L4_Myself();
     notice(SYSBOOT_I_SYSBOOT "launching kernel\n");
     notice(RUN_S_PROC_ID "identification of created process is %08X\n",
-            (unsigned int) roottid.global.raw);
+            (unsigned int) L4_ThreadNo(roottid));
     s0tid = L4_GlobalId(kip->ThreadInfo.X.UserBase, 1);
 
     NumProcessors = L4_NumProcessors((void *) kip);
@@ -105,12 +105,11 @@ main(void)
                 (int) (MainProcDesc->X.InternalFreq / 1000));
     }
 
-    L4_Sigma0_GetPage(L4_nilthread, L4_Fpage(L4_BootInfo(kip),
-            ((sizeof(BootInfo) / page_size) + 1) * page_size));
+    L4_Sigma0_GetPage(L4_nilthread, L4_Fpage(L4_BootInfo(kip), page_size));
 
-    BootInfo = (void *) L4_BootInfo((void *) kip);
-    NumBootInfoEntries = L4_BootInfo_Entries(BootInfo);
-    BootRecord = L4_BootInfo_FirstEntry(BootInfo);
+    BootInfo = L4_BootInfo((void *) kip);
+    NumBootInfoEntries = L4_BootInfo_Entries((void *) BootInfo);
+    BootRecord = L4_BootInfo_FirstEntry((void *) BootInfo);
 
     for(i = 2; i < NumBootInfoEntries; i++)
     {
@@ -126,11 +125,32 @@ main(void)
     }
 
     PANIC(L4_BootRec_Type(BootRecord) != L4_BootInfo_SimpleExec);
-
     CommandLine = L4_SimpleExec_Cmdline(BootRecord);
     notice(SYSBOOT_I_SYSBOOT "parsing command line: %s\n", CommandLine);
-    parsing(CommandLine, " root", RootDevice, RootDeviceLength);
+    parsing(CommandLine, (char *) " root", RootDevice, RootDeviceLength);
     notice(SYSBOOT_I_SYSBOOT "selecting root device: %s\n", RootDevice);
+
+	// Starting virtual memory subsystem
+	notice(SYSBOOT_I_SYSBOOT "spawning pager\n");
+	vms$vm_init(kip, &MemInfo);
+
+	// A thread must have a pager. This pager requires a
+	// specific thread to handle pagefault protocol.
+	// This thread is created by hand because there is no memory management
+	// to manage thread.
+
+	pagerid = L4_GlobalId(L4_ThreadNo(roottid) + 1, 1);
+    notice(RUN_S_PROC_ID "identification of created process is %08X\n",
+            (unsigned int) L4_ThreadNo(pagerid));
+
+	//notice(SYSBOOT_I_SYSBOOT "spawning name subsystem\n");
+	//vms$ns_init();
+	//passer le thread_id aux serveurs créés.
+
+	// Adding to name server:
+	// - SYS$KERNEL
+	// - SYS$PAGER
+	// - SYS$NAME_SERVER
 
     switch(NumBootInfoEntries - 3)
     {
@@ -160,6 +180,9 @@ main(void)
                 (long unsigned int) L4_Module_Size(BootRecord));
                 */
     }
+
+	// Ajout de la mémoire utilisée par les structures bootinfo à la mémoire
+	// virtuelle.
 
     kip_area = L4_FpageLog2((L4_Word_t) kip, L4_KipAreaSizeLog2 (kip));
     //utcb_area = L4_FpageLog2

@@ -31,8 +31,8 @@
  ********************************************************************/
 #include <l4/types.h>
 #include <stdarg.h>
-#include <l4io.h>
-#include "lib.h"
+#include "libearly/l4io.h"
+#include "libearly/lib.h"
 
 #ifndef NULL
 #define NULL ((void *) 0)

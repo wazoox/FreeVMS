@@ -43,7 +43,7 @@ $(SRCDIR)/kernel/config.h.in:
 $(BUILDDIR)/kernel/Makefile: Makefile
 	@mkdir -p $(BUILDDIR)/kernel
 	@(cd $(BUILDDIR)/kernel && $(SRCDIR)/kernel/configure \
-			--with-kickstart-linkbase=0x00100000 \
+			--with-kickstart-linkbase=0x00020000 \
 			--with-s0-linkbase=0x00040000 \
 			--with-roottask-linkbase=0x01000000 \
 			--prefix=$(BUILDDIR)/kernel/build)

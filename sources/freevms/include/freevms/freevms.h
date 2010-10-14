@@ -19,35 +19,35 @@
 ================================================================================
 */
 
-#include "freevms/freevms.h"
+#include "libearly/lib.h"
+#include "libearly/l4io.h"
 
-void
-parsing(char *line, char *command, char *argument, int length)
-{
-    char    *ptr;
+// L4 interfaces
+#include "l4/kip.h"
+#include "l4/kcp.h"
+#include "l4/sigma0.h"
+#include "l4/thread.h"
+#include "l4/bootinfo.h"
 
-    int     i;
+// FreeVMS messagesœ
+#include "freevms/information.h"
+#include "freevms/system.h"
+#include "freevms/levels.h"
 
-    for(i = 0; i < length; argument[i++] = 0);
-    PANIC((ptr = strstr(line, " root")) == NULL);
+// FreeVMS subsystems
+#include "freevms/vm.h"
 
-    i = 0; while((*ptr) != '=') { ptr++; PANIC(i >= length); }
-    ptr++; while((*ptr) == ' ') { ptr++; PANIC(i >= length); }
+// Defines
+#define NULL ((void *) 0)
+#define FREEVMS_VERSION "0.0.1"
 
-    i = 0;
-    while(((*ptr) != ' ') && ((*ptr != 0)))
-    {
-        argument[i++] = *ptr++;
-        PANIC(i >= length);
-    }
+// Macros
+#define notice(...) printf(__VA_ARGS__)
 
-    ptr = argument;
-    while(*ptr)
-    {
-        if (((*ptr) >= 'a') && (*ptr <= 'z'))
-            (*ptr) = (*ptr) - ('a' - 'A');
-        ptr++;
-    }
+#define PANIC(a)  if (a) { \
+        notice("Panic at %s(%d)\n", __FUNCTION__, __LINE__); \
+        notice("Have a nice day !\n"); \
+        while(1); } while(0)
 
-    return;
-}
+// Prototypes
+void parsing(char *line, char *command, char *argument, int length);

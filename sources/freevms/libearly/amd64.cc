@@ -32,7 +32,7 @@
 #include <config.h>
 #include <l4/types.h>
 
-#include "amd64.h"
+#include "libearly/amd64.h"
 
 extern "C" void __l4_putc (int c);
 extern "C" void putc (int c) __attribute__ ((weak, alias ("__l4_putc")));

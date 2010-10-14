@@ -19,27 +19,9 @@
 ================================================================================
 */
 
-#include "lib.h"
-#include "l4io.h"
+#include "freevms/freevms.h"
 
-#include "l4/kip.h"
-#include "l4/sigma0.h"
-#include "l4/thread.h"
-#include "l4/bootinfo.h"
-
-#include "information.h"
-#include "system.h"
-#include "levels.h"
-
-#define NULL ((void *) 0)
-
-#define FREEVMS_VERSION "0.0.1"
-
-#define notice(...) printf(__VA_ARGS__)
-
-#define PANIC(a)  if (a) { \
-        notice("Panic at %s(%d)\n", __FUNCTION__, __LINE__); \
-        notice("Have a nice day !\n"); \
-        while(1); } while(0)
-
-void parsing(char *line, char *command, char *argument, int length);
+void
+vms$server()
+{
+}

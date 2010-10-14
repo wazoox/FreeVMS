@@ -2,18 +2,19 @@ DESTDIR=../../build/freevms
 
 CFLAGS=-Wall -fno-stack-protector -nostdinc -O2 -g -Wall -Wshadow \
 		-Wconversion  -Wno-conversion -fno-exceptions
-INCLUDES=-I. -I./lib \
+INCLUDES=-I./include \
 		-I$(DESTDIR)/../kernel \
-		-I$(DESTDIR)/../kernel/build/include \
 		-I$(DESTDIR)/../kernel/build/include \
 		-I/usr/lib/gcc/x86_64-linux-gnu/4.4.5/include
 
-OBJ=$(DESTDIR)/root/boot.o \
+OBJ=$(DESTDIR)/libearly/amd64.o \
+	$(DESTDIR)/libearly/get_hex.o \
+	$(DESTDIR)/libearly/print.o \
+	$(DESTDIR)/root/boot.o \
 	$(DESTDIR)/root/init.o \
 	$(DESTDIR)/root/parsing.o \
-	$(DESTDIR)/lib/amd64.o \
-	$(DESTDIR)/lib/get_hex.o \
-	$(DESTDIR)/lib/print.o
+	$(DESTDIR)/vm/vm_init.o \
+	$(DESTDIR)/vm/vm_server.o
 
 all: directories $(OBJ) $(DESTDIR)/vmskernel.sys
 
@@ -22,12 +23,13 @@ clean:
 
 $(DESTDIR)/vmskernel.sys: $(OBJ)
 	ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4 \
-			$(OBJ) -nostdlib -Ttext=0x01000000  -ll4 -static -o $@
+			$(OBJ) -nostdlib -T linker/elf_x86_64 -ll4 -static -o $@
 
 directories:
-	mkdir -p $(DESTDIR)/root
 	mkdir -p $(DESTDIR)/drv
-	mkdir -p $(DESTDIR)/lib
+	mkdir -p $(DESTDIR)/libearly
+	mkdir -p $(DESTDIR)/root
+	mkdir -p $(DESTDIR)/vm
 
 # ./root
 
@@ -40,15 +42,23 @@ $(DESTDIR)/root/parsing.o: root/parsing.c
 $(DESTDIR)/root/boot.o: root/boot.S
 	as $< -o $@
 
-# ./lib
+# ./vm
 
-$(DESTDIR)/lib/amd64.o: lib/amd64.cc
+$(DESTDIR)/vm/vm_init.o: vm/vm_init.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
-$(DESTDIR)/lib/get_hex.o: lib/get_hex.cc
+$(DESTDIR)/vm/vm_server.o: vm/vm_server.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
-$(DESTDIR)/lib/print.o: lib/print.cc
+# ./libearly
+
+$(DESTDIR)/libearly/amd64.o: libearly/amd64.cc
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/libearly/get_hex.o: libearly/get_hex.cc
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/libearly/print.o: libearly/print.cc
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 # ./test

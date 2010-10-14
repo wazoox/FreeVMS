@@ -41,6 +41,6 @@ _return_from_main:
     .bss
 
     .align  16
-    .space  4096 * 64 /* 64k */
+    .space  4096 * 64 /* 256k */
 
 stack:
