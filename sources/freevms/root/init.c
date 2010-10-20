@@ -65,6 +65,9 @@ main(void)
     notice(">>> FreeVMS %s (TM)\n", FREEVMS_VERSION);
     notice("\n");
 
+	notice(SYSBOOT_I_SYSBOOT "leaving kernel privileges\n");
+	notice(SYSBOOT_I_SYSBOOT "starting FreeVMS kernel with executive "
+			"privileges\n");
     notice(SYSBOOT_I_SYSBOOT "booting main processor\n");
 
     kip = (L4_KernelInterfacePage_t *) L4_KernelInterface(&kernel_interface,
@@ -137,7 +140,7 @@ main(void)
     notice(SYSBOOT_I_SYSBOOT "selecting root device: %s\n", root_device);
 
     // Starting virtual memory subsystem
-    notice(SYSBOOT_I_SYSBOOT "spawning pager\n");
+    notice(SYSBOOT_I_SYSBOOT "spawning VMS$PAGER\n");
     vms$vm_init(kip, &mem_info);
 
     // A thread must have a pager. This pager requires a
@@ -159,11 +162,9 @@ main(void)
 			(L4_Word_t) vms$pager);
 	PANIC(L4_ErrorCode(),
 			notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
+	L4_Call(pager_tid);
     notice(RUN_S_PROC_ID "identification of created process is %08X\n",
             (unsigned int) L4_ThreadNo(pager_tid));
-
-	L4_Time_t timeout = L4_TimePeriod(2000);
-	L4_Sleep(timeout);
 
     // Starting job controller
     jobctl_tid = L4_GlobalId(L4_ThreadNo(root_tid) + 2, 1);

@@ -26,13 +26,13 @@ vms$pager()
 {
 	L4_ThreadId_t		tid;
 
-	notice("------------------------------------------------------------\n");
-	notice("VMS$PAGER lauched\n");
-	notice("------------------------------------------------------------\n");
+	notice(SYSBOOT_I_SYSBOOT "running VMS$PAGER with executive privileges\n");
 
-	while(1)
+	L4_Wait(&tid);
+
+	for(;;)
 	{
-		L4_Wait (&tid);
+		L4_ReplyWait(tid, &tid);
 	}
 
 	return;

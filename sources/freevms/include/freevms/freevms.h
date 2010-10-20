@@ -40,7 +40,7 @@
 // Defines
 #define NULL							((void *) 0)
 #define FREEVMS_VERSION					"0.0.1"
-#define THREAD_STACK_BASE				(0xFFF000L)
+#define THREAD_STACK_BASE				(0xF00000L)
 
 // Address
 #define UTCB_BASE_ADDRESS		0x80000000UL
