@@ -37,7 +37,8 @@ OUTPUT_ARCH("i386:x86-64")
 BOOTMEM_SIZE	= 1024K;
 
 /* #define KERNEL_OFFSET 0  */
-_start_text_phys = 0x400000;
+_start_text_phys = 0x800000;
+//_start_text_phys = 0x400000;
 _start_text = _start_text_phys + KERNEL_OFFSET;
 
 

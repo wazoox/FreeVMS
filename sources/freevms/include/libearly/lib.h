@@ -37,7 +37,7 @@ static unsigned strlen( const char *src )
     unsigned cnt = 0;
 
     while( src && src[cnt] )
-	cnt++;
+    cnt++;
     return cnt;
 }
 
@@ -46,10 +46,10 @@ static void strcpy( char *dst, const char *src )
     unsigned cnt = 0;
    
     if( !dst || !src )
-	return;
+    return;
 
     do {
-	dst[cnt] = src[cnt];
+    dst[cnt] = src[cnt];
     } while( src[cnt++] );
     
 }
@@ -66,24 +66,24 @@ static void strcpy( char *dst, const char *src )
 static int
 strcmp(const char *s1, const char *s2)
 {
-	while (*s1 == *s2++)
-		if (*s1++ == 0)
-			return (0);
-	return (*(unsigned char *)s1 - *(unsigned char *)--s2);
+    while (*s1 == *s2++)
+        if (*s1++ == 0)
+            return (0);
+    return (*(unsigned char *)s1 - *(unsigned char *)--s2);
 }
 
 static int
 strncmp(const char *s1, const char *s2, unsigned int n)
 {
-	if (n == 0)
-		return (0);
-	do {
-		if (*s1 != *s2++)
-			return (*(unsigned char *)s1 - *(unsigned char *)--s2);
-		if (*s1++ == 0)
-			break;
-	} while (--n != 0);
-	return (0);
+    if (n == 0)
+        return (0);
+    do {
+        if (*s1 != *s2++)
+            return (*(unsigned char *)s1 - *(unsigned char *)--s2);
+        if (*s1++ == 0)
+            break;
+    } while (--n != 0);
+    return (0);
 }
 
 /*
@@ -92,32 +92,32 @@ strncmp(const char *s1, const char *s2, unsigned int n)
 static char *
 strstr(const char *s, const char *find)
 {
-	char c, sc;
-	int len;
+    char c, sc;
+    int len;
 
-	if ((c = *find++) != 0) {
-		len = strlen(find);
-		do {
-			do {
-				if ((sc = *s++) == 0)
-					return (0);
-			} while (sc != c);
-		} while (strncmp(s, find, len) != 0);
-		s--;
-	}
-	return ((char *)s);
+    if ((c = *find++) != 0) {
+        len = strlen(find);
+        do {
+            do {
+                if ((sc = *s++) == 0)
+                    return (0);
+            } while (sc != c);
+        } while (strncmp(s, find, len) != 0);
+        s--;
+    }
+    return ((char *)s);
 }
 
 static char *
 strchr(const char *p, int ch)
 {
     for (;; ++p) {
-	if (*p == ch) {
-	    /* LINTED const cast-away */
-	    return((char *)p);
-	}
-	if (!*p)
-	    return((char *)0);
+    if (*p == ch) {
+        /* LINTED const cast-away */
+        return((char *)p);
+    }
+    if (!*p)
+        return((char *)0);
     }
     /* NOTREACHED */
 }

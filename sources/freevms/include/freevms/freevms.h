@@ -38,13 +38,20 @@
 #include "freevms/vm.h"
 
 // Defines
-#define NULL ((void *) 0)
-#define FREEVMS_VERSION "0.0.1"
+#define NULL							((void *) 0)
+#define FREEVMS_VERSION					"0.0.1"
+#define THREAD_STACK_BASE				(0xFFF000L)
+
+// Address
+#define UTCB_BASE_ADDRESS		0x80000000UL
+#define UTCB(x)					((void*) (L4_Address(utcb_area) + \
+										((x) * utcb_size)))
 
 // Macros
 #define notice(...) printf(__VA_ARGS__)
 
-#define PANIC(a)  if (a) { \
+#define PANIC(a, ...)  if (a) { \
+	    __VA_ARGS__; \
         notice("Panic at %s(%d)\n", __FUNCTION__, __LINE__); \
         notice("Have a nice day !\n"); \
         while(1); } while(0)

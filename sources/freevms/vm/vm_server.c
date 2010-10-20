@@ -22,6 +22,18 @@
 #include "freevms/freevms.h"
 
 void
-vms$server()
+vms$pager()
 {
+	L4_ThreadId_t		tid;
+
+	notice("------------------------------------------------------------\n");
+	notice("VMS$PAGER lauched\n");
+	notice("------------------------------------------------------------\n");
+
+	while(1)
+	{
+		L4_Wait (&tid);
+	}
+
+	return;
 }

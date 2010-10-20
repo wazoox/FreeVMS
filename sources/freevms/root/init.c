@@ -24,40 +24,42 @@
 int
 main(void)
 {
-    char                        *CommandLine;
+    char                        *command_line;
 
-#   define                      RootDeviceLength 80
-    char                        RootDevice[RootDeviceLength];
+#   define                      ROOT_DEVICE_LENGTH 80
+    char                        root_device[ROOT_DEVICE_LENGTH];
 
-    L4_BootRec_t                *BootRecord;
+    L4_BootRec_t                *boot_record;
 
     L4_Clock_t                  time;
 
     L4_Fpage_t                  kip_area;
-    L4_Fpage_t                  utcb_area;
+    L4_Fpage_t                  threads_stack;
 
-	L4_KernelInterfacePage_t 	*kip;
+    L4_KernelInterfacePage_t    *kip;
 
-    L4_ProcDesc_t               *MainProcDesc;
+    L4_ProcDesc_t               *main_proc_desc;
 
-    L4_ThreadId_t               pagerid;
-    L4_ThreadId_t               roottid;
-    L4_ThreadId_t               s0tid;
+    L4_ThreadId_t               jobctl_tid;
+    L4_ThreadId_t               name_tid;
+    L4_ThreadId_t               pager_tid;
+    L4_ThreadId_t               root_tid;
+    L4_ThreadId_t               s0_tid;
 
+    L4_Word_t                   api_flags;
+    L4_Word_t                   boot_info;
+    L4_Word_t                   i;
+    L4_Word_t                   kernel_id;
+    L4_Word_t                   kernel_interface;
+    L4_Word_t                   num_boot_info_entries;
+    L4_Word_t                   num_processors;
     L4_Word_t                   page_bits;
     L4_Word_t                   page_size;
-    L4_Word_t                   utcb_size;
+	L4_Word_t					pager_utcb;
+    L4_Word_t                   running_system;
+	L4_Word_t					utcb_size;
 
-    L4_Word_t                   ApiFlags;
-    L4_Word_t                   BootInfo;
-    L4_Word_t                   i;
-    L4_Word_t                   KernelId;
-    L4_Word_t                   KernelInterface;
-    L4_Word_t                   NumBootInfoEntries;
-    L4_Word_t                   NumProcessors;
-    L4_Word_t                   RunningSystem;
-
-	struct vms$meminfo			MemInfo;
+    struct vms$meminfo          mem_info;
 
     notice("\n");
     notice(">>> FreeVMS %s (TM)\n", FREEVMS_VERSION);
@@ -65,134 +67,163 @@ main(void)
 
     notice(SYSBOOT_I_SYSBOOT "booting main processor\n");
 
-    kip = (L4_KernelInterfacePage_t *) L4_KernelInterface(&KernelInterface,
-            &ApiFlags, &KernelId);
+    kip = (L4_KernelInterfacePage_t *) L4_KernelInterface(&kernel_interface,
+            &api_flags, &kernel_id);
 
     for(page_bits = 0; !((1 << page_bits) & L4_PageSizeMask(kip)); page_bits++);
     page_size = (1 << page_bits);
     notice(SYSBOOT_I_SYSBOOT "computing page size: %d bytes\n",
             (int) page_size);
 
-    roottid = L4_Myself();
+    root_tid = L4_Myself();
     notice(SYSBOOT_I_SYSBOOT "launching kernel\n");
     notice(RUN_S_PROC_ID "identification of created process is %08X\n",
-            (unsigned int) L4_ThreadNo(roottid));
-    s0tid = L4_GlobalId(kip->ThreadInfo.X.UserBase, 1);
+            (unsigned int) L4_ThreadNo(root_tid));
+    s0_tid = L4_GlobalId(kip->ThreadInfo.X.UserBase, 1);
 
-    NumProcessors = L4_NumProcessors((void *) kip);
+	// Map kip
 
-    switch(NumProcessors - 1)
+    kip_area = L4_FpageLog2((L4_Word_t) kip, L4_KipAreaSizeLog2(kip));
+	utcb_size = L4_UtcbSize(kip);
+    num_processors = L4_NumProcessors((void *) kip);
+
+    switch(num_processors - 1)
     {
         case 0:
             break;
 
         case 1:
             notice(SYSBOOT_I_SYSBOOT "booting %d secondary processor\n",
-                    (int) (NumProcessors - 1));
+                    (int) (num_processors - 1));
             break;
 
         default:
             notice(SYSBOOT_I_SYSBOOT "booting %d secondary processors\n",
-                    (int) (NumProcessors - 1));
+                    (int) (num_processors - 1));
             break;
     }
 
-    for(i = 0; i < NumProcessors; i++)
+    for(i = 0; i < num_processors; i++)
     {
-        MainProcDesc = L4_ProcDesc((void *) kip, i);
+        main_proc_desc = L4_ProcDesc((void *) kip, i);
         notice(SYSBOOT_I_SYSBOOT "CPU%d EXTFREQ=%d MHz, INTFREQ=%d MHz\n",
-                (int) i, (int) (MainProcDesc->X.ExternalFreq / 1000),
-                (int) (MainProcDesc->X.InternalFreq / 1000));
+                (int) i, (int) (main_proc_desc->X.ExternalFreq / 1000),
+                (int) (main_proc_desc->X.InternalFreq / 1000));
     }
 
     L4_Sigma0_GetPage(L4_nilthread, L4_Fpage(L4_BootInfo(kip), page_size));
 
-    BootInfo = L4_BootInfo((void *) kip);
-    NumBootInfoEntries = L4_BootInfo_Entries((void *) BootInfo);
-    BootRecord = L4_BootInfo_FirstEntry((void *) BootInfo);
+    boot_info = L4_BootInfo((void *) kip);
+    num_boot_info_entries = L4_BootInfo_Entries((void *) boot_info);
+    boot_record = L4_BootInfo_FirstEntry((void *) boot_info);
 
-    for(i = 2; i < NumBootInfoEntries; i++)
+    for(i = 2; i < num_boot_info_entries; i++)
     {
-        PANIC(L4_BootRec_Type(BootRecord) != L4_BootInfo_SimpleExec);
-        CommandLine = L4_SimpleExec_Cmdline(BootRecord);
+        PANIC(L4_BootRec_Type(boot_record) != L4_BootInfo_SimpleExec);
+        command_line = L4_SimpleExec_Cmdline(boot_record);
 
-        if (strstr(CommandLine, "vmskernel.sys") != NULL)
+        if (strstr(command_line, "vmskernel.sys") != NULL)
         {
             break;
         }
 
-        BootRecord = L4_BootRec_Next(BootRecord);
+        boot_record = L4_BootRec_Next(boot_record);
     }
 
-    PANIC(L4_BootRec_Type(BootRecord) != L4_BootInfo_SimpleExec);
-    CommandLine = L4_SimpleExec_Cmdline(BootRecord);
-    notice(SYSBOOT_I_SYSBOOT "parsing command line: %s\n", CommandLine);
-    parsing(CommandLine, (char *) " root", RootDevice, RootDeviceLength);
-    notice(SYSBOOT_I_SYSBOOT "selecting root device: %s\n", RootDevice);
+    PANIC(L4_BootRec_Type(boot_record) != L4_BootInfo_SimpleExec);
+    command_line = L4_SimpleExec_Cmdline(boot_record);
+    notice(SYSBOOT_I_SYSBOOT "parsing command line: %s\n", command_line);
+    parsing(command_line, (char *) " root", root_device, ROOT_DEVICE_LENGTH);
+    notice(SYSBOOT_I_SYSBOOT "selecting root device: %s\n", root_device);
 
-	// Starting virtual memory subsystem
-	notice(SYSBOOT_I_SYSBOOT "spawning pager\n");
-	vms$vm_init(kip, &MemInfo);
+    // Starting virtual memory subsystem
+    notice(SYSBOOT_I_SYSBOOT "spawning pager\n");
+    vms$vm_init(kip, &mem_info);
 
-	// A thread must have a pager. This pager requires a
-	// specific thread to handle pagefault protocol.
-	// This thread is created by hand because there is no memory management
-	// to manage thread.
+    // A thread must have a pager. This pager requires a
+    // specific thread to handle pagefault protocol.
+    // This thread is created by hand because there is no memory management
+    // to manage thread.
 
-	pagerid = L4_GlobalId(L4_ThreadNo(roottid) + 1, 1);
+	threads_stack = L4_Sigma0_GetPage(s0_tid,
+			L4_FpageLog2(THREAD_STACK_BASE, 16));
+
+	pager_utcb = L4_MyLocalId().raw;
+	pager_utcb = (pager_utcb & (~(utcb_size - 1))) + utcb_size;
+    pager_tid = L4_GlobalId(L4_ThreadNo(root_tid) + 1, 1);
+	L4_ThreadControl(pager_tid, root_tid, root_tid, root_tid,
+			(void *) pager_utcb);
+	PANIC(L4_ErrorCode(),
+			notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
+	L4_Start(pager_tid, (L4_Word_t) THREAD_STACK_BASE + 4096 * (i + 1) - 32,
+			(L4_Word_t) vms$pager);
+	PANIC(L4_ErrorCode(),
+			notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
     notice(RUN_S_PROC_ID "identification of created process is %08X\n",
-            (unsigned int) L4_ThreadNo(pagerid));
+            (unsigned int) L4_ThreadNo(pager_tid));
 
-	//notice(SYSBOOT_I_SYSBOOT "spawning name subsystem\n");
-	//vms$ns_init();
-	//passer le thread_id aux serveurs créés.
+	L4_Time_t timeout = L4_TimePeriod(2000);
+	L4_Sleep(timeout);
 
-	// Adding to name server:
-	// - SYS$KERNEL
-	// - SYS$PAGER
-	// - SYS$NAME_SERVER
+    // Starting job controller
+    jobctl_tid = L4_GlobalId(L4_ThreadNo(root_tid) + 2, 1);
+    notice(SYSBOOT_I_SYSBOOT "spawning job controller\n");
+    notice(RUN_S_PROC_ID "identification of created process is %08X\n",
+            (unsigned int) L4_ThreadNo(jobctl_tid));
 
-    switch(NumBootInfoEntries - 3)
+    name_tid = L4_GlobalId(L4_ThreadNo(root_tid) + 3, 1);
+    notice(SYSBOOT_I_SYSBOOT "spawning name service\n");
+    notice(RUN_S_PROC_ID "identification of created process is %08X\n",
+            (unsigned int) L4_ThreadNo(name_tid));
+
+	notice(SYSBOOT_I_SYSBOOT "spawning lock controller\n");
+    //passer le thread_id aux serveurs créés.
+
+    // Adding to name server:
+    // - SYS$KERNEL
+    // - SYS$PAGER
+    // - SYS$NAMESERVER
+    // - SYS$JOBCTL
+	// - SYS$LOCKCTL
+
+    switch(num_boot_info_entries - 3)
     {
         case 0:
             break;
 
         case 1:
             notice(SYSBOOT_I_SYSBOOT "trying to load %d driver\n",
-                    (int) (NumBootInfoEntries - 3));
+                    (int) (num_boot_info_entries - 3));
             break;
 
         default:
             notice(SYSBOOT_I_SYSBOOT "trying to load %d drivers\n",
-                    (int) (NumBootInfoEntries - 3));
+                    (int) (num_boot_info_entries - 3));
             break;
     }
 
-    for(; i < NumBootInfoEntries; i++)
+    for(; i < num_boot_info_entries; i++)
     {
-        BootRecord = L4_BootRec_Next(BootRecord);
-        PANIC(L4_BootRec_Type(BootRecord) != L4_BootInfo_Module);
-        notice(SYSBOOT_I_SYSBOOT "loading %s\n", L4_Module_Cmdline(BootRecord));
+        boot_record = L4_BootRec_Next(boot_record);
+        PANIC(L4_BootRec_Type(boot_record) != L4_BootInfo_Module);
+        notice(SYSBOOT_I_SYSBOOT "loading %s\n",
+				L4_Module_Cmdline(boot_record));
         /*
         elf_loader();
         notice(SYSBOOT_I_SYSBOOT "address %016lX:%016lX\n",
-                (long unsigned int) L4_Module_Start(BootRecord),
-                (long unsigned int) L4_Module_Size(BootRecord));
+                (long unsigned int) L4_Module_Start(boot_record),
+                (long unsigned int) L4_Module_Size(boot_record));
                 */
     }
 
-	// Ajout de la mémoire utilisée par les structures bootinfo à la mémoire
-	// virtuelle.
-
-    kip_area = L4_FpageLog2((L4_Word_t) kip, L4_KipAreaSizeLog2 (kip));
-    //utcb_area = L4_FpageLog2
-
     time = L4_SystemClock();
     notice(STDRV_I_STARTUP "FreeVMS startup begun at %d, %d (UTC)\n",
-            (L4_Word32_t) time.X.low, (L4_Word32_t) time.X.high);
+            time.X.low, time.X.high);
+	notice("%d\n", time.X.low);
+	notice("%d\n", time.X.high);
 
     notice(SYSBOOT_I_SYSBOOT "trying to mount root filesystem\n");
-    notice(MOUNT_I_MOUNTED "SYS$ROOT mounted on _%s:\n", RootDevice);
+    notice(MOUNT_I_MOUNTED "SYS$ROOT mounted on _%s:\n", root_device);
     notice(SYSBOOT_I_SYSBOOT "trying to read SYS$ROOT:[VMS$COMMON.SYSMGR]"
             "VMSKERNEL.CNF\n");
     notice(SYSBOOT_I_SYSBOOT "trying to read SYS$ROOT:[VMS$COMMON.SYSMGR]"
@@ -226,9 +257,10 @@ main(void)
     notice("%%DCL-S-SPAWNED, process SYSTEM_1 spawned\n");
     */
 
-    RunningSystem = 1;
+	L4_KDB_Enter("Debug");
+    running_system = 1;
 
-    while(RunningSystem == 1);
+    while(running_system == 1);
     {
     }
 
