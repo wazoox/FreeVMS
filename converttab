@@ -1,0 +1,6 @@
+#!/bin/bash
+
+expand -t4 $1 > tmp
+mv -f tmp $1
+
+exit 0
