@@ -19,15 +19,19 @@
 ================================================================================
 */
 
+#define AMD64
+
 #include "libearly/lib.h"
 #include "libearly/l4io.h"
 
 // L4 interfaces
+#include "l4/arch.h"
+#include "l4/bootinfo.h"
+#include "l4/ipc.h"
 #include "l4/kip.h"
 #include "l4/kcp.h"
 #include "l4/sigma0.h"
 #include "l4/thread.h"
-#include "l4/bootinfo.h"
 
 // FreeVMS messagesœ
 #include "freevms/information.h"
@@ -38,23 +42,26 @@
 #include "freevms/vm.h"
 
 // Defines
-#define NULL							((void *) 0)
-#define FREEVMS_VERSION					"0.0.1"
-#define THREAD_STACK_BASE				(0xF00000L)
+#define NULL                            ((void *) 0)
+#define FREEVMS_VERSION                 "0.0.1"
+#define THREAD_STACK_BASE               (0xF00000L)
 
 // Address
-#define UTCB_BASE_ADDRESS		0x80000000UL
-#define UTCB(x)					((void*) (L4_Address(utcb_area) + \
-										((x) * utcb_size)))
+#define UTCB_BASE_ADDRESS       0x80000000UL
+#define UTCB(x)                 ((void*) (L4_Address(utcb_area) + \
+                                        ((x) * utcb_size)))
 
 // Macros
 #define notice(...) printf(__VA_ARGS__)
 
 #define PANIC(a, ...)  if (a) { \
-	    __VA_ARGS__; \
+        __VA_ARGS__; \
         notice("Panic at %s(%d)\n", __FUNCTION__, __LINE__); \
         notice("Have a nice day !\n"); \
         while(1); } while(0)
+
+#define L4_REQUEST_MASK     (~((~0UL) >> ((sizeof (L4_Word_t) * 8) - 20)))
+#define L4_IO_PAGEFAULT     (-8UL << 20)
 
 // Prototypes
 void parsing(char *line, char *command, char *argument, int length);

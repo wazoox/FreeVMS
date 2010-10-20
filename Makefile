@@ -21,6 +21,7 @@ all:
 	@echo "make freevms-install    : install system"
 	@echo "make userland           : build userland"
 	@echo "make image              : install system in ../mnt (loop device)"
+	@echo "make convert            : convert tabs"
 	@echo
 	@echo "To build FreeVMS, run kernelconfig, kernel, bootstrap, freevms "
 	@echo "and userland."
@@ -84,3 +85,6 @@ image:
 
 userland:
 	@echo "Nothing to do, but you can write it ;-)"
+
+convert:
+	find sources/freevms -name "*.[ch]" -exec ./converttab {} \;

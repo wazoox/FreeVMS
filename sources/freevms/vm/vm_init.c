@@ -279,6 +279,12 @@ vms$vm_init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *MemInfo)
     static struct memdesc           static_io_regions[NUM_MI_IOREGIONS];
     static struct memdesc           static_vm_regions[NUM_MI_VMREGIONS];
 
+    unsigned int                    i;
+
+    unsigned long int               size;
+
+    notice(SYSBOOT_I_SYSBOOT "initialyzing virtual memory\n");
+
     MemInfo->regions = static_regions;
     MemInfo->max_regions = NUM_MI_REGIONS;
     MemInfo->num_regions = vms$find_memory_region(kip,
@@ -303,6 +309,22 @@ vms$vm_init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *MemInfo)
     MemInfo->max_objects = NUM_MI_OBJECTS;
     MemInfo->num_objects = vms$find_initial_objects(kip,
             NUM_MI_OBJECTS, static_objects);
+
+    for(size = 0, i = 0; i < MemInfo->num_regions; i++)
+    {
+        notice(MEM_I_REGIONS "reserving $%016lX - $%016lX\n",
+                MemInfo->regions[i].base, MemInfo->regions[i].end);
+        size += MemInfo->regions[i].end - MemInfo->regions[i].base;
+    }
+    notice(MEM_I_REGIONS "reserving %lu bytes for pager\n", size);
+
+    for(size = 0, i = 0; i < MemInfo->num_objects; i++)
+    {
+        notice(MEM_I_BOOTINFO "keeping $%016lX - $%016lX\n",
+                MemInfo->objects[i].base, MemInfo->objects[i].end);
+        size += MemInfo->objects[i].end - MemInfo->objects[i].base;
+    }
+    notice(MEM_I_BOOTINFO "keeping %lu bytes for first modules\n", size);
 
     return;
 }

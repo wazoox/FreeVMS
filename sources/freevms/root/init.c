@@ -55,9 +55,9 @@ main(void)
     L4_Word_t                   num_processors;
     L4_Word_t                   page_bits;
     L4_Word_t                   page_size;
-	L4_Word_t					pager_utcb;
+    L4_Word_t                   pager_utcb;
     L4_Word_t                   running_system;
-	L4_Word_t					utcb_size;
+    L4_Word_t                   utcb_size;
 
     struct vms$meminfo          mem_info;
 
@@ -65,29 +65,28 @@ main(void)
     notice(">>> FreeVMS %s (TM)\n", FREEVMS_VERSION);
     notice("\n");
 
-	notice(SYSBOOT_I_SYSBOOT "leaving kernel privileges\n");
-	notice(SYSBOOT_I_SYSBOOT "starting FreeVMS kernel with executive "
-			"privileges\n");
-    notice(SYSBOOT_I_SYSBOOT "booting main processor\n");
-
     kip = (L4_KernelInterfacePage_t *) L4_KernelInterface(&kernel_interface,
             &api_flags, &kernel_id);
+
+    notice(SYSBOOT_I_SYSBOOT "leaving kernel privileges\n");
+    notice(SYSBOOT_I_SYSBOOT "launching FreeVMS kernel with executive "
+            "privileges\n");
+    root_tid = L4_Myself();
+    notice(RUN_S_PROC_ID "identification of created process is %08X\n",
+            (unsigned int) L4_ThreadNo(root_tid));
+    s0_tid = L4_GlobalId(kip->ThreadInfo.X.UserBase, 1);
+
+    notice(SYSBOOT_I_SYSBOOT "booting main processor\n");
 
     for(page_bits = 0; !((1 << page_bits) & L4_PageSizeMask(kip)); page_bits++);
     page_size = (1 << page_bits);
     notice(SYSBOOT_I_SYSBOOT "computing page size: %d bytes\n",
             (int) page_size);
 
-    root_tid = L4_Myself();
-    notice(SYSBOOT_I_SYSBOOT "launching kernel\n");
-    notice(RUN_S_PROC_ID "identification of created process is %08X\n",
-            (unsigned int) L4_ThreadNo(root_tid));
-    s0_tid = L4_GlobalId(kip->ThreadInfo.X.UserBase, 1);
-
-	// Map kip
+    // Map kip
 
     kip_area = L4_FpageLog2((L4_Word_t) kip, L4_KipAreaSizeLog2(kip));
-	utcb_size = L4_UtcbSize(kip);
+    utcb_size = L4_UtcbSize(kip);
     num_processors = L4_NumProcessors((void *) kip);
 
     switch(num_processors - 1)
@@ -139,8 +138,10 @@ main(void)
     parsing(command_line, (char *) " root", root_device, ROOT_DEVICE_LENGTH);
     notice(SYSBOOT_I_SYSBOOT "selecting root device: %s\n", root_device);
 
+    threads_stack = L4_Sigma0_GetPage(s0_tid,
+            L4_FpageLog2(THREAD_STACK_BASE, 16));
+
     // Starting virtual memory subsystem
-    notice(SYSBOOT_I_SYSBOOT "spawning VMS$PAGER\n");
     vms$vm_init(kip, &mem_info);
 
     // A thread must have a pager. This pager requires a
@@ -148,21 +149,18 @@ main(void)
     // This thread is created by hand because there is no memory management
     // to manage thread.
 
-	threads_stack = L4_Sigma0_GetPage(s0_tid,
-			L4_FpageLog2(THREAD_STACK_BASE, 16));
-
-	pager_utcb = L4_MyLocalId().raw;
-	pager_utcb = (pager_utcb & (~(utcb_size - 1))) + utcb_size;
+    pager_utcb = L4_MyLocalId().raw;
+    pager_utcb = (pager_utcb & (~(utcb_size - 1))) + utcb_size;
     pager_tid = L4_GlobalId(L4_ThreadNo(root_tid) + 1, 1);
-	L4_ThreadControl(pager_tid, root_tid, root_tid, root_tid,
-			(void *) pager_utcb);
-	PANIC(L4_ErrorCode(),
-			notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
-	L4_Start(pager_tid, (L4_Word_t) THREAD_STACK_BASE + 4096 * (i + 1) - 32,
-			(L4_Word_t) vms$pager);
-	PANIC(L4_ErrorCode(),
-			notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
-	L4_Call(pager_tid);
+    L4_ThreadControl(pager_tid, root_tid, root_tid, root_tid,
+            (void *) pager_utcb);
+    PANIC(L4_ErrorCode(),
+            notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
+    L4_Start(pager_tid, (L4_Word_t) THREAD_STACK_BASE + 4096 * (i + 1) - 32,
+            (L4_Word_t) vms$pager);
+    PANIC(L4_ErrorCode(),
+            notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
+    L4_Call(pager_tid);
     notice(RUN_S_PROC_ID "identification of created process is %08X\n",
             (unsigned int) L4_ThreadNo(pager_tid));
 
@@ -171,21 +169,22 @@ main(void)
     notice(SYSBOOT_I_SYSBOOT "spawning job controller\n");
     notice(RUN_S_PROC_ID "identification of created process is %08X\n",
             (unsigned int) L4_ThreadNo(jobctl_tid));
+    // tid = jobctl$create(JOBCTL$THREAD/PROC)
+    // jobctl$delete(tid)
+    // jobctl$schedule()
 
     name_tid = L4_GlobalId(L4_ThreadNo(root_tid) + 3, 1);
     notice(SYSBOOT_I_SYSBOOT "spawning name service\n");
     notice(RUN_S_PROC_ID "identification of created process is %08X\n",
             (unsigned int) L4_ThreadNo(name_tid));
 
-	notice(SYSBOOT_I_SYSBOOT "spawning lock controller\n");
     //passer le thread_id aux serveurs créés.
 
     // Adding to name server:
     // - SYS$KERNEL
     // - SYS$PAGER
-    // - SYS$NAMESERVER
+    // - SYS$NMSRV
     // - SYS$JOBCTL
-	// - SYS$LOCKCTL
 
     switch(num_boot_info_entries - 3)
     {
@@ -208,7 +207,7 @@ main(void)
         boot_record = L4_BootRec_Next(boot_record);
         PANIC(L4_BootRec_Type(boot_record) != L4_BootInfo_Module);
         notice(SYSBOOT_I_SYSBOOT "loading %s\n",
-				L4_Module_Cmdline(boot_record));
+                L4_Module_Cmdline(boot_record));
         /*
         elf_loader();
         notice(SYSBOOT_I_SYSBOOT "address %016lX:%016lX\n",
@@ -216,12 +215,6 @@ main(void)
                 (long unsigned int) L4_Module_Size(boot_record));
                 */
     }
-
-    time = L4_SystemClock();
-    notice(STDRV_I_STARTUP "FreeVMS startup begun at %d, %d (UTC)\n",
-            time.X.low, time.X.high);
-	notice("%d\n", time.X.low);
-	notice("%d\n", time.X.high);
 
     notice(SYSBOOT_I_SYSBOOT "trying to mount root filesystem\n");
     notice(MOUNT_I_MOUNTED "SYS$ROOT mounted on _%s:\n", root_device);
@@ -235,7 +228,11 @@ main(void)
      * start_task()
      */
 
+    time = L4_SystemClock();
+    notice(STDRV_I_STARTUP "FreeVMS startup begun at %d, %d (UTC)\n",
+            time.X.low, time.X.high);
     notice("\n");
+
     notice("The FreeVMS system is now executing the site-specific "
             "startup commands.\n");
     notice("\n");
@@ -258,7 +255,7 @@ main(void)
     notice("%%DCL-S-SPAWNED, process SYSTEM_1 spawned\n");
     */
 
-	L4_KDB_Enter("Debug");
+    L4_KDB_Enter("Debug");
     running_system = 1;
 
     while(running_system == 1);

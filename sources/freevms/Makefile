@@ -4,7 +4,7 @@ CFLAGS=-Wall -fno-stack-protector -nostdinc -O2 -g -Wall -Wshadow \
 		-Wconversion  -Wno-conversion -fno-exceptions
 INCLUDES=-I./include \
 		-I$(DESTDIR)/../kernel \
-		-I$(DESTDIR)/../kernel/build/include \
+		-I$(DESTDIR)/../kernel/include \
 		-I/usr/lib/gcc/x86_64-linux-gnu/4.4.5/include
 
 OBJ=$(DESTDIR)/libearly/amd64.o \
