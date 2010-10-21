@@ -45,8 +45,7 @@ vms$pager()
             &api_flags, &kernel_id);
     for(page_bits = 0; !((1 << page_bits) & L4_PageSizeMask(kip)); page_bits++);
 
-    notice(SYSBOOT_I_SYSBOOT "spawning virtual memory system "
-            "with executive privileges\n");
+    notice(SYSBOOT_I_SYSBOOT "spawning pager with executive privileges\n");
 
     L4_Wait(&tid);
 

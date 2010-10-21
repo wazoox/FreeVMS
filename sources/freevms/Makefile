@@ -13,8 +13,10 @@ OBJ=$(DESTDIR)/libearly/amd64.o \
 	$(DESTDIR)/root/boot.o \
 	$(DESTDIR)/root/init.o \
 	$(DESTDIR)/root/parsing.o \
+	$(DESTDIR)/vm/vm_alloc.o \
 	$(DESTDIR)/vm/vm_init.o \
-	$(DESTDIR)/vm/vm_server.o
+	$(DESTDIR)/vm/vm_server.o \
+	$(DESTDIR)/vm/vm_slab.o
 
 all: directories $(OBJ) $(DESTDIR)/vmskernel.sys
 
@@ -48,6 +50,12 @@ $(DESTDIR)/vm/vm_init.o: vm/vm_init.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/vm/vm_server.o: vm/vm_server.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/vm/vm_alloc.o: vm/vm_alloc.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/vm/vm_slab.o: vm/vm_slab.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 # ./libearly

@@ -23,5 +23,5 @@
 #define STDRV_I_STARTUP     "%%STDRV-I-STARTUP, "
 #define MOUNT_I_MOUNTED     "%%MOUNT-I-MOUNTED, "
 #define MOUNT_I_OPRQST      "%%MOUNT-I-OPRQST, "
-#define MEM_I_REGIONS       "%%MEM-I-REGIONS, "
-#define MEM_I_BOOTINFO      "%%MEM-I-BOOTINFO, "
+#define MEM_I_AREA          "%%MEM-I-AREA, "
+#define MEM_I_ALLOC         "%%MEM-I-ALLOC, "

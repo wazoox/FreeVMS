@@ -33,10 +33,15 @@
 #include "l4/sigma0.h"
 #include "l4/thread.h"
 
+typedef L4_Word64_t		vms$pointer;
+
 // FreeVMS messagesœ
 #include "freevms/information.h"
 #include "freevms/system.h"
 #include "freevms/levels.h"
+
+// FreeVMS queues
+#include "freevms/tailq.h"
 
 // FreeVMS subsystems
 #include "freevms/vm.h"

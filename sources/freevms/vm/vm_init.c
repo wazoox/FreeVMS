@@ -21,6 +21,9 @@
 
 #include "freevms/freevms.h"
 
+static struct fpage_alloc pm_alloc;
+static struct fpage_alloc vm_alloc;
+
 /*
 ================================================================================
   Read a memory descriptor from KIP structure. Return true if it is physical
@@ -47,7 +50,7 @@ vms$find_memory_info(L4_KernelInterfacePage_t *kip, int pos,
 
 static int
 vms$remove_chunk(struct memdesc *mem_desc, int pos, int max,
-        unsigned long int low, unsigned long int high)
+        vms$pointer low, vms$pointer high)
 {
     int             j;
     int             k;
@@ -100,6 +103,28 @@ vms$remove_chunk(struct memdesc *mem_desc, int pos, int max,
     return(pos);
 }
 
+static inline vms$pointer
+vms$page_round_down(vms$pointer address, unsigned int page_size)
+{
+	return(address & (~(page_size - 1)));
+}
+
+static inline vms$pointer
+vms$page_round_up(vms$pointer address, unsigned int page_size)
+{
+	return((address + (page_size - 1)) & (~(page_size - 1)));
+}
+
+static void
+vms$remove_virtmem(struct vms$meminfo *mem_info,
+		vms$pointer base, unsigned long end, unsigned int page_size)
+{
+	mem_info->num_vm_regions = vms$remove_chunk(mem_info->vm_regions,
+			mem_info->num_vm_regions, mem_info->max_vm_regions,
+			vms$page_round_down(base, page_size),
+			vms$page_round_up(end, page_size) - 1);
+}
+
 static char *
 vms$strncpy(char *dest, const char *src, int n)
 {
@@ -114,10 +139,27 @@ vms$strncpy(char *dest, const char *src, int n)
     return ret;
 }
 
+static char *
+vms$strncat(char *s1, const char *s2, int n)
+{
+	char *s = s1;
+
+	while (*s != '\0') s++;
+
+	while (n != 0 && (*s = *s2++) != '\0')
+	{
+		n--;
+		s++;
+	}
+
+	if (*s != '\0') *s = '\0';
+	return s1;
+}
+
 void
 vms$add_initial_object(struct initial_obj *objs, const char *name,
-        unsigned long int base, unsigned long int end,
-        unsigned long int entry, char flags)
+        vms$pointer base, vms$pointer end,
+        vms$pointer entry, char flags)
 {
     if (name == NULL)
     {
@@ -132,6 +174,123 @@ vms$add_initial_object(struct initial_obj *objs, const char *name,
     objs->flags = flags;
 
     return;
+}
+
+static unsigned int
+vms$bootinfo_find_initial_objects(L4_KernelInterfacePage_t *kip,
+		unsigned int max, struct initial_obj *initial_objs)
+{
+	char						data_name[INITIAL_NAME_MAX];
+
+	L4_BootRec_t				*record;
+
+	L4_Word_t					dsize;
+	L4_Word_t					dstart;
+	L4_Word_t					tsize;
+	L4_Word_t					tstart;
+	L4_Word_t					type;
+
+	unsigned int				count;
+	unsigned int				num_recs;
+	unsigned int				objects;
+
+	void						*bootinfo;
+
+	bootinfo = (void*) L4_BootInfo(kip);
+	count = 0;
+
+	// Check bootinfo validity
+
+	if (L4_BootInfo_Valid(bootinfo) == 0)
+	{
+		return(0);
+	}
+
+	num_recs = L4_BootInfo_Entries(bootinfo);
+	record = L4_BootInfo_FirstEntry(bootinfo);
+
+	while(num_recs > 0)
+	{
+		PANIC(record == NULL);
+		type = L4_BootRec_Type(record);
+		objects = 0;
+
+		switch(type)
+		{
+			case L4_BootInfo_Module:
+				vms$add_initial_object(initial_objs,
+						L4_Module_Cmdline(record),
+						L4_Module_Start(record),
+						L4_Module_Start(record) + L4_Module_Size(record) - 1,
+						0, VMS$IOF_VIRT | VMS$IOF_PHYS);
+				objects = 1;
+				break;
+
+			case L4_BootInfo_SimpleExec:
+				tstart = L4_SimpleExec_TextVstart(record);
+				tsize = L4_SimpleExec_TextSize(record);
+				dstart = L4_SimpleExec_DataVstart(record);
+				dsize = L4_SimpleExec_DataSize(record);
+
+				vms$add_initial_object(initial_objs,
+						L4_SimpleExec_Cmdline(record),
+						tstart, tstart + tsize - 1,
+						L4_SimpleExec_InitialIP(record),
+						VMS$IOF_ROOT | VMS$IOF_VIRT | VMS$IOF_PHYS);
+				objects = 1;
+
+				if ((!((dstart < (tstart + tsize) && dstart >= tstart)))
+						&& (dsize != 0))
+				{
+					initial_objs++;
+					objects++;
+
+					vms$strncpy(data_name, L4_SimpleExec_Cmdline(record),
+							INITIAL_NAME_MAX - 5);
+					vms$strncat(data_name, ".data", INITIAL_NAME_MAX);
+
+					vms$add_initial_object(initial_objs, data_name,
+							dstart, dstart + dsize - 1, 0,
+							VMS$IOF_ROOT | VMS$IOF_VIRT | VMS$IOF_PHYS);
+				}
+
+				break;
+
+			case L4_BootInfo_Multiboot:
+				/*
+				 * We have found MBI. In a first time, we shall try to
+				 * manage memory without MBI as all modules are loaded as
+				 * SimpleExec or Module.
+				 */
+
+				objects = 0;
+				break;
+
+			default:
+				PANIC(1);
+				break;
+		}
+
+		if (objects > 0)
+		{
+			count += objects;
+			initial_objs++;
+
+			if (count == max) goto overflow;
+		}
+
+		record = L4_BootRec_Next(record);
+		num_recs--;
+	}
+
+	vms$add_initial_object(initial_objs++, "Boot",
+			(vms$pointer) bootinfo,
+			(vms$pointer) bootinfo + L4_BootInfo_Size(bootinfo) - 1,
+			0, VMS$IOF_BOOT | VMS$IOF_PHYS | VMS$IOF_VIRT);
+	count++;
+
+overflow:
+	return count;
 }
 
 static unsigned int
@@ -158,21 +317,21 @@ vms$find_initial_objects(L4_KernelInterfacePage_t *kip,
         {
             if (type == L4_ReservedMemoryType)
             {
-                vms$add_initial_object(initial_objs++, "L4 object", low, high,
+                vms$add_initial_object(initial_objs++, "L4 Object", low, high,
                         0, VMS$IOF_RESERVED | VMS$IOF_PHYS);
                 if ((++count) == max) goto overflow;
             }
         }
     }
 
-    vms$add_initial_object(initial_objs++, "L4 sigma0", kcp->sigma0.low,
+    vms$add_initial_object(initial_objs++, "L4 Sigma0", kcp->sigma0.low,
             kcp->sigma0.high, 0, VMS$IOF_RESERVED | VMS$IOF_PHYS);
     if ((++count) == max) goto overflow;
 
-    //count += vms$bootinfo_find_initial_objects(max - count, initial_objs);
+    count += vms$bootinfo_find_initial_objects(kip, max - count, initial_objs);
 
 overflow:
-    return(0);
+    return(count);
 }
 
 static unsigned int
@@ -271,7 +430,7 @@ vms$find_memory_region(L4_KernelInterfacePage_t *kip,
 }
 
 void
-vms$vm_init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *MemInfo)
+vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info)
 {
     static struct initial_obj       static_objects[NUM_MI_OBJECTS];
 
@@ -281,50 +440,115 @@ vms$vm_init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *MemInfo)
 
     unsigned int                    i;
 
-    unsigned long int               size;
-
     notice(SYSBOOT_I_SYSBOOT "initialyzing virtual memory\n");
 
-    MemInfo->regions = static_regions;
-    MemInfo->max_regions = NUM_MI_REGIONS;
-    MemInfo->num_regions = vms$find_memory_region(kip,
+    mem_info->regions = static_regions;
+    mem_info->max_regions = NUM_MI_REGIONS;
+    mem_info->num_regions = vms$find_memory_region(kip,
             NUM_MI_REGIONS, VMS$MEM_RAM, VMS$MEM_IO, static_regions);
 
-    MemInfo->io_regions = static_io_regions;
-    MemInfo->max_io_regions = NUM_MI_IOREGIONS;
-    MemInfo->num_io_regions = vms$find_memory_region(kip,
+    mem_info->io_regions = static_io_regions;
+    mem_info->max_io_regions = NUM_MI_IOREGIONS;
+    mem_info->num_io_regions = vms$find_memory_region(kip,
             NUM_MI_IOREGIONS, VMS$MEM_IO, VMS$MEM_RAM, static_io_regions);
 
-    MemInfo->vm_regions = static_vm_regions;
-    MemInfo->max_vm_regions = NUM_MI_VMREGIONS;
-    MemInfo->num_vm_regions = vms$find_memory_region(kip,
+    mem_info->vm_regions = static_vm_regions;
+    mem_info->max_vm_regions = NUM_MI_VMREGIONS;
+    mem_info->num_vm_regions = vms$find_memory_region(kip,
             NUM_MI_VMREGIONS, VMS$MEM_VM, 0, static_vm_regions);
 
     // Create a guard page
 
-    MemInfo->num_vm_regions = vms$remove_chunk(MemInfo->vm_regions,
-            MemInfo->num_vm_regions, NUM_MI_VMREGIONS, 0, 0xfff);
+    mem_info->num_vm_regions = vms$remove_chunk(mem_info->vm_regions,
+            mem_info->num_vm_regions, NUM_MI_VMREGIONS, 0, 0xfff);
 
-    MemInfo->objects = static_objects;
-    MemInfo->max_objects = NUM_MI_OBJECTS;
-    MemInfo->num_objects = vms$find_initial_objects(kip,
+    mem_info->objects = static_objects;
+    mem_info->max_objects = NUM_MI_OBJECTS;
+    mem_info->num_objects = vms$find_initial_objects(kip,
             NUM_MI_OBJECTS, static_objects);
 
-    for(size = 0, i = 0; i < MemInfo->num_regions; i++)
+    for(i = 0; i < mem_info->num_regions; i++)
     {
-        notice(MEM_I_REGIONS "reserving $%016lX - $%016lX\n",
-                MemInfo->regions[i].base, MemInfo->regions[i].end);
-        size += MemInfo->regions[i].end - MemInfo->regions[i].base;
+        notice(MEM_I_AREA "$%016lX - $%016lX: physical memory\n",
+                mem_info->regions[i].base, mem_info->regions[i].end);
     }
-    notice(MEM_I_REGIONS "reserving %lu bytes for pager\n", size);
 
-    for(size = 0, i = 0; i < MemInfo->num_objects; i++)
+    for(i = 0; i < mem_info->num_vm_regions; i++)
     {
-        notice(MEM_I_BOOTINFO "keeping $%016lX - $%016lX\n",
-                MemInfo->objects[i].base, MemInfo->objects[i].end);
-        size += MemInfo->objects[i].end - MemInfo->objects[i].base;
+        notice(MEM_I_AREA "$%016lX - $%016lX: virtual memory\n",
+                mem_info->vm_regions[i].base, mem_info->vm_regions[i].end);
     }
-    notice(MEM_I_BOOTINFO "keeping %lu bytes for first modules\n", size);
+
+    for(i = 0; i < mem_info->num_io_regions; i++)
+    {
+        notice(MEM_I_AREA "$%016lX - $%016lX: mapped IO\n",
+                mem_info->io_regions[i].base, mem_info->io_regions[i].end);
+    }
+
+    for(i = 0; i < mem_info->num_objects; i++)
+    {
+		if (mem_info->objects[i].flags & VMS$IOF_ROOT)
+		{
+			notice(MEM_I_AREA "$%016lX - $%016lX: kernel\n",
+					mem_info->objects[i].base, mem_info->objects[i].end);
+		}
+		else if (mem_info->objects[i].flags & VMS$IOF_RESERVED)
+		{
+			notice(MEM_I_AREA "$%016lX - $%016lX: reserved by kernel\n",
+					mem_info->objects[i].base, mem_info->objects[i].end);
+		}
+		else if (mem_info->objects[i].flags & VMS$IOF_BOOT)
+		{
+			notice(MEM_I_AREA "$%016lX - $%016lX: boot structure\n",
+					mem_info->objects[i].base, mem_info->objects[i].end);
+		}
+		else
+		{
+			notice(MEM_I_AREA "$%016lX - $%016lX: modules\n",
+					mem_info->objects[i].base, mem_info->objects[i].end);
+		}
+    }
 
     return;
+}
+
+void
+vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
+{
+	unsigned int			i;
+
+	vms$pointer				base;
+	vms$pointer				end;
+
+	notice(SYSBOOT_I_SYSBOOT "reserving memory for preload objects\n");
+
+	// Bootimage objects are removed from free virtual memory.
+	for(i = 0; i < mem_info->num_objects; i++)
+	{
+		if (mem_info->objects[i].flags & VMS$IOF_VIRT)
+		{
+			notice(MEM_I_ALLOC "allocating $%016lX - $%016lX\n",
+					mem_info->objects[i].base, mem_info->objects[i].end);
+			vms$remove_virtmem(mem_info, mem_info->objects[i].base,
+					mem_info->objects[i].end, page_size);
+		}
+	}
+
+	for(i = 0; i < mem_info->num_vm_regions; i++)
+	{
+		base = vms$page_round_up(mem_info->vm_regions[i].base, page_size);
+		end = vms$page_round_down(mem_info->vm_regions[i].base + 1, page_size)
+			- 1;
+
+		if (((end - base) + 1) >= (2 * page_size))
+		{
+			vms$fpage_free_internal(&vm_alloc, base, end);
+			mem_info->vm_regions[i].end = mem_info->vm_regions[i].base;
+			break;
+		}
+	}
+
+	PANIC(i >= mem_info->num_regions);
+
+	return;
 }

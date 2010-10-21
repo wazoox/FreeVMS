@@ -142,7 +142,8 @@ main(void)
             L4_FpageLog2(THREAD_STACK_BASE, 16));
 
     // Starting virtual memory subsystem
-    vms$vm_init(kip, &mem_info);
+    vms$init(kip, &mem_info);
+	vms$bootstrap(&mem_info, (unsigned int) page_size);
 
     // A thread must have a pager. This pager requires a
     // specific thread to handle pagefault protocol.
@@ -215,6 +216,8 @@ main(void)
                 (long unsigned int) L4_Module_Size(boot_record));
                 */
     }
+
+	notice(SYSBOOT_I_SYSBOOT "freeing kernel memory\n");
 
     notice(SYSBOOT_I_SYSBOOT "trying to mount root filesystem\n");
     notice(MOUNT_I_MOUNTED "SYS$ROOT mounted on _%s:\n", root_device);
