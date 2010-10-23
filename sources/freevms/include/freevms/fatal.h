@@ -19,16 +19,7 @@
 ================================================================================
 */
 
-#define DBG_I_VMS           "%%DBG-I-VMS, "
+#define IPC_F_FAILED		"%%IPC-F-FAILED, "
 
-#define MEM_I_ALLOC         "%%MEM-I-ALLOC, "
-#define MEM_I_AREA          "%%MEM-I-AREA, "
-#define MEM_I_FREE          "%%MEM-I-FREE, "
-#define MEM_I_NOTEMEM		"%%MEM-I-NOTEMEM, "
-
-#define MOUNT_I_MOUNTED     "%%MOUNT-I-MOUNTED, "
-#define MOUNT_I_OPRQST      "%%MOUNT-I-OPRQST, "
-
-#define STDRV_I_STARTUP     "%%STDRV-I-STARTUP, "
-
-#define SYSBOOT_I_SYSBOOT   "%%SYSBOOT-I-SYSBOOT, "
+#define MEM_F_REJMAP		"%%MEM-F-REJMAP, "
+#define MEM_F_OUTMEM        "%%MEM-F-OUTMEM, "

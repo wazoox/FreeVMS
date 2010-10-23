@@ -10,12 +10,15 @@ INCLUDES=-I./include \
 OBJ=$(DESTDIR)/libearly/amd64.o \
 	$(DESTDIR)/libearly/get_hex.o \
 	$(DESTDIR)/libearly/print.o \
+	$(DESTDIR)/root/backtrace.o \
 	$(DESTDIR)/root/boot.o \
 	$(DESTDIR)/root/init.o \
 	$(DESTDIR)/root/parsing.o \
 	$(DESTDIR)/vm/vm_alloc.o \
+	$(DESTDIR)/vm/vm_btree.o \
 	$(DESTDIR)/vm/vm_init.o \
 	$(DESTDIR)/vm/vm_server.o \
+	$(DESTDIR)/vm/vm_sigma0.o \
 	$(DESTDIR)/vm/vm_slab.o
 
 all: directories $(OBJ) $(DESTDIR)/vmskernel.sys
@@ -38,6 +41,9 @@ directories:
 $(DESTDIR)/root/init.o: root/init.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
+$(DESTDIR)/root/backtrace.o: root/backtrace.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
 $(DESTDIR)/root/parsing.o: root/parsing.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
@@ -53,6 +59,12 @@ $(DESTDIR)/vm/vm_server.o: vm/vm_server.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/vm/vm_alloc.o: vm/vm_alloc.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/vm/vm_btree.o: vm/vm_btree.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/vm/vm_sigma0.o: vm/vm_sigma0.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/vm/vm_slab.o: vm/vm_slab.c

@@ -19,16 +19,68 @@
 ================================================================================
 */
 
-#define DBG_I_VMS           "%%DBG-I-VMS, "
+#include "freevms/freevms.h"
 
-#define MEM_I_ALLOC         "%%MEM-I-ALLOC, "
-#define MEM_I_AREA          "%%MEM-I-AREA, "
-#define MEM_I_FREE          "%%MEM-I-FREE, "
-#define MEM_I_NOTEMEM		"%%MEM-I-NOTEMEM, "
+int
+EXPORT(BTSearch)(GBTree const btree, BTKey const key, GBTObject *obj)
+{
+	BTKeyCount		lo;
+	BTKeyCount		hi;
+	BTKeyCount		mid;
 
-#define MOUNT_I_MOUNTED     "%%MOUNT-I-MOUNTED, "
-#define MOUNT_I_OPRQST      "%%MOUNT-I-OPRQST, "
+	BTPage			*current;
 
-#define STDRV_I_STARTUP     "%%STDRV-I-STARTUP, "
+	if (!btree)
+	{
+		return(BT_INVALID);
+	}
 
-#define SYSBOOT_I_SYSBOOT   "%%SYSBOOT-I-SYSBOOT, "
+	if (!(current=btree->root))
+	{
+		return(BT_NOT_FOUND);
+	}
+
+	for(;;)
+	{
+		lo = 0;
+		hi = current->count;
+
+		while(lo < hi)
+		{
+			mid = (lo + hi) / 2;
+
+			if (BTKeyEQ(current->key[mid], key))
+			{
+				hi = mid+1;
+				break;
+			}
+			else if (BTKeyGT(current->key[mid], key))
+			{
+				hi = mid;
+			}
+			else
+			{
+				lo = mid + 1;
+			}
+
+			if (current->isleaf)
+			{
+				break;
+			}
+
+			current = current->child[hi];
+		}
+	}
+
+	(*obj) = (GBTObject)(current->child[hi]);
+
+	if (BTObjMatch(*obj, key))
+	{
+		return(BT_OK);
+	}
+	else
+	{
+		return(BT_NOT_FOUND);
+	}
+}
+

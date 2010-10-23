@@ -19,16 +19,15 @@
 ================================================================================
 */
 
-#define DBG_I_VMS           "%%DBG-I-VMS, "
+#include "freevms/freevms.h"
 
-#define MEM_I_ALLOC         "%%MEM-I-ALLOC, "
-#define MEM_I_AREA          "%%MEM-I-AREA, "
-#define MEM_I_FREE          "%%MEM-I-FREE, "
-#define MEM_I_NOTEMEM		"%%MEM-I-NOTEMEM, "
+void backtrace(void)
+{
+	while(1)
+	{
+		L4_KDB_Enter("Panic");
+	}
 
-#define MOUNT_I_MOUNTED     "%%MOUNT-I-MOUNTED, "
-#define MOUNT_I_OPRQST      "%%MOUNT-I-OPRQST, "
+	return;
+}
 
-#define STDRV_I_STARTUP     "%%STDRV-I-STARTUP, "
-
-#define SYSBOOT_I_SYSBOOT   "%%SYSBOOT-I-SYSBOOT, "

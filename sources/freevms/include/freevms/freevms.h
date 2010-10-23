@@ -20,6 +20,7 @@
 */
 
 #define AMD64
+#define DEBUG_VM
 
 #include "libearly/lib.h"
 #include "libearly/l4io.h"
@@ -31,17 +32,19 @@
 #include "l4/kip.h"
 #include "l4/kcp.h"
 #include "l4/sigma0.h"
+#include "l4/space.h"
 #include "l4/thread.h"
 
 typedef L4_Word64_t		vms$pointer;
 
 // FreeVMS messagesœ
+#include "freevms/fatal.h"
 #include "freevms/information.h"
 #include "freevms/system.h"
 #include "freevms/levels.h"
 
-// FreeVMS queues
 #include "freevms/tailq.h"
+#include "freevms/b_plus_tree.h"
 
 // FreeVMS subsystems
 #include "freevms/vm.h"
@@ -49,20 +52,21 @@ typedef L4_Word64_t		vms$pointer;
 // Defines
 #define NULL                            ((void *) 0)
 #define FREEVMS_VERSION                 "0.0.1"
-#define THREAD_STACK_BASE               (0xF00000L)
+#define THREAD_STACK_BASE               (0xF00000UL)
 
 // Address
-#define UTCB_BASE_ADDRESS       0x80000000UL
 #define UTCB(x)                 ((void*) (L4_Address(utcb_area) + \
                                         ((x) * utcb_size)))
 
 // Macros
 #define notice(...) printf(__VA_ARGS__)
 
+void backtrace(void);
 #define PANIC(a, ...)  if (a) { \
         __VA_ARGS__; \
         notice("Panic at %s(%d)\n", __FUNCTION__, __LINE__); \
         notice("Have a nice day !\n"); \
+		backtrace(); \
         while(1); } while(0)
 
 #define L4_REQUEST_MASK     (~((~0UL) >> ((sizeof (L4_Word_t) * 8) - 20)))

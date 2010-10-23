@@ -21,8 +21,8 @@
 
 #include "freevms/freevms.h"
 
-static struct fpage_alloc pm_alloc;
-static struct fpage_alloc vm_alloc;
+struct fpage_alloc pm_alloc;
+struct fpage_alloc vm_alloc;
 
 /*
 ================================================================================
@@ -37,6 +37,8 @@ vms$find_memory_info(L4_KernelInterfacePage_t *kip, int pos,
 {
     L4_MemoryDesc_t     *mem_desc;
 
+	vms$debug(__func__);
+
     mem_desc = L4_MemoryDesc(kip, pos);
     PANIC(mem_desc == NULL);
 
@@ -46,83 +48,6 @@ vms$find_memory_info(L4_KernelInterfacePage_t *kip, int pos,
     PANIC((*high) <= (*low));
 
     return(mem_desc->x.v == 0);
-}
-
-static int
-vms$remove_chunk(struct memdesc *mem_desc, int pos, int max,
-        vms$pointer low, vms$pointer high)
-{
-    int             j;
-    int             k;
-
-    for(j = 0; j < pos; j++)
-    {
-        if ((low <= mem_desc[j].base) && (high >= mem_desc[j].end))
-        {
-            // Remove whole chunk
-            for(k = j; k < pos; k++)
-            {
-                mem_desc[k] = mem_desc[k + 1];
-            }
-
-            pos--;
-            j--;
-        }
-        else if ((low >= mem_desc[j].base) && (low < mem_desc[j].end) &&
-                (high >= mem_desc[j].end))
-        {
-            // Chunk overlaps top
-            mem_desc[j].end = low - 1;
-        }
-        else if ((low <= mem_desc[j].base) && (high <= mem_desc[j].end) &&
-                (high > mem_desc[j].base))
-        {
-            // Chuck overlaps bottom
-            mem_desc[j].base = high + 1;
-        }
-        else if ((low > mem_desc[j].base) && (low < mem_desc[j].end) &&
-                (high > mem_desc[j].end) && (high > mem_desc[j].base))
-        {
-            // Chunk slips region
-            PANIC(pos >= (max - 1))
-
-            // The following loop creates a free slot for the split.
-            for(k = pos; k > j; k--)
-            {
-                mem_desc[k] = mem_desc[k - 1];
-            }
-
-            mem_desc[j + 1].end = mem_desc[j].end;
-            mem_desc[j + 1].base = high + 1;
-            mem_desc[j].end = low - 1;
-
-            pos++;
-        }
-    }
-
-    return(pos);
-}
-
-static inline vms$pointer
-vms$page_round_down(vms$pointer address, unsigned int page_size)
-{
-	return(address & (~(page_size - 1)));
-}
-
-static inline vms$pointer
-vms$page_round_up(vms$pointer address, unsigned int page_size)
-{
-	return((address + (page_size - 1)) & (~(page_size - 1)));
-}
-
-static void
-vms$remove_virtmem(struct vms$meminfo *mem_info,
-		vms$pointer base, unsigned long end, unsigned int page_size)
-{
-	mem_info->num_vm_regions = vms$remove_chunk(mem_info->vm_regions,
-			mem_info->num_vm_regions, mem_info->max_vm_regions,
-			vms$page_round_down(base, page_size),
-			vms$page_round_up(end, page_size) - 1);
 }
 
 static char *
@@ -161,6 +86,8 @@ vms$add_initial_object(struct initial_obj *objs, const char *name,
         vms$pointer base, vms$pointer end,
         vms$pointer entry, char flags)
 {
+	vms$debug(__func__);
+
     if (name == NULL)
     {
         name = "";
@@ -195,6 +122,8 @@ vms$bootinfo_find_initial_objects(L4_KernelInterfacePage_t *kip,
 	unsigned int				objects;
 
 	void						*bootinfo;
+
+	vms$debug(__func__);
 
 	bootinfo = (void*) L4_BootInfo(kip);
 	count = 0;
@@ -306,6 +235,8 @@ vms$find_initial_objects(L4_KernelInterfacePage_t *kip,
     unsigned int                    count;
     unsigned int                    i;
 
+	vms$debug(__func__);
+
     count = 0;
 
     kcp = (L4_KernelConfigurationPage_t *) kip;
@@ -349,6 +280,8 @@ vms$find_memory_region(L4_KernelInterfacePage_t *kip,
     unsigned int        i;
     unsigned int        j;
     unsigned int        pos;
+
+	vms$debug(__func__);
 
     pos = 0;
 
@@ -440,6 +373,7 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info)
 
     unsigned int                    i;
 
+	vms$debug(__func__);
     notice(SYSBOOT_I_SYSBOOT "initialyzing virtual memory\n");
 
     mem_info->regions = static_regions;
@@ -499,7 +433,7 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info)
 		}
 		else if (mem_info->objects[i].flags & VMS$IOF_BOOT)
 		{
-			notice(MEM_I_AREA "$%016lX - $%016lX: boot structure\n",
+			notice(MEM_I_AREA "$%016lX - $%016lX: boot information structure\n",
 					mem_info->objects[i].base, mem_info->objects[i].end);
 		}
 		else
@@ -520,6 +454,7 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 	vms$pointer				base;
 	vms$pointer				end;
 
+	vms$debug(__func__);
 	notice(SYSBOOT_I_SYSBOOT "reserving memory for preload objects\n");
 
 	// Bootimage objects are removed from free virtual memory.
@@ -534,6 +469,7 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 		}
 	}
 
+	// Free up som virtual memory to bootstrap the fpage allocator.
 	for(i = 0; i < mem_info->num_vm_regions; i++)
 	{
 		base = vms$page_round_up(mem_info->vm_regions[i].base, page_size);
@@ -549,6 +485,45 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 	}
 
 	PANIC(i >= mem_info->num_regions);
+
+	// We need to make sure the first chunk of physical memory we free
+	// is at least 2 * page_size to bootstrap the slab allocators for
+	// memsections and the fpage lists.
+
+	for(i = 0; i < mem_info->num_regions; i++)
+	{
+		base = vms$page_round_up(mem_info->regions[i].base, page_size);
+		end = vms$page_round_down(mem_info->regions[i].end + 1, page_size) - 1;
+
+		if (((end - base) + 1) >= (2 * page_size))
+		{
+			vms$fpage_free_chunk(&pm_alloc, base, end);
+			mem_info->regions[i].end = mem_info->regions[i].base;
+			break;
+		}
+	}
+
+	PANIC(i >= mem_info->num_regions);
+
+	// Base and end may not be aligned, but we need them to be aligned. If
+	// the area is less than a page than we should not add it to the free list.
+
+	for(i = 0; i < mem_info->num_regions; i++)
+	{
+		if (mem_info->regions[i].base == mem_info->regions[i].end)
+		{
+			continue;
+		}
+
+		notice(MEM_I_FREE "freeing $%016lX - $%016lX\n", base, end);
+
+		if (base < end)
+		{
+			vms$fpage_free_chunk(&pm_alloc, base, end);
+		}
+	}
+
+	//vms$fpage_clear_internal(&vm_alloc);
 
 	return;
 }
