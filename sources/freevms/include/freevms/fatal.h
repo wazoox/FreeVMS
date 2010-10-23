@@ -19,7 +19,7 @@
 ================================================================================
 */
 
-#define IPC_F_FAILED		"%%IPC-F-FAILED, "
+#define IPC_F_FAILED        "%%IPC-F-FAILED, "
 
-#define MEM_F_REJMAP		"%%MEM-F-REJMAP, "
+#define MEM_F_REJMAP        "%%MEM-F-REJMAP, "
 #define MEM_F_OUTMEM        "%%MEM-F-OUTMEM, "

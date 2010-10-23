@@ -23,11 +23,11 @@
 
 void backtrace(void)
 {
-	while(1)
-	{
-		L4_KDB_Enter("Panic");
-	}
+    while(1)
+    {
+        L4_KDB_Enter("Panic");
+    }
 
-	return;
+    return;
 }
 

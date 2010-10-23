@@ -20,15 +20,15 @@
 */
 
 #ifdef DEBUG_VM
-#	define vms$debug(msg) notice(DBG_I_VMS "%s\n", msg);
+#   define vms$debug(msg) notice(DBG_I_VMS "%s\n", msg);
 #else
-#	define vms$debug(msg)
+#   define vms$debug(msg)
 #endif
 
 struct memdesc
 {
-    vms$pointer   		base;
-    vms$pointer   		end;
+    vms$pointer         base;
+    vms$pointer         end;
 };
 
 struct initial_obj
@@ -37,9 +37,9 @@ struct initial_obj
     char                name[INITIAL_NAME_MAX];
     char                flags;
 
-    vms$pointer   		base;
-    vms$pointer   		end;
-    vms$pointer   		entry;
+    vms$pointer         base;
+    vms$pointer         end;
+    vms$pointer         entry;
 };
 
 struct vms$meminfo
@@ -79,100 +79,100 @@ struct vms$meminfo
 #define     VMS$IOF_PHYS        0x20    // Set if memory is virtual
 // Both VMS$IOF_VIRT and VMS$IOF_PHYS can be set for direct mapped.
 
-#define		MAX_FPAGE_ORDER		(sizeof(L4_Word_t) * 8)
+#define     MAX_FPAGE_ORDER     (sizeof(L4_Word_t) * 8)
 
-#define		INVALID_ADDR 		(~((vms$pointer) 0))
+#define     INVALID_ADDR        (~((vms$pointer) 0))
 
-#define		SIGMA0_REQUEST_LABEL (((vms$pointer) -6) << 4)
+#define     SIGMA0_REQUEST_LABEL (((vms$pointer) -6) << 4)
 
 struct fpage_list
 {
-	L4_Fpage_t					fpage;
-	TAILQ_ENTRY(fpage_list)		flist;
+    L4_Fpage_t                  fpage;
+    TAILQ_ENTRY(fpage_list)     flist;
 };
 
 TAILQ_HEAD(flist_head, fpage_list);
 
 struct fpage_alloc
 {
-	struct flist_head		flist[MAX_FPAGE_ORDER + 1];
-	struct
-	{
-		vms$pointer			base;
-		vms$pointer			end;
-		int					active;
-	} internal;
+    struct flist_head       flist[MAX_FPAGE_ORDER + 1];
+    struct
+    {
+        vms$pointer         base;
+        vms$pointer         end;
+        int                 active;
+    } internal;
 };
 
 struct slab
 {
-	TAILQ_ENTRY(slab)		slabs;
+    TAILQ_ENTRY(slab)       slabs;
 };
 
 struct slab_cache
 {
-	vms$pointer							slab_size;
-	TAILQ_HEAD(sc_head, memsection)		pools;
+    vms$pointer                         slab_size;
+    TAILQ_HEAD(sc_head, memsection)     pools;
 };
 
 #define SLAB_CACHE_INITIALIZER(sz, sc) \
-		{ (sz), TAILQ_HEAD_INITIALIZER((sc)->pools) }
+        { (sz), TAILQ_HEAD_INITIALIZER((sc)->pools) }
 
 struct memsection
 {
-	vms$pointer					magic;
-	vms$pointer					base;
-	vms$pointer					end;
-	vms$pointer					memory_attributes;
-	vms$pointer					flags;
-	vms$pointer					phys_active;
-	union
-	{
-		vms$pointer						base;
-		struct flist_head				list;
-		TAILQ_HEAD(ml_head, map_list)	mappings;
-	} phys;
-	struct pd					*owner;
-	struct thread				*server;
-	struct slab_cache			*slab_cache;
-	TAILQ_ENTRY(memsection)		pools;
-	TAILQ_HEAD(sl_head, slab)	slabs;
+    vms$pointer                 magic;
+    vms$pointer                 base;
+    vms$pointer                 end;
+    vms$pointer                 memory_attributes;
+    vms$pointer                 flags;
+    vms$pointer                 phys_active;
+    union
+    {
+        vms$pointer                     base;
+        struct flist_head               list;
+        TAILQ_HEAD(ml_head, map_list)   mappings;
+    } phys;
+    struct pd                   *owner;
+    struct thread               *server;
+    struct slab_cache           *slab_cache;
+    TAILQ_ENTRY(memsection)     pools;
+    TAILQ_HEAD(sl_head, slab)   slabs;
 };
 
 struct memsection_list
 {
-	struct memsection_node		*first;
-	struct memsection_node		*last;
+    struct memsection_node      *first;
+    struct memsection_node      *last;
 };
 
 struct memsection_node
 {
-	struct memsection_node		*next;
-	struct memsection_node		*prev;
-	struct memsection			data;
+    struct memsection_node      *next;
+    struct memsection_node      *prev;
+    struct memsection           data;
 };
 
 int vms$remove_chunk(struct memdesc *mem_desc, int pos, int max,
-		vms$pointer low, vms$pointer high);
+        vms$pointer low, vms$pointer high);
 
 L4_Word_t vms$min_pagesize(void);
 L4_Word_t vms$min_pagebits(void);
 
 L4_Fpage_t vms$biggest_fpage(vms$pointer addr, vms$pointer base,
-		vms$pointer end);
+        vms$pointer end);
 
 void vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr,
-		vms$pointer size);
+        vms$pointer size);
 void vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size);
 void vms$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
-		vms$pointer end);
+        vms$pointer end);
 void vms$fpage_free_internal(struct fpage_alloc *alloc, vms$pointer base,
-		unsigned long end);
+        unsigned long end);
 void vms$init(L4_KernelInterfacePage_t *kip,
         struct vms$meminfo *MemInfo);
 void vms$pager(void);
 void vms$remove_virtmem(struct vms$meminfo *mem_info,
-		vms$pointer base, unsigned long end, unsigned int page_size);
+        vms$pointer base, unsigned long end, unsigned int page_size);
 void *vms$slab_cache_alloc(struct slab_cache *sc);
 void vms$slab_cache_free(struct slab_cache *sc, void *ptr);
 

@@ -37,7 +37,7 @@ vms$find_memory_info(L4_KernelInterfacePage_t *kip, int pos,
 {
     L4_MemoryDesc_t     *mem_desc;
 
-	vms$debug(__func__);
+    vms$debug(__func__);
 
     mem_desc = L4_MemoryDesc(kip, pos);
     PANIC(mem_desc == NULL);
@@ -67,18 +67,18 @@ vms$strncpy(char *dest, const char *src, int n)
 static char *
 vms$strncat(char *s1, const char *s2, int n)
 {
-	char *s = s1;
+    char *s = s1;
 
-	while (*s != '\0') s++;
+    while (*s != '\0') s++;
 
-	while (n != 0 && (*s = *s2++) != '\0')
-	{
-		n--;
-		s++;
-	}
+    while (n != 0 && (*s = *s2++) != '\0')
+    {
+        n--;
+        s++;
+    }
 
-	if (*s != '\0') *s = '\0';
-	return s1;
+    if (*s != '\0') *s = '\0';
+    return s1;
 }
 
 void
@@ -86,7 +86,7 @@ vms$add_initial_object(struct initial_obj *objs, const char *name,
         vms$pointer base, vms$pointer end,
         vms$pointer entry, char flags)
 {
-	vms$debug(__func__);
+    vms$debug(__func__);
 
     if (name == NULL)
     {
@@ -105,121 +105,121 @@ vms$add_initial_object(struct initial_obj *objs, const char *name,
 
 static unsigned int
 vms$bootinfo_find_initial_objects(L4_KernelInterfacePage_t *kip,
-		unsigned int max, struct initial_obj *initial_objs)
+        unsigned int max, struct initial_obj *initial_objs)
 {
-	char						data_name[INITIAL_NAME_MAX];
+    char                        data_name[INITIAL_NAME_MAX];
 
-	L4_BootRec_t				*record;
+    L4_BootRec_t                *record;
 
-	L4_Word_t					dsize;
-	L4_Word_t					dstart;
-	L4_Word_t					tsize;
-	L4_Word_t					tstart;
-	L4_Word_t					type;
+    L4_Word_t                   dsize;
+    L4_Word_t                   dstart;
+    L4_Word_t                   tsize;
+    L4_Word_t                   tstart;
+    L4_Word_t                   type;
 
-	unsigned int				count;
-	unsigned int				num_recs;
-	unsigned int				objects;
+    unsigned int                count;
+    unsigned int                num_recs;
+    unsigned int                objects;
 
-	void						*bootinfo;
+    void                        *bootinfo;
 
-	vms$debug(__func__);
+    vms$debug(__func__);
 
-	bootinfo = (void*) L4_BootInfo(kip);
-	count = 0;
+    bootinfo = (void*) L4_BootInfo(kip);
+    count = 0;
 
-	// Check bootinfo validity
+    // Check bootinfo validity
 
-	if (L4_BootInfo_Valid(bootinfo) == 0)
-	{
-		return(0);
-	}
+    if (L4_BootInfo_Valid(bootinfo) == 0)
+    {
+        return(0);
+    }
 
-	num_recs = L4_BootInfo_Entries(bootinfo);
-	record = L4_BootInfo_FirstEntry(bootinfo);
+    num_recs = L4_BootInfo_Entries(bootinfo);
+    record = L4_BootInfo_FirstEntry(bootinfo);
 
-	while(num_recs > 0)
-	{
-		PANIC(record == NULL);
-		type = L4_BootRec_Type(record);
-		objects = 0;
+    while(num_recs > 0)
+    {
+        PANIC(record == NULL);
+        type = L4_BootRec_Type(record);
+        objects = 0;
 
-		switch(type)
-		{
-			case L4_BootInfo_Module:
-				vms$add_initial_object(initial_objs,
-						L4_Module_Cmdline(record),
-						L4_Module_Start(record),
-						L4_Module_Start(record) + L4_Module_Size(record) - 1,
-						0, VMS$IOF_VIRT | VMS$IOF_PHYS);
-				objects = 1;
-				break;
+        switch(type)
+        {
+            case L4_BootInfo_Module:
+                vms$add_initial_object(initial_objs,
+                        L4_Module_Cmdline(record),
+                        L4_Module_Start(record),
+                        L4_Module_Start(record) + L4_Module_Size(record) - 1,
+                        0, VMS$IOF_VIRT | VMS$IOF_PHYS);
+                objects = 1;
+                break;
 
-			case L4_BootInfo_SimpleExec:
-				tstart = L4_SimpleExec_TextVstart(record);
-				tsize = L4_SimpleExec_TextSize(record);
-				dstart = L4_SimpleExec_DataVstart(record);
-				dsize = L4_SimpleExec_DataSize(record);
+            case L4_BootInfo_SimpleExec:
+                tstart = L4_SimpleExec_TextVstart(record);
+                tsize = L4_SimpleExec_TextSize(record);
+                dstart = L4_SimpleExec_DataVstart(record);
+                dsize = L4_SimpleExec_DataSize(record);
 
-				vms$add_initial_object(initial_objs,
-						L4_SimpleExec_Cmdline(record),
-						tstart, tstart + tsize - 1,
-						L4_SimpleExec_InitialIP(record),
-						VMS$IOF_ROOT | VMS$IOF_VIRT | VMS$IOF_PHYS);
-				objects = 1;
+                vms$add_initial_object(initial_objs,
+                        L4_SimpleExec_Cmdline(record),
+                        tstart, tstart + tsize - 1,
+                        L4_SimpleExec_InitialIP(record),
+                        VMS$IOF_ROOT | VMS$IOF_VIRT | VMS$IOF_PHYS);
+                objects = 1;
 
-				if ((!((dstart < (tstart + tsize) && dstart >= tstart)))
-						&& (dsize != 0))
-				{
-					initial_objs++;
-					objects++;
+                if ((!((dstart < (tstart + tsize) && dstart >= tstart)))
+                        && (dsize != 0))
+                {
+                    initial_objs++;
+                    objects++;
 
-					vms$strncpy(data_name, L4_SimpleExec_Cmdline(record),
-							INITIAL_NAME_MAX - 5);
-					vms$strncat(data_name, ".data", INITIAL_NAME_MAX);
+                    vms$strncpy(data_name, L4_SimpleExec_Cmdline(record),
+                            INITIAL_NAME_MAX - 5);
+                    vms$strncat(data_name, ".data", INITIAL_NAME_MAX);
 
-					vms$add_initial_object(initial_objs, data_name,
-							dstart, dstart + dsize - 1, 0,
-							VMS$IOF_ROOT | VMS$IOF_VIRT | VMS$IOF_PHYS);
-				}
+                    vms$add_initial_object(initial_objs, data_name,
+                            dstart, dstart + dsize - 1, 0,
+                            VMS$IOF_ROOT | VMS$IOF_VIRT | VMS$IOF_PHYS);
+                }
 
-				break;
+                break;
 
-			case L4_BootInfo_Multiboot:
-				/*
-				 * We have found MBI. In a first time, we shall try to
-				 * manage memory without MBI as all modules are loaded as
-				 * SimpleExec or Module.
-				 */
+            case L4_BootInfo_Multiboot:
+                /*
+                 * We have found MBI. In a first time, we shall try to
+                 * manage memory without MBI as all modules are loaded as
+                 * SimpleExec or Module.
+                 */
 
-				objects = 0;
-				break;
+                objects = 0;
+                break;
 
-			default:
-				PANIC(1);
-				break;
-		}
+            default:
+                PANIC(1);
+                break;
+        }
 
-		if (objects > 0)
-		{
-			count += objects;
-			initial_objs++;
+        if (objects > 0)
+        {
+            count += objects;
+            initial_objs++;
 
-			if (count == max) goto overflow;
-		}
+            if (count == max) goto overflow;
+        }
 
-		record = L4_BootRec_Next(record);
-		num_recs--;
-	}
+        record = L4_BootRec_Next(record);
+        num_recs--;
+    }
 
-	vms$add_initial_object(initial_objs++, "Boot",
-			(vms$pointer) bootinfo,
-			(vms$pointer) bootinfo + L4_BootInfo_Size(bootinfo) - 1,
-			0, VMS$IOF_BOOT | VMS$IOF_PHYS | VMS$IOF_VIRT);
-	count++;
+    vms$add_initial_object(initial_objs++, "Boot",
+            (vms$pointer) bootinfo,
+            (vms$pointer) bootinfo + L4_BootInfo_Size(bootinfo) - 1,
+            0, VMS$IOF_BOOT | VMS$IOF_PHYS | VMS$IOF_VIRT);
+    count++;
 
 overflow:
-	return count;
+    return count;
 }
 
 static unsigned int
@@ -235,7 +235,7 @@ vms$find_initial_objects(L4_KernelInterfacePage_t *kip,
     unsigned int                    count;
     unsigned int                    i;
 
-	vms$debug(__func__);
+    vms$debug(__func__);
 
     count = 0;
 
@@ -281,7 +281,7 @@ vms$find_memory_region(L4_KernelInterfacePage_t *kip,
     unsigned int        j;
     unsigned int        pos;
 
-	vms$debug(__func__);
+    vms$debug(__func__);
 
     pos = 0;
 
@@ -373,7 +373,7 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info)
 
     unsigned int                    i;
 
-	vms$debug(__func__);
+    vms$debug(__func__);
     notice(SYSBOOT_I_SYSBOOT "initialyzing virtual memory\n");
 
     mem_info->regions = static_regions;
@@ -421,26 +421,26 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info)
 
     for(i = 0; i < mem_info->num_objects; i++)
     {
-		if (mem_info->objects[i].flags & VMS$IOF_ROOT)
-		{
-			notice(MEM_I_AREA "$%016lX - $%016lX: kernel\n",
-					mem_info->objects[i].base, mem_info->objects[i].end);
-		}
-		else if (mem_info->objects[i].flags & VMS$IOF_RESERVED)
-		{
-			notice(MEM_I_AREA "$%016lX - $%016lX: reserved by kernel\n",
-					mem_info->objects[i].base, mem_info->objects[i].end);
-		}
-		else if (mem_info->objects[i].flags & VMS$IOF_BOOT)
-		{
-			notice(MEM_I_AREA "$%016lX - $%016lX: boot information structure\n",
-					mem_info->objects[i].base, mem_info->objects[i].end);
-		}
-		else
-		{
-			notice(MEM_I_AREA "$%016lX - $%016lX: modules\n",
-					mem_info->objects[i].base, mem_info->objects[i].end);
-		}
+        if (mem_info->objects[i].flags & VMS$IOF_ROOT)
+        {
+            notice(MEM_I_AREA "$%016lX - $%016lX: kernel\n",
+                    mem_info->objects[i].base, mem_info->objects[i].end);
+        }
+        else if (mem_info->objects[i].flags & VMS$IOF_RESERVED)
+        {
+            notice(MEM_I_AREA "$%016lX - $%016lX: reserved by kernel\n",
+                    mem_info->objects[i].base, mem_info->objects[i].end);
+        }
+        else if (mem_info->objects[i].flags & VMS$IOF_BOOT)
+        {
+            notice(MEM_I_AREA "$%016lX - $%016lX: boot information structure\n",
+                    mem_info->objects[i].base, mem_info->objects[i].end);
+        }
+        else
+        {
+            notice(MEM_I_AREA "$%016lX - $%016lX: modules\n",
+                    mem_info->objects[i].base, mem_info->objects[i].end);
+        }
     }
 
     return;
@@ -449,81 +449,81 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info)
 void
 vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 {
-	unsigned int			i;
+    unsigned int            i;
 
-	vms$pointer				base;
-	vms$pointer				end;
+    vms$pointer             base;
+    vms$pointer             end;
 
-	vms$debug(__func__);
-	notice(SYSBOOT_I_SYSBOOT "reserving memory for preload objects\n");
+    vms$debug(__func__);
+    notice(SYSBOOT_I_SYSBOOT "reserving memory for preload objects\n");
 
-	// Bootimage objects are removed from free virtual memory.
-	for(i = 0; i < mem_info->num_objects; i++)
-	{
-		if (mem_info->objects[i].flags & VMS$IOF_VIRT)
-		{
-			notice(MEM_I_ALLOC "allocating $%016lX - $%016lX\n",
-					mem_info->objects[i].base, mem_info->objects[i].end);
-			vms$remove_virtmem(mem_info, mem_info->objects[i].base,
-					mem_info->objects[i].end, page_size);
-		}
-	}
+    // Bootimage objects are removed from free virtual memory.
+    for(i = 0; i < mem_info->num_objects; i++)
+    {
+        if (mem_info->objects[i].flags & VMS$IOF_VIRT)
+        {
+            notice(MEM_I_ALLOC "allocating $%016lX - $%016lX\n",
+                    mem_info->objects[i].base, mem_info->objects[i].end);
+            vms$remove_virtmem(mem_info, mem_info->objects[i].base,
+                    mem_info->objects[i].end, page_size);
+        }
+    }
 
-	// Free up som virtual memory to bootstrap the fpage allocator.
-	for(i = 0; i < mem_info->num_vm_regions; i++)
-	{
-		base = vms$page_round_up(mem_info->vm_regions[i].base, page_size);
-		end = vms$page_round_down(mem_info->vm_regions[i].base + 1, page_size)
-			- 1;
+    // Free up som virtual memory to bootstrap the fpage allocator.
+    for(i = 0; i < mem_info->num_vm_regions; i++)
+    {
+        base = vms$page_round_up(mem_info->vm_regions[i].base, page_size);
+        end = vms$page_round_down(mem_info->vm_regions[i].base + 1, page_size)
+            - 1;
 
-		if (((end - base) + 1) >= (2 * page_size))
-		{
-			vms$fpage_free_internal(&vm_alloc, base, end);
-			mem_info->vm_regions[i].end = mem_info->vm_regions[i].base;
-			break;
-		}
-	}
+        if (((end - base) + 1) >= (2 * page_size))
+        {
+            vms$fpage_free_internal(&vm_alloc, base, end);
+            mem_info->vm_regions[i].end = mem_info->vm_regions[i].base;
+            break;
+        }
+    }
 
-	PANIC(i >= mem_info->num_regions);
+    PANIC(i >= mem_info->num_regions);
 
-	// We need to make sure the first chunk of physical memory we free
-	// is at least 2 * page_size to bootstrap the slab allocators for
-	// memsections and the fpage lists.
+    // We need to make sure the first chunk of physical memory we free
+    // is at least 2 * page_size to bootstrap the slab allocators for
+    // memsections and the fpage lists.
 
-	for(i = 0; i < mem_info->num_regions; i++)
-	{
-		base = vms$page_round_up(mem_info->regions[i].base, page_size);
-		end = vms$page_round_down(mem_info->regions[i].end + 1, page_size) - 1;
+    for(i = 0; i < mem_info->num_regions; i++)
+    {
+        base = vms$page_round_up(mem_info->regions[i].base, page_size);
+        end = vms$page_round_down(mem_info->regions[i].end + 1, page_size) - 1;
 
-		if (((end - base) + 1) >= (2 * page_size))
-		{
-			vms$fpage_free_chunk(&pm_alloc, base, end);
-			mem_info->regions[i].end = mem_info->regions[i].base;
-			break;
-		}
-	}
+        if (((end - base) + 1) >= (2 * page_size))
+        {
+            vms$fpage_free_chunk(&pm_alloc, base, end);
+            mem_info->regions[i].end = mem_info->regions[i].base;
+            break;
+        }
+    }
 
-	PANIC(i >= mem_info->num_regions);
+    PANIC(i >= mem_info->num_regions);
 
-	// Base and end may not be aligned, but we need them to be aligned. If
-	// the area is less than a page than we should not add it to the free list.
+    // Base and end may not be aligned, but we need them to be aligned. If
+    // the area is less than a page than we should not add it to the free list.
 
-	for(i = 0; i < mem_info->num_regions; i++)
-	{
-		if (mem_info->regions[i].base == mem_info->regions[i].end)
-		{
-			continue;
-		}
+    for(i = 0; i < mem_info->num_regions; i++)
+    {
+        if (mem_info->regions[i].base == mem_info->regions[i].end)
+        {
+            continue;
+        }
 
-		notice(MEM_I_FREE "freeing $%016lX - $%016lX\n", base, end);
+        notice(MEM_I_FREE "freeing $%016lX - $%016lX\n", base, end);
 
-		if (base < end)
-		{
-			vms$fpage_free_chunk(&pm_alloc, base, end);
-		}
-	}
+        if (base < end)
+        {
+            vms$fpage_free_chunk(&pm_alloc, base, end);
+        }
+    }
 
-	//vms$fpage_clear_internal(&vm_alloc);
+    //vms$fpage_clear_internal(&vm_alloc);
 
-	return;
+    return;
 }

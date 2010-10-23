@@ -35,7 +35,7 @@
 #include "l4/space.h"
 #include "l4/thread.h"
 
-typedef L4_Word64_t		vms$pointer;
+typedef L4_Word64_t     vms$pointer;
 
 // FreeVMS messagesœ
 #include "freevms/fatal.h"
@@ -66,7 +66,7 @@ void backtrace(void);
         __VA_ARGS__; \
         notice("Panic at %s(%d)\n", __FUNCTION__, __LINE__); \
         notice("Have a nice day !\n"); \
-		backtrace(); \
+        backtrace(); \
         while(1); } while(0)
 
 #define L4_REQUEST_MASK     (~((~0UL) >> ((sizeof (L4_Word_t) * 8) - 20)))

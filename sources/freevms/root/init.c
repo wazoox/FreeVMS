@@ -143,7 +143,7 @@ main(void)
 
     // Starting virtual memory subsystem
     vms$init(kip, &mem_info);
-	vms$bootstrap(&mem_info, (unsigned int) page_size);
+    vms$bootstrap(&mem_info, (unsigned int) page_size);
 
     // A thread must have a pager. This pager requires a
     // specific thread to handle pagefault protocol.
@@ -217,7 +217,7 @@ main(void)
                 */
     }
 
-	notice(SYSBOOT_I_SYSBOOT "freeing kernel memory\n");
+    notice(SYSBOOT_I_SYSBOOT "freeing kernel memory\n");
 
     notice(SYSBOOT_I_SYSBOOT "trying to mount root filesystem\n");
     notice(MOUNT_I_MOUNTED "SYS$ROOT mounted on _%s:\n", root_device);

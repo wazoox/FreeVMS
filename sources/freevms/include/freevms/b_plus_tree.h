@@ -41,10 +41,10 @@ typedef BTObject *GBTObject;
 #define MAX_POOL_SIZE 1000
 typedef struct PAGE_POOL
 {
-	char *base;
-	unsigned int size; /* pool size in pages, == bitmap size in bits */
-	unsigned int n_allocs, n_frees;
-	unsigned int bitmap[MAX_POOL_SIZE/(8*sizeof(int))];
+    char *base;
+    unsigned int size; /* pool size in pages, == bitmap size in bits */
+    unsigned int n_allocs, n_frees;
+    unsigned int bitmap[MAX_POOL_SIZE/(8*sizeof(int))];
 } PagePool;
 
 /* Defines for B-tree: */
@@ -57,12 +57,12 @@ typedef struct PAGE_POOL
 #define BTKeyEQ(key1, key2) ((key1) == (key2))
 
 #define BTObjMatch(obj, ky) ((ky) >= ((vms$pointer)((obj)->base)) && \
-		(ky)<=((vms$pointer)(obj)->end))
+        (ky)<=((vms$pointer)(obj)->end))
 
 #define BTOverlaps(o1,o2) (((o1)->end >= (o2)->base && \
-		((o1)->end <= (o2)->end)) || \
-	    ((o1)->base >= (o2)->base && \
-	    (o1)->base <= (o2)->end))
+        ((o1)->end <= (o2)->end)) || \
+        ((o1)->base >= (o2)->base && \
+        (o1)->base <= (o2)->end))
 
 /* B+ tree implementation.
 
@@ -93,18 +93,18 @@ typedef struct PAGE_POOL
    - define "BT_ORDER" as the maximum spread of the B-tree.
      Must be odd.
    - Define the following macros for dealing with keys:
-        BTGetObjKey(object)	returns the key to object
-	BTKeyLT(key1, key2)	key1 <  key2
-	BTKeyGT(key1, key2)	key1 >  key2
-	BTKeyEQ(key1, key2)	key1 == key2
+        BTGetObjKey(object) returns the key to object
+    BTKeyLT(key1, key2) key1 <  key2
+    BTKeyGT(key1, key2) key1 >  key2
+    BTKeyEQ(key1, key2) key1 == key2
      If you want the B+ tree to store objects taking up an interval of
      key space (rather than just a single value), define
-	BTGetObjLim(object)     returns upper limit key value (i.e.
-	                        the next value available as key for another
-				object)
-	BTObjMatch(obj, key)	key  IN obj (if the key lies within the
-	                        object, i.e. obj->key <= key < obj->limit)
-	BTOverlaps(obj1, obj2)  objects overlap.
+    BTGetObjLim(object)     returns upper limit key value (i.e.
+                            the next value available as key for another
+                object)
+    BTObjMatch(obj, key)    key  IN obj (if the key lies within the
+                            object, i.e. obj->key <= key < obj->limit)
+    BTOverlaps(obj1, obj2)  objects overlap.
      For normal B+-trees, leave those undefined.
    - define a type "GBTObject", which should be a pointer to a struct
      containing the data to be indexed.
@@ -117,7 +117,7 @@ typedef struct PAGE_POOL
      correct pool, in case several B+ trees are used
    - define functions
         struct sBTPage *alloc_page(PagePool *pool);
-	void free_page(PagePool *pool, struct sBTPage *page);
+    void free_page(PagePool *pool, struct sBTPage *page);
      for (de)allocating pages for the B+ tree.
  */
 
@@ -145,10 +145,10 @@ typedef int   BTKeyCount;
 /* one B-Tree page */
 
 struct sBTPage {
-	BTKeyCount		count;           	/* number of keys used */
-	bool			isleaf;         	/* true if this is a leaf page */
-	BTKey			key[BT_MAXKEY];		/* child[i]<key[i]<=child[i+1] */
-	struct sBTPage*	child[BT_ORDER];	/* Child (or object) pointers */
+    BTKeyCount      count;              /* number of keys used */
+    bool            isleaf;             /* true if this is a leaf page */
+    BTKey           key[BT_MAXKEY];     /* child[i]<key[i]<=child[i+1] */
+    struct sBTPage* child[BT_ORDER];    /* Child (or object) pointers */
 };
 
 typedef struct sBTPage BTPage;
@@ -193,7 +193,7 @@ int EXPORT(BTIns)(GBTree const, GBTObject const obj, GBTObject *ngb);
    Returns BT_FOUND       if successful,
            BT_INVALID     if invalid "GBTree",
            BT_ALLOC_fail  if out of memory,
-		   BT_DUPLICATE   if "key" already exists in B-tree,
+           BT_DUPLICATE   if "key" already exists in B-tree,
            BT_OVERLAP     if new object overlaps existing one.
  */
 

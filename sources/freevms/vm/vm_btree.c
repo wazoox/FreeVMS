@@ -24,63 +24,63 @@
 int
 EXPORT(BTSearch)(GBTree const btree, BTKey const key, GBTObject *obj)
 {
-	BTKeyCount		lo;
-	BTKeyCount		hi;
-	BTKeyCount		mid;
+    BTKeyCount      lo;
+    BTKeyCount      hi;
+    BTKeyCount      mid;
 
-	BTPage			*current;
+    BTPage          *current;
 
-	if (!btree)
-	{
-		return(BT_INVALID);
-	}
+    if (!btree)
+    {
+        return(BT_INVALID);
+    }
 
-	if (!(current=btree->root))
-	{
-		return(BT_NOT_FOUND);
-	}
+    if (!(current=btree->root))
+    {
+        return(BT_NOT_FOUND);
+    }
 
-	for(;;)
-	{
-		lo = 0;
-		hi = current->count;
+    for(;;)
+    {
+        lo = 0;
+        hi = current->count;
 
-		while(lo < hi)
-		{
-			mid = (lo + hi) / 2;
+        while(lo < hi)
+        {
+            mid = (lo + hi) / 2;
 
-			if (BTKeyEQ(current->key[mid], key))
-			{
-				hi = mid+1;
-				break;
-			}
-			else if (BTKeyGT(current->key[mid], key))
-			{
-				hi = mid;
-			}
-			else
-			{
-				lo = mid + 1;
-			}
+            if (BTKeyEQ(current->key[mid], key))
+            {
+                hi = mid+1;
+                break;
+            }
+            else if (BTKeyGT(current->key[mid], key))
+            {
+                hi = mid;
+            }
+            else
+            {
+                lo = mid + 1;
+            }
 
-			if (current->isleaf)
-			{
-				break;
-			}
+            if (current->isleaf)
+            {
+                break;
+            }
 
-			current = current->child[hi];
-		}
-	}
+            current = current->child[hi];
+        }
+    }
 
-	(*obj) = (GBTObject)(current->child[hi]);
+    (*obj) = (GBTObject)(current->child[hi]);
 
-	if (BTObjMatch(*obj, key))
-	{
-		return(BT_OK);
-	}
-	else
-	{
-		return(BT_NOT_FOUND);
-	}
+    if (BTObjMatch(*obj, key))
+    {
+        return(BT_OK);
+    }
+    else
+    {
+        return(BT_NOT_FOUND);
+    }
 }
 

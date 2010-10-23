@@ -24,7 +24,7 @@
 #define MEM_I_ALLOC         "%%MEM-I-ALLOC, "
 #define MEM_I_AREA          "%%MEM-I-AREA, "
 #define MEM_I_FREE          "%%MEM-I-FREE, "
-#define MEM_I_NOTEMEM		"%%MEM-I-NOTEMEM, "
+#define MEM_I_NOTEMEM       "%%MEM-I-NOTEMEM, "
 
 #define MOUNT_I_MOUNTED     "%%MOUNT-I-MOUNTED, "
 #define MOUNT_I_OPRQST      "%%MOUNT-I-OPRQST, "
