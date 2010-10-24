@@ -25,15 +25,15 @@
 #   include "./amd64.h"
 #endif
 
-#define get_registers(arch)         CONCAT(registers_, arch)
-#define CONCAT(a, b)                XCAT(a, b)
-#define XCAT(a, b)                  a##b()
+#define arch_specific(func)         CONCAT(func, ARCH)
+#define CONCAT(a, b)                XCAT(a, _, b)
+#define XCAT(a, c, b)               a##c##b()
 
 void backtrace(void)
 {
     vms$pointer         sp;
 
-    sp = get_registers(ARCH);
+    sp = arch_specific(get_registers);
 
     /*
     void show_backtrace (void)

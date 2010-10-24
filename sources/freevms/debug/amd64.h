@@ -20,7 +20,7 @@
 */
 
 vms$pointer
-registers_amd64(void)
+get_registers_amd64(void)
 {
     vms$pointer         reg;
     vms$pointer         sp;
