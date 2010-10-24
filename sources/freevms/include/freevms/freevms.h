@@ -71,7 +71,7 @@ void backtrace(void);
         backtrace(); \
         while(1); } while(0)
 
-#define L4_SIZEOFWORD		(sizeof(L4_Word_t) * 8)
+#define L4_SIZEOFWORD       (sizeof(L4_Word_t) * 8)
 #define L4_REQUEST_MASK     (~((~0UL) >> (L4_SIZEOFWORD - 20)))
 #define L4_IO_PAGEFAULT     (-8UL << 20)
 

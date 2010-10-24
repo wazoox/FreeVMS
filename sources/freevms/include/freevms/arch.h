@@ -22,5 +22,5 @@
 #define AMD64
 
 #ifdef AMD64
-#	define ARCH		amd64
+#   define ARCH     amd64
 #endif

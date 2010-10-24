@@ -87,4 +87,4 @@ userland:
 	@echo "Nothing to do, but you can write it ;-)"
 
 convert:
-	find sources/freevms -name "*.[ch]" -exec ./converttab {} \;
+	find sources/freevms -name "*.[chS]" -exec ./converttab {} \;

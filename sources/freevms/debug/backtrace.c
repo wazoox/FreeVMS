@@ -20,46 +20,49 @@
 */
 
 #include "freevms/freevms.h"
-#include "./amd64.h"
 
-#define get_registers(arch)			CONCAT(registers_, arch)
-#define CONCAT(a, b)				XCAT(a, b)
-#define XCAT(a, b)					a##b()
+#ifdef AMD64
+#   include "./amd64.h"
+#endif
+
+#define get_registers(arch)         CONCAT(registers_, arch)
+#define CONCAT(a, b)                XCAT(a, b)
+#define XCAT(a, b)                  a##b()
 
 void backtrace(void)
 {
-	vms$pointer			sp;
+    vms$pointer         sp;
 
-	sp = get_registers(ARCH);
+    sp = get_registers(ARCH);
 
-	/*
-	void show_backtrace (void)
-	{
-		char name[256];
-		unw_cursor_t cursor; unw_context_t uc;
-		unw_word_t ip, sp, offp;
+    /*
+    void show_backtrace (void)
+    {
+        char name[256];
+        unw_cursor_t cursor; unw_context_t uc;
+        unw_word_t ip, sp, offp;
 
-		unw_getcontext (&uc);
-		unw_init_local (&cursor, &uc);
+        unw_getcontext (&uc);
+        unw_init_local (&cursor, &uc);
 
-		while (unw_step(&cursor) > 0)
-		{
-			char file[256];
-			int line = 0;
+        while (unw_step(&cursor) > 0)
+        {
+            char file[256];
+            int line = 0;
 
-			name[0] = '\0';
-			unw_get_proc_name (&cursor, name, 256, &offp);
-			unw_get_reg (&cursor, UNW_REG_IP, &ip);
-			unw_get_reg (&cursor, UNW_REG_SP, &sp);
+            name[0] = '\0';
+            unw_get_proc_name (&cursor, name, 256, &offp);
+            unw_get_reg (&cursor, UNW_REG_IP, &ip);
+            unw_get_reg (&cursor, UNW_REG_SP, &sp);
 
-			printf ("%s ip = %lx, sp = %lx\n", name, (long) ip, (long) sp);
-		}
-	}
-	*/
+            printf ("%s ip = %lx, sp = %lx\n", name, (long) ip, (long) sp);
+        }
+    }
+    */
 
-	for(;;);
-	// 0000000001037830
-	// 0000000001037820
+    for(;;);
+    // 0000000001037830
+    // 0000000001037820
     return;
 }
 

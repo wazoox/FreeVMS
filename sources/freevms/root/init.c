@@ -140,8 +140,8 @@ main(void)
 
     threads_stack = L4_Sigma0_GetPage(s0_tid,
             L4_FpageLog2(THREAD_STACK_BASE, 16));
-	vms$initmem(THREAD_STACK_BASE, 1UL << 16);
-	
+    vms$initmem(THREAD_STACK_BASE, 1UL << 16);
+    
     // Starting virtual memory subsystem
     vms$init(kip, &mem_info);
     vms$bootstrap(&mem_info, (unsigned int) page_size);
@@ -160,7 +160,7 @@ main(void)
             notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
 
     L4_Start(pager_tid, (L4_Word_t) ((THREAD_STACK_BASE + 4096)
-			- L4_SIZEOFWORD), (L4_Word_t) vms$pager);
+            - L4_SIZEOFWORD), (L4_Word_t) vms$pager);
 
     PANIC(L4_ErrorCode(),
             notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
