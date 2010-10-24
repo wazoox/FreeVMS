@@ -43,8 +43,6 @@ vms$objtable_lookup(void *addr)
 
     int                     r;
 
-    vms$debug(__func__);
-
     r = ObjBTSearch(objtable, (vms$pointer) addr, &memsection);
 
     if ((r == BT_NOT_FOUND) || (r == BT_INVALID))
@@ -97,8 +95,6 @@ vms$memsection_create_cache(struct slab_cache *sc)
     vms$pointer                 page_size;
     vms$pointer                 phys;
     vms$pointer                 virt;
-
-    vms$debug(__func__);
 
     page_size = (int) vms$min_pagesize();
 
@@ -188,8 +184,6 @@ vms$slab_cache_alloc(struct slab_cache *sc)
 
     unsigned char           *ptr;
 
-    vms$debug(__func__);
-
     TAILQ_FOREACH(pool, &sc->pools, pools)
     {
         if (!TAILQ_EMPTY(&pool->slabs))
@@ -231,8 +225,6 @@ vms$slab_cache_free(struct slab_cache *sc, void *ptr)
 {
     struct memsection       *pool;
     struct slab             *slab;
-
-    vms$debug(__func__);
 
     slab = (struct slab *) ptr;
     pool = vms$objtable_lookup((void *) ((vms$pointer) ptr));

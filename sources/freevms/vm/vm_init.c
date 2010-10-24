@@ -37,8 +37,6 @@ vms$find_memory_info(L4_KernelInterfacePage_t *kip, int pos,
 {
     L4_MemoryDesc_t     *mem_desc;
 
-    vms$debug(__func__);
-
     mem_desc = L4_MemoryDesc(kip, pos);
     PANIC(mem_desc == NULL);
 
@@ -86,8 +84,6 @@ vms$add_initial_object(struct initial_obj *objs, const char *name,
         vms$pointer base, vms$pointer end,
         vms$pointer entry, char flags)
 {
-    vms$debug(__func__);
-
     if (name == NULL)
     {
         name = "";
@@ -122,8 +118,6 @@ vms$bootinfo_find_initial_objects(L4_KernelInterfacePage_t *kip,
     unsigned int                objects;
 
     void                        *bootinfo;
-
-    vms$debug(__func__);
 
     bootinfo = (void*) L4_BootInfo(kip);
     count = 0;
@@ -235,8 +229,6 @@ vms$find_initial_objects(L4_KernelInterfacePage_t *kip,
     unsigned int                    count;
     unsigned int                    i;
 
-    vms$debug(__func__);
-
     count = 0;
 
     kcp = (L4_KernelConfigurationPage_t *) kip;
@@ -280,8 +272,6 @@ vms$find_memory_region(L4_KernelInterfacePage_t *kip,
     unsigned int        i;
     unsigned int        j;
     unsigned int        pos;
-
-    vms$debug(__func__);
 
     pos = 0;
 
@@ -373,7 +363,6 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info)
 
     unsigned int                    i;
 
-    vms$debug(__func__);
     notice(SYSBOOT_I_SYSBOOT "initialyzing virtual memory\n");
 
     mem_info->regions = static_regions;
@@ -433,7 +422,7 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info)
         }
         else if (mem_info->objects[i].flags & VMS$IOF_BOOT)
         {
-            notice(MEM_I_AREA "$%016lX - $%016lX: boot information structure\n",
+            notice(MEM_I_AREA "$%016lX - $%016lX: boot information\n",
                     mem_info->objects[i].base, mem_info->objects[i].end);
         }
         else
@@ -454,7 +443,6 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
     vms$pointer             base;
     vms$pointer             end;
 
-    vms$debug(__func__);
     notice(SYSBOOT_I_SYSBOOT "reserving memory for preload objects\n");
 
     // Bootimage objects are removed from free virtual memory.

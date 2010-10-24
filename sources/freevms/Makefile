@@ -7,10 +7,10 @@ INCLUDES=-I./include \
 		-I$(DESTDIR)/../kernel/include \
 		-I/usr/lib/gcc/x86_64-linux-gnu/4.4.5/include
 
-OBJ=$(DESTDIR)/libearly/amd64.o \
+OBJ=$(DESTDIR)/debug/backtrace.o \
+    $(DESTDIR)/libearly/amd64.o \
 	$(DESTDIR)/libearly/get_hex.o \
 	$(DESTDIR)/libearly/print.o \
-	$(DESTDIR)/root/backtrace.o \
 	$(DESTDIR)/root/boot.o \
 	$(DESTDIR)/root/init.o \
 	$(DESTDIR)/root/parsing.o \
@@ -31,17 +31,20 @@ $(DESTDIR)/vmskernel.sys: $(OBJ)
 			$(OBJ) -nostdlib -T linker/elf_x86_64 -ll4 -static -o $@
 
 directories:
+	mkdir -p $(DESTDIR)/debug
 	mkdir -p $(DESTDIR)/drv
 	mkdir -p $(DESTDIR)/libearly
 	mkdir -p $(DESTDIR)/root
 	mkdir -p $(DESTDIR)/vm
 
+# ./debug
+
+$(DESTDIR)/debug/backtrace.o: debug/backtrace.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
 # ./root
 
 $(DESTDIR)/root/init.o: root/init.c
-	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
-
-$(DESTDIR)/root/backtrace.o: root/backtrace.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/root/parsing.o: root/parsing.c

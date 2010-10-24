@@ -19,8 +19,9 @@
 ================================================================================
 */
 
-#define AMD64
 #define DEBUG_VM
+
+#include "freevms/arch.h"
 
 #include "libearly/lib.h"
 #include "libearly/l4io.h"
@@ -62,14 +63,16 @@ typedef L4_Word64_t     vms$pointer;
 #define notice(...) printf(__VA_ARGS__)
 
 void backtrace(void);
+
 #define PANIC(a, ...)  if (a) { \
         __VA_ARGS__; \
-        notice("Panic at %s(%d)\n", __FUNCTION__, __LINE__); \
-        notice("Have a nice day !\n"); \
+        notice("\nPanic at %s(%d)\n", __FUNCTION__, __LINE__); \
+        notice("Have a nice day !\n\n"); \
         backtrace(); \
         while(1); } while(0)
 
-#define L4_REQUEST_MASK     (~((~0UL) >> ((sizeof (L4_Word_t) * 8) - 20)))
+#define L4_SIZEOFWORD		(sizeof(L4_Word_t) * 8)
+#define L4_REQUEST_MASK     (~((~0UL) >> (L4_SIZEOFWORD - 20)))
 #define L4_IO_PAGEFAULT     (-8UL << 20)
 
 // Prototypes

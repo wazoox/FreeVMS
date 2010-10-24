@@ -66,8 +66,6 @@ vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr, vms$pointer size)
     vms$pointer             vbase;
     vms$pointer             vend;
 
-    vms$debug(__func__);
-
     vbase = virt_addr;
     vend = (vbase + size) - 1;
 

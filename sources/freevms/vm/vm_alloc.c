@@ -113,8 +113,6 @@ vms$fpage_clear_internal(struct fpage_alloc *alloc)
 {
     struct fpage_list       *fpage;
 
-    vms$debug(__func__);
-
     if (alloc->internal.active)
     {
         while(alloc->internal.base < alloc->internal.end)
@@ -143,8 +141,6 @@ void
 vms$fpage_free_internal(struct fpage_alloc *alloc, vms$pointer base,
         vms$pointer end)
 {
-    vms$debug(__func__);
-
     if (alloc->internal.active)
     {
         vms$fpage_clear_internal(alloc);
@@ -171,8 +167,6 @@ vms$fpage_alloc_internal(struct fpage_alloc *alloc, int size)
     struct fpage_list       *node;
 
     vms$pointer             mem;
-
-    vms$debug(__func__);
 
     if (alloc->internal.active == 0)
     {
@@ -209,8 +203,6 @@ void
 vms$remove_virtmem(struct vms$meminfo *mem_info,
         vms$pointer base, unsigned long end, unsigned int page_size)
 {
-    vms$debug(__func__);
-
     mem_info->num_vm_regions = vms$remove_chunk(mem_info->vm_regions,
             mem_info->num_vm_regions, mem_info->max_vm_regions,
             vms$page_round_down(base, page_size),
@@ -223,8 +215,6 @@ vms$remove_chunk(struct memdesc *mem_desc, int pos, int max,
 {
     int             j;
     int             k;
-
-    vms$debug(__func__);
 
     for(j = 0; j < pos; j++)
     {
@@ -278,8 +268,6 @@ void
 vms$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
         vms$pointer end)
 {
-    vms$debug(__func__);
-
     if (alloc->internal.active)
     {
         vms$fpage_clear_internal(alloc);
