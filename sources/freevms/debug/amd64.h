@@ -20,7 +20,7 @@
 */
 
 vms$pointer
-get_registers_amd64(void)
+dbg$get_registers_amd64(void)
 {
     vms$pointer         reg;
     vms$pointer         sp;
@@ -75,3 +75,36 @@ get_registers_amd64(void)
 
     return(sp);
 }
+
+void
+dbg$backtrace_amd64(vms$pointer sp)
+{
+    unsigned int            i;
+
+    vms$pointer             fp;
+
+    i = 0;
+    // First frame pointer
+    fp = sp + sizeof(vms$pointer);
+
+    do
+    {
+        sp = fp + sizeof(vms$pointer);
+        /*
+         * list = (unw_dyn_info_list_t *) (uintptr_t) _U_dyn_info_list_addr ();
+         * for (di = list->first; di; di = di->next)
+         *   if (ip >= di->start_ip && ip < di->end_ip)
+         *     return unwi_extract_dynamic_proc_info(as, ip, pi, di,
+         *     need_unwind_info,arg);
+         */
+        notice("  <%02u> [$%016lX] -> $%016lX (%s)\n", i, sp, dbg$direct(sp),
+                dbg$symbol(dbg$direct(sp)));
+
+        // Previous frame pointer
+        fp = dbg$direct(fp);
+        i++;
+    } while(dbg$direct(sp + 8) != 0x0);
+
+    return;
+}
+

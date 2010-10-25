@@ -1,0 +1,15 @@
+#!/bin/bash
+
+echo "static const char *symbols[] = {"
+
+for i in $(nm ../../build/freevms/vmskernel.sys | grep ' T ' | sort | \
+        sed -e '1,$s/\$/\\$/g' | \
+        awk '{ printf("%s ", $1); cmd="c++filt -t "$3;
+        cmd|getline; printf("%s\n", $cmd); }' | cut -f1 -d'(')
+do
+    echo "\"$i\", "
+done
+
+echo "0 };"
+
+exit 0

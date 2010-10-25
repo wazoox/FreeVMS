@@ -1,7 +1,7 @@
 DESTDIR=../../build/freevms
 
 CFLAGS=-Wall -fno-stack-protector -nostdinc -O2 -g -Wall -Wshadow \
-		-Wconversion  -Wno-conversion -fno-exceptions
+		-Wconversion  -Wno-conversion -fno-exceptions -fno-omit-frame-pointer
 INCLUDES=-I./include \
 		-I$(DESTDIR)/../kernel \
 		-I$(DESTDIR)/../kernel/include \
@@ -11,9 +11,9 @@ OBJ=$(DESTDIR)/debug/backtrace.o \
     $(DESTDIR)/libearly/amd64.o \
 	$(DESTDIR)/libearly/get_hex.o \
 	$(DESTDIR)/libearly/print.o \
-	$(DESTDIR)/root/boot.o \
-	$(DESTDIR)/root/init.o \
-	$(DESTDIR)/root/parsing.o \
+	$(DESTDIR)/sys/boot.o \
+	$(DESTDIR)/sys/init.o \
+	$(DESTDIR)/sys/parsing.o \
 	$(DESTDIR)/vm/vm_alloc.o \
 	$(DESTDIR)/vm/vm_btree.o \
 	$(DESTDIR)/vm/vm_init.o \
@@ -27,14 +27,25 @@ clean:
 	rm -f $(OBJ) freevms
 
 $(DESTDIR)/vmskernel.sys: $(OBJ)
+	@rm -f debug/symbols.h
+	@echo "static const char *symbols[] = { 0 };" > debug/symbols.h
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c debug/symbols.c \
+			-o $(DESTDIR)/debug/symbols.o
 	ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4 \
-			$(OBJ) -nostdlib -T linker/elf_x86_64 -ll4 -static -o $@
+			$(OBJ) -nostdlib -T linker/elf_x86_64 -ll4 \
+			$(DESTDIR)/debug/symbols.o -static -o $@
+	linker/symbols > debug/symbols.h
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c debug/symbols.c \
+			-o $(DESTDIR)/debug/symbols.o
+	ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4 \
+			$(OBJ) -nostdlib -T linker/elf_x86_64 -ll4 \
+			$(DESTDIR)/debug/symbols.o -static -o $@
 
 directories:
 	mkdir -p $(DESTDIR)/debug
 	mkdir -p $(DESTDIR)/drv
 	mkdir -p $(DESTDIR)/libearly
-	mkdir -p $(DESTDIR)/root
+	mkdir -p $(DESTDIR)/sys
 	mkdir -p $(DESTDIR)/vm
 
 # ./debug
@@ -42,15 +53,15 @@ directories:
 $(DESTDIR)/debug/backtrace.o: debug/backtrace.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
-# ./root
+# ./sys
 
-$(DESTDIR)/root/init.o: root/init.c
+$(DESTDIR)/sys/init.o: sys/init.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
-$(DESTDIR)/root/parsing.o: root/parsing.c
+$(DESTDIR)/sys/parsing.o: sys/parsing.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
-$(DESTDIR)/root/boot.o: root/boot.S
+$(DESTDIR)/sys/boot.o: sys/boot.S
 	as $< -o $@
 
 # ./vm

@@ -62,13 +62,14 @@ typedef L4_Word64_t     vms$pointer;
 // Macros
 #define notice(...) printf(__VA_ARGS__)
 
-void backtrace(void);
+const char *dbg$symbol(vms$pointer address);
+void dbg$backtrace(void);
 
 #define PANIC(a, ...)  if (a) { \
         __VA_ARGS__; \
-        notice("\nPanic at %s(%d)\n", __FUNCTION__, __LINE__); \
+        notice("\nPanic at %s line %d\n", __FUNCTION__, __LINE__); \
         notice("Have a nice day !\n\n"); \
-        backtrace(); \
+        dbg$backtrace(); \
         while(1); } while(0)
 
 #define L4_SIZEOFWORD       (sizeof(L4_Word_t) * 8)

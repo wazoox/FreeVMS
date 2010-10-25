@@ -21,48 +21,34 @@
 
 #include "freevms/freevms.h"
 
+#define arch_specific(func)         CONCAT(func, ARCH)
+#define CONCAT(a, b)                XCAT(a, _, b)
+#define XCAT(a, c, b)               a##c##b
+
+inline static vms$pointer
+dbg$direct(vms$pointer reg)
+{
+    vms$pointer         *ireg;
+
+    ireg = (vms$pointer *) reg;
+    return((*ireg));
+}
+
 #ifdef AMD64
 #   include "./amd64.h"
 #endif
 
-#define arch_specific(func)         CONCAT(func, ARCH)
-#define CONCAT(a, b)                XCAT(a, _, b)
-#define XCAT(a, c, b)               a##c##b()
-
-void backtrace(void)
+void
+dbg$backtrace(void)
 {
     vms$pointer         sp;
 
-    sp = arch_specific(get_registers);
+    sp = arch_specific(dbg$get_registers)();
 
-    /*
-    void show_backtrace (void)
-    {
-        char name[256];
-        unw_cursor_t cursor; unw_context_t uc;
-        unw_word_t ip, sp, offp;
+    notice("\nBacktrace:\n\n");
+    arch_specific(dbg$backtrace)(sp);
+    notice("\n");
 
-        unw_getcontext (&uc);
-        unw_init_local (&cursor, &uc);
-
-        while (unw_step(&cursor) > 0)
-        {
-            char file[256];
-            int line = 0;
-
-            name[0] = '\0';
-            unw_get_proc_name (&cursor, name, 256, &offp);
-            unw_get_reg (&cursor, UNW_REG_IP, &ip);
-            unw_get_reg (&cursor, UNW_REG_SP, &sp);
-
-            printf ("%s ip = %lx, sp = %lx\n", name, (long) ip, (long) sp);
-        }
-    }
-    */
-
-    for(;;);
-    // 0000000001037830
-    // 0000000001037820
     return;
 }
 
