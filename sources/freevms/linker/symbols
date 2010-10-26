@@ -2,7 +2,8 @@
 
 echo "static const char *symbols[] = {"
 
-for i in $(nm ../../build/freevms/vmskernel.sys | grep ' T ' | sort | \
+for i in $(nm ../../build/freevms/vmskernel.sys | \
+		grep ' [Tt] ' | grep -v ' _GLOBAL' | sort | \
         sed -e '1,$s/\$/\\$/g' | \
         awk '{ printf("%s ", $1); cmd="c++filt -t "$3;
         cmd|getline; printf("%s\n", $cmd); }' | cut -f1 -d'(')

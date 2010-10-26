@@ -98,7 +98,6 @@ vms$memsection_create_cache(struct slab_cache *sc)
 
     page_size = (int) vms$min_pagesize();
 
-notice("V %d\n", page_size);
     virt = vms$fpage_alloc_internal(&vm_alloc, page_size);
 
     if (virt == INVALID_ADDR)
@@ -106,7 +105,6 @@ notice("V %d\n", page_size);
         return((struct memsection *) NULL);
     }
 
-notice("P\n");
     phys = vms$fpage_alloc_internal(&pm_alloc, page_size);
 
     if (phys == INVALID_ADDR)
@@ -194,9 +192,7 @@ vms$slab_cache_alloc(struct slab_cache *sc)
 
     if (pool == NULL)
     {
-        notice("slab_cache_alloc <1>\n");
         pool = vms$memsection_create_cache(sc);
-        notice("slab_cache_alloc <2>\n");
     }
 
     if (pool == NULL)
@@ -204,8 +200,11 @@ vms$slab_cache_alloc(struct slab_cache *sc)
         return(NULL);
     }
 
+	vms$debug("slab_cache_alloc 6");
     slab = TAILQ_FIRST(&pool->slabs);
-    TAILQ_REMOVE(&pool->slabs, TAILQ_FIRST(&pool->slabs), slabs);
+	notice("slab_cache_alloc 7 %lx %lx\n", &pool->slabs, slab);
+    TAILQ_REMOVE(&pool->slabs, slab, slabs);
+	vms$debug("slab_cache_alloc 8");
 
     length = sc->slab_size;
     ptr = (unsigned char *) slab;
@@ -217,6 +216,7 @@ vms$slab_cache_alloc(struct slab_cache *sc)
         ptr++;
     }
 
+	vms$debug("slab_cache_alloc 10");
     return(slab);
 }
 

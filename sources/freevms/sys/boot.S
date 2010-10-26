@@ -30,8 +30,11 @@ _start:
     pushq   %rax
     callq   __L4_Init
     pushq   $0
+    pushq   $0
     pushq   $_return_from_main
     jmp     main
+    popq    %r15
+    popq    %r15
 
 _return_from_main:
     int $3

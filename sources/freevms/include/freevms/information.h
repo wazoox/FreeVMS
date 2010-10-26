@@ -25,6 +25,7 @@
 #define MEM_I_AREA          "%%MEM-I-AREA, "
 #define MEM_I_FREE          "%%MEM-I-FREE, "
 #define MEM_I_NOTEMEM       "%%MEM-I-NOTEMEM, "
+#define MEM_I_REJMAP        "%%MEM-I-REJMAP, "
 
 #define MOUNT_I_MOUNTED     "%%MOUNT-I-MOUNTED, "
 #define MOUNT_I_OPRQST      "%%MOUNT-I-OPRQST, "

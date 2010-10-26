@@ -90,20 +90,16 @@ dbg$backtrace_amd64(vms$pointer sp)
     do
     {
         sp = fp + sizeof(vms$pointer);
-        /*
-         * list = (unw_dyn_info_list_t *) (uintptr_t) _U_dyn_info_list_addr ();
-         * for (di = list->first; di; di = di->next)
-         *   if (ip >= di->start_ip && ip < di->end_ip)
-         *     return unwi_extract_dynamic_proc_info(as, ip, pi, di,
-         *     need_unwind_info,arg);
-         */
         notice("  <%02u> [$%016lX] -> $%016lX (%s)\n", i, sp, dbg$direct(sp),
                 dbg$symbol(dbg$direct(sp)));
 
         // Previous frame pointer
         fp = dbg$direct(fp);
         i++;
-    } while(dbg$direct(sp + 8) != 0x0);
+
+		// Stack is ended by two 0x0 (16 bytes aligned stack)
+    } while((dbg$direct(sp + sizeof(vms$pointer)) != 0) ||
+			(dbg$direct(sp + (2 * sizeof(vms$pointer))) != 0));
 
     return;
 }

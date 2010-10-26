@@ -108,7 +108,7 @@ vms$biggest_fpage(vms$pointer addr, vms$pointer base, vms$pointer end)
     return(L4_FpageLog2(addr >> bits << bits, bits));
 }
 
-static void
+void
 vms$fpage_clear_internal(struct fpage_alloc *alloc)
 {
     struct fpage_list       *fpage;
@@ -117,18 +117,21 @@ vms$fpage_clear_internal(struct fpage_alloc *alloc)
     {
         while(alloc->internal.base < alloc->internal.end)
         {
+notice("while 1 %lx %lx\n", alloc->internal.base, alloc->internal.end);
             if ((fpage = (struct fpage_list *) vms$slab_cache_alloc(&fp_cache))
                     == (struct fpage_list *) NULL)
             {
                 vms$debug("vms$slab_cache_alloc returns NULL !");
                 return;
             }
+vms$debug("while 2");
 
             fpage->fpage = vms$biggest_fpage(alloc->internal.base,
                     alloc->internal.base, alloc->internal.end);
             TAILQ_INSERT_TAIL(&alloc->flist[vms$fp_order(fpage->fpage)],
                     fpage, flist);
             alloc->internal.base += L4_Size(fpage->fpage);
+vms$debug("while 3");
         }
 
         alloc->internal.active = 0;
@@ -170,9 +173,8 @@ vms$fpage_alloc_internal(struct fpage_alloc *alloc, int size)
 
     if (alloc->internal.active == 0)
     {
-        for(i = 0; TAILQ_EMPTY(&alloc->flist[i]); i++);
-        notice("%d\n", i);
-        PANIC(i > MAX_FPAGE_ORDER, notice(MEM_F_OUTMEM "out of memory\n"));
+        for(i = 0; TAILQ_EMPTY(&alloc->flist[i]) && (i < MAX_FPAGE_ORDER); i++);
+        PANIC(i == MAX_FPAGE_ORDER, notice(MEM_F_OUTMEM "out of memory\n"));
 
         node = TAILQ_FIRST(&alloc->flist[i]);
         alloc->internal.base = L4_Address(node->fpage);
@@ -270,11 +272,16 @@ vms$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
 {
     if (alloc->internal.active)
     {
+		notice("<1>\n");
         vms$fpage_clear_internal(alloc);
+		notice("<2>\n");
     }
 
+		notice("<3>\n");
     vms$fpage_free_internal(alloc, base, end);
+		notice("<4>\n");
     vms$fpage_clear_internal(alloc);
+		notice("<5>\n");
 
     return;
 }

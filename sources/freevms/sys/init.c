@@ -160,7 +160,7 @@ main(void)
             notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
 
     L4_Start(pager_tid, (L4_Word_t) ((THREAD_STACK_BASE + 4096)
-            - L4_SIZEOFWORD), (L4_Word_t) vms$pager);
+            - (2 * L4_SIZEOFWORD)), (L4_Word_t) vms$pager);
 
     PANIC(L4_ErrorCode(),
             notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
