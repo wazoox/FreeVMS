@@ -68,7 +68,7 @@ void dbg$backtrace(void);
 #define PANIC(a, ...)  if (a) { \
         __VA_ARGS__; \
         notice("\nPanic at %s, %s line %d\n", __FUNCTION__, __FILE__, \
-				__LINE__); \
+                __LINE__); \
         notice("Have a nice day !\n\n"); \
         dbg$backtrace(); \
         while(1); } while(0)

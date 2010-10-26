@@ -97,9 +97,9 @@ dbg$backtrace_amd64(vms$pointer sp)
         fp = dbg$direct(fp);
         i++;
 
-		// Stack is ended by two 0x0 (16 bytes aligned stack)
+        // Stack is ended by two 0x0 (16 bytes aligned stack)
     } while((dbg$direct(sp + sizeof(vms$pointer)) != 0) ||
-			(dbg$direct(sp + (2 * sizeof(vms$pointer))) != 0));
+            (dbg$direct(sp + (2 * sizeof(vms$pointer))) != 0));
 
     return;
 }

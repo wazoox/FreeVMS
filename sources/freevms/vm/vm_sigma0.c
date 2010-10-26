@@ -49,11 +49,11 @@ sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page)
     L4_MsgStore(tag, &msg);
     L4_MsgGetMapItem(&msg, 0, &map);
 
-	if (map.X.snd_fpage.raw == L4_Nilpage.raw)
-	{
-		notice(MEM_I_REJMAP "rejecting mapping V=$%016lX P=$%016lX\n",
-				L4_Address(virt_page), L4_Address(phys_page));
-	}
+    if (map.X.snd_fpage.raw == L4_Nilpage.raw)
+    {
+        notice(MEM_I_REJMAP "rejecting mapping V=$%016lX P=$%016lX\n",
+                L4_Address(virt_page), L4_Address(phys_page));
+    }
 
     return;
 }

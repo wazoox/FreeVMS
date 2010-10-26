@@ -272,16 +272,16 @@ vms$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
 {
     if (alloc->internal.active)
     {
-		notice("<1>\n");
+        notice("<1>\n");
         vms$fpage_clear_internal(alloc);
-		notice("<2>\n");
+        notice("<2>\n");
     }
 
-		notice("<3>\n");
+        notice("<3>\n");
     vms$fpage_free_internal(alloc, base, end);
-		notice("<4>\n");
+        notice("<4>\n");
     vms$fpage_clear_internal(alloc);
-		notice("<5>\n");
+        notice("<5>\n");
 
     return;
 }

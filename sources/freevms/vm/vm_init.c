@@ -445,10 +445,10 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 
     notice(SYSBOOT_I_SYSBOOT "reserving memory for preload objects\n");
 
-	/*
-	vms$initmem((vms$pointer) &pm_alloc, sizeof(pm_alloc));
-	vms$initmem((vms$pointer) &vm_alloc, sizeof(vm_alloc));
-	*/
+    /*
+    vms$initmem((vms$pointer) &pm_alloc, sizeof(pm_alloc));
+    vms$initmem((vms$pointer) &vm_alloc, sizeof(vm_alloc));
+    */
 
 
     // Bootimage objects are removed from free virtual memory.
@@ -472,8 +472,8 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 
         if (((end - base) + 1) >= (2 * page_size))
         {
-			notice(MEM_I_FREE "freeing virtual memory $%016lX - $%016lX\n",
-					base, end);
+            notice(MEM_I_FREE "freeing virtual memory $%016lX - $%016lX\n",
+                    base, end);
             vms$fpage_free_internal(&vm_alloc, base, end);
             mem_info->vm_regions[i].end = mem_info->vm_regions[i].base;
             break;
@@ -493,7 +493,7 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 
         if (((end - base) + 1) >= (2 * page_size))
         {
-			notice(MEM_I_FREE "freeing region $%016lX - $%016lX\n", base, end);
+            notice(MEM_I_FREE "freeing region $%016lX - $%016lX\n", base, end);
             vms$fpage_free_chunk(&pm_alloc, base, end);
             mem_info->regions[i].end = mem_info->regions[i].base;
             break;
@@ -502,7 +502,7 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 
     PANIC(i >= mem_info->num_regions);
 
-			notice("<return>\n");
+            notice("<return>\n");
     // Base and end may not be aligned, but we need them to be aligned. If
     // the area is less than a page than we should not add it to the free list.
 

@@ -200,11 +200,11 @@ vms$slab_cache_alloc(struct slab_cache *sc)
         return(NULL);
     }
 
-	vms$debug("slab_cache_alloc 6");
+    vms$debug("slab_cache_alloc 6");
     slab = TAILQ_FIRST(&pool->slabs);
-	notice("slab_cache_alloc 7 %lx %lx\n", &pool->slabs, slab);
+    notice("slab_cache_alloc 7 %lx %lx\n", &pool->slabs, slab);
     TAILQ_REMOVE(&pool->slabs, slab, slabs);
-	vms$debug("slab_cache_alloc 8");
+    vms$debug("slab_cache_alloc 8");
 
     length = sc->slab_size;
     ptr = (unsigned char *) slab;
@@ -216,7 +216,7 @@ vms$slab_cache_alloc(struct slab_cache *sc)
         ptr++;
     }
 
-	vms$debug("slab_cache_alloc 10");
+    vms$debug("slab_cache_alloc 10");
     return(slab);
 }
 
