@@ -60,13 +60,14 @@ vms$min_pagesize(void)
 vms$pointer
 vms$page_round_down(vms$pointer address, unsigned int page_size)
 {
-    return(address & (~(page_size - 1)));
+    return(address & (~(((vms$pointer) page_size) - 1)));
 }
 
 vms$pointer
 vms$page_round_up(vms$pointer address, unsigned int page_size)
 {
-    return((address + (page_size - 1)) & (~(page_size - 1)));
+    return((address + (((vms$pointer) page_size) - 1)) &
+			(~(((vms$pointer) page_size) - 1)));
 }
 
 static inline int

@@ -445,12 +445,6 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 
     notice(SYSBOOT_I_SYSBOOT "reserving memory for preload objects\n");
 
-    /*
-    vms$initmem((vms$pointer) &pm_alloc, sizeof(pm_alloc));
-    vms$initmem((vms$pointer) &vm_alloc, sizeof(vm_alloc));
-    */
-
-
     // Bootimage objects are removed from free virtual memory.
     for(i = 0; i < mem_info->num_objects; i++)
     {
