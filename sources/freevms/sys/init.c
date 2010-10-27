@@ -61,9 +61,9 @@ main(void)
 
     struct vms$meminfo          mem_info;
 
-#	ifdef DEBUG_SIGMA0
-	dbg$sigma0();
-#	endif
+#   ifdef DEBUG_SIGMA0
+    dbg$sigma0();
+#   endif
 
     notice("\n");
     notice(">>> FreeVMS %s (TM)\n", FREEVMS_VERSION);

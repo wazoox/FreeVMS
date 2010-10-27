@@ -67,7 +67,7 @@ vms$pointer
 vms$page_round_up(vms$pointer address, unsigned int page_size)
 {
     return((address + (((vms$pointer) page_size) - 1)) &
-			(~(((vms$pointer) page_size) - 1)));
+            (~(((vms$pointer) page_size) - 1)));
 }
 
 static inline int

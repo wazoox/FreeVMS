@@ -51,8 +51,11 @@ sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page)
 
     if (map.X.snd_fpage.raw == L4_Nilpage.raw)
     {
-        notice(MEM_I_REJMAP "rejecting mapping V=$%016lX P=$%016lX\n",
-                L4_Address(virt_page), L4_Address(phys_page));
+        notice(MEM_I_REJMAP "rejecting mapping\n");
+        notice(MEM_I_REJMAP "virtual  address $%016lX\n",
+                L4_Address(virt_page));
+        notice(MEM_I_REJMAP "physical address $%016lX\n",
+                L4_Address(phys_page));
     }
 
     return;

@@ -20,7 +20,7 @@
 */
 
 #define DEBUG_VM
-#define DEBUG_SIGMA0	0
+#define DEBUG_SIGMA0    0
 
 #include "freevms/arch.h"
 
