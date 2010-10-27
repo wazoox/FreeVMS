@@ -61,12 +61,10 @@ main(void)
 
     struct vms$meminfo          mem_info;
 
-#   ifdef DEBUG_SIGMA0
-    dbg$sigma0();
-#   endif
+	dbg$sigma0(0);
 
     notice("\n");
-    notice(">>> FreeVMS %s (TM)\n", FREEVMS_VERSION);
+    notice(">>> FreeVMS %s (R)\n", FREEVMS_VERSION);
     notice("\n");
 
     kip = (L4_KernelInterfacePage_t *) L4_KernelInterface(&kernel_interface,

@@ -23,11 +23,11 @@
 
 #define MEM_I_ALLOC         "%%MEM-I-ALLOC, "
 #define MEM_I_AREA          "%%MEM-I-AREA, "
-#define MEM_I_FALLOC        "%%MEM-I-FALLOC, "
+#define MEM_I_FALLOC        "%%MEM-I-F_ALLOC, "
 #define MEM_I_FREE          "%%MEM-I-FREE, "
 #define MEM_I_NOTEMEM       "%%MEM-I-NOTEMEM, "
 #define MEM_I_REJMAP        "%%MEM-I-REJMAP, "
-#define MEM_I_SALLOC        "%%MEM-I-SALLOC, "
+#define MEM_I_SALLOC        "%%MEM-I-S_ALLOC, "
 
 #define MOUNT_I_MOUNTED     "%%MOUNT-I-MOUNTED, "
 #define MOUNT_I_OPRQST      "%%MOUNT-I-OPRQST, "

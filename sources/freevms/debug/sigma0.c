@@ -22,7 +22,7 @@
 #include "freevms/freevms.h"
 
 void
-dbg$sigma0(void)
+dbg$sigma0(int level)
 {
     L4_Msg_t                msg;
 
@@ -36,7 +36,7 @@ dbg$sigma0(void)
     sigma0 = L4_Pager();
     L4_MsgClear(&msg);
     L4_MsgAppendWord(&msg, (L4_Word_t) L4_S0EXT_VERBOSE);
-    L4_MsgAppendWord(&msg, (L4_Word_t) DEBUG_SIGMA0);
+    L4_MsgAppendWord(&msg, (L4_Word_t) level);
     L4_Set_Label(&msg.tag, L4_SIGMA0_EXT);
     L4_MsgLoad(&msg);
 
