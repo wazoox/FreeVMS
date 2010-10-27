@@ -169,7 +169,7 @@ void vms$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
 void vms$fpage_free_internal(struct fpage_alloc *alloc, vms$pointer base,
         unsigned long end);
 void vms$init(L4_KernelInterfacePage_t *kip,
-        struct vms$meminfo *MemInfo);
+        struct vms$meminfo *MemInfo, unsigned int page_size);
 void vms$initmem(vms$pointer zone, vms$pointer len);
 void vms$pager(void);
 void vms$remove_virtmem(struct vms$meminfo *mem_info,

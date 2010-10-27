@@ -70,8 +70,7 @@
 
 // Modifications from { .tqh_first = NULL, .tqh_last = NULL }
 #define TAILQ_HEAD_INITIALIZER(head) \
-    { (head).tqh_first = (typeof((head).tqh_first)) NULL, \
-            (head).tqh_last = (typeof((head).tqh_last)) NULL }
+    { (typeof((head).tqh_first)) NULL, (typeof((head).tqh_last)) NULL }
 
 #define TAILQ_INIT(head) \
     do { \

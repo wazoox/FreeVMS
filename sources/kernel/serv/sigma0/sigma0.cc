@@ -288,7 +288,6 @@ extern "C" void sigma0_main (void)
 		    reply = true;
 		break;
 	    }
-
 	    if (! reply)
 		tag = L4_Wait (&tid);
 	    else

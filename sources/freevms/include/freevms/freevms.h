@@ -20,6 +20,7 @@
 */
 
 #define DEBUG_VM
+#define DEBUG_SIGMA0	0
 
 #include "freevms/arch.h"
 
@@ -51,7 +52,7 @@ typedef L4_Word64_t     vms$pointer;
 #include "freevms/vm.h"
 
 // Defines
-#define NULL                            ((void *) 0)
+#define NULL                            ((vms$pointer) 0)
 #define FREEVMS_VERSION                 "0.0.1"
 #define THREAD_STACK_BASE               (0xF00000UL)
 
@@ -63,15 +64,17 @@ typedef L4_Word64_t     vms$pointer;
 #define notice(...) printf(__VA_ARGS__)
 
 const char *dbg$symbol(vms$pointer address);
-void dbg$backtrace(void);
 
-#define PANIC(a, ...)  if (a) { \
+void dbg$backtrace(void);
+void dbg$sigma0(void);
+
+#define PANIC(a, ...) if (a) { \
         __VA_ARGS__; \
         notice("\nPanic at %s, %s line %d\n", __FUNCTION__, __FILE__, \
                 __LINE__); \
         notice("Have a nice day !\n\n"); \
         dbg$backtrace(); \
-        while(1); } while(0)
+        while(1); }
 
 #define L4_SIZEOFWORD       (sizeof(L4_Word_t) * 8)
 #define L4_REQUEST_MASK     (~((~0UL) >> (L4_SIZEOFWORD - 20)))

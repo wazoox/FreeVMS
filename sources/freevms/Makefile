@@ -8,6 +8,7 @@ INCLUDES=-I./include \
 		-I/usr/lib/gcc/x86_64-linux-gnu/4.4.5/include
 
 OBJ=$(DESTDIR)/debug/backtrace.o \
+    $(DESTDIR)/debug/sigma0.o \
     $(DESTDIR)/libearly/amd64.o \
 	$(DESTDIR)/libearly/get_hex.o \
 	$(DESTDIR)/libearly/print.o \
@@ -32,13 +33,13 @@ $(DESTDIR)/vmskernel.sys: $(OBJ)
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c debug/symbols.c \
 			-o $(DESTDIR)/debug/symbols.o
 	ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4 \
-			$(OBJ) -nostdlib -T linker/elf_x86_64 -ll4 \
+			$+ -nostdlib -T linker/elf_x86_64 -ll4 \
 			$(DESTDIR)/debug/symbols.o -static -o $@
 	linker/symbols > debug/symbols.h
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c debug/symbols.c \
 			-o $(DESTDIR)/debug/symbols.o
 	ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4 \
-			$(OBJ) -nostdlib -T linker/elf_x86_64 -ll4 \
+			$+ -nostdlib -T linker/elf_x86_64 -ll4 \
 			$(DESTDIR)/debug/symbols.o -static -o $@
 
 directories:
@@ -51,6 +52,9 @@ directories:
 # ./debug
 
 $(DESTDIR)/debug/backtrace.o: debug/backtrace.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/debug/sigma0.o: debug/sigma0.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 # ./sys

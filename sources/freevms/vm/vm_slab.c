@@ -163,7 +163,7 @@ vms$memsection_create_cache(struct slab_cache *sc)
 
     for (; (virt + sc->slab_size) - 1 <= ms->end; virt += sc->slab_size)
     {
-        TAILQ_INSERT_TAIL(&ms->slabs, (struct slab *)virt, slabs);
+        TAILQ_INSERT_TAIL(&ms->slabs, (struct slab *) virt, slabs);
     }
 
     ms->slab_cache = sc;
@@ -200,11 +200,8 @@ vms$slab_cache_alloc(struct slab_cache *sc)
         return(NULL);
     }
 
-    vms$debug("slab_cache_alloc 6");
     slab = TAILQ_FIRST(&pool->slabs);
-    notice("slab_cache_alloc 7 %lx %lx\n", &pool->slabs, slab);
-    TAILQ_REMOVE(&pool->slabs, slab, slabs);
-    vms$debug("slab_cache_alloc 8");
+    TAILQ_REMOVE(&pool->slabs, TAILQ_FIRST(&pool->slabs), slabs);
 
     length = sc->slab_size;
     ptr = (unsigned char *) slab;
@@ -216,7 +213,6 @@ vms$slab_cache_alloc(struct slab_cache *sc)
         ptr++;
     }
 
-    vms$debug("slab_cache_alloc 10");
     return(slab);
 }
 

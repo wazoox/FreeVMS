@@ -61,6 +61,10 @@ main(void)
 
     struct vms$meminfo          mem_info;
 
+#	ifdef DEBUG_SIGMA0
+	dbg$sigma0();
+#	endif
+
     notice("\n");
     notice(">>> FreeVMS %s (TM)\n", FREEVMS_VERSION);
     notice("\n");
@@ -143,7 +147,7 @@ main(void)
     vms$initmem(THREAD_STACK_BASE, 1UL << 16);
     
     // Starting virtual memory subsystem
-    vms$init(kip, &mem_info);
+    vms$init(kip, &mem_info, (unsigned int) page_size);
     vms$bootstrap(&mem_info, (unsigned int) page_size);
 
     // A thread must have a pager. This pager requires a
