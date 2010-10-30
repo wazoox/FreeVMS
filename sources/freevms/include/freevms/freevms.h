@@ -21,8 +21,6 @@
 
 #define DEBUG_VM
 
-#include "freevms/arch.h"
-
 #include "libearly/lib.h"
 #include "libearly/l4io.h"
 
@@ -35,6 +33,8 @@
 #include "l4/sigma0.h"
 #include "l4/space.h"
 #include "l4/thread.h"
+
+#include "freevms/arch.h"
 
 typedef L4_Word64_t     vms$pointer;
 
@@ -49,6 +49,7 @@ typedef L4_Word64_t     vms$pointer;
 
 // FreeVMS subsystems
 #include "freevms/vm.h"
+#include "freevms/pd.h"
 
 // Defines
 #define NULL                            ((vms$pointer) 0)
@@ -61,6 +62,9 @@ typedef L4_Word64_t     vms$pointer;
 
 // Macros
 #define notice(...) printf(__VA_ARGS__)
+
+#define max(a, b)	((a < b) ? b : a)
+#define min(a, b)	((a < b) ? a : b)
 
 const char *dbg$symbol(vms$pointer address);
 

@@ -19,20 +19,13 @@
 ================================================================================
 */
 
-#define DBG_I_VMS           "%%DBG-I-VMS, "
+extern int					vms$pd_initialized;
 
-#define MEM_I_ALLOC         "%%MEM-I-ALLOC, "
-#define MEM_I_AREA          "%%MEM-I-AREA, "
-#define MEM_I_FALLOC        "%%MEM-I-F_ALLOC, "
-#define MEM_I_FREE          "%%MEM-I-FREE, "
-#define MEM_I_NOTEMEM       "%%MEM-I-NOTEMEM, "
-#define MEM_I_REJMAP        "%%MEM-I-REJMAP, "
-#define MEM_I_SALLOC        "%%MEM-I-S_ALLOC, "
-#define MEM_I_VALLOC        "%%MEM-I-VM_ALLOC, "
+struct pd
+{
+	struct pd				*owner;	// Our owner
+	struct memsection_list	memsections;
+};
 
-#define MOUNT_I_MOUNTED     "%%MOUNT-I-MOUNTED, "
-#define MOUNT_I_OPRQST      "%%MOUNT-I-OPRQST, "
-
-#define STDRV_I_STARTUP     "%%STDRV-I-STARTUP, "
-
-#define SYSBOOT_I_SYSBOOT   "%%SYSBOOT-I-SYSBOOT, "
+struct memsection *vms$pd_create_memsection(struct pd *self, vms$pointer size,
+		vms$pointer base, unsigned int flags);

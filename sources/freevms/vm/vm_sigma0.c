@@ -21,8 +21,8 @@
 
 #include "freevms/freevms.h"
 
-static void
-sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page)
+void
+vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page)
 {
     L4_ThreadId_t           tid;
 
@@ -52,10 +52,8 @@ sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page)
     if (map.X.snd_fpage.raw == L4_Nilpage.raw)
     {
         notice(MEM_I_REJMAP "rejecting mapping\n");
-        notice(MEM_I_REJMAP "virtual  address $%016lX\n",
-                L4_Address(virt_page));
-        notice(MEM_I_REJMAP "physical address $%016lX\n",
-                L4_Address(phys_page));
+        notice(MEM_I_REJMAP "virtual $%016lX, physical $%016lX\n",
+                L4_Address(virt_page), L4_Address(phys_page));
     }
 
     return;
@@ -73,10 +71,10 @@ vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr, vms$pointer size)
     vms$pointer             vend;
 
     vbase = virt_addr;
-    vend = (vbase + size) - 1;
+    vend = vbase + (size - 1);
 
     pbase = phys_addr;
-    pend = (pbase + size) - 1;
+    pend = pbase + (size - 1);
 
     if (vbase < vend)
     {
@@ -92,7 +90,7 @@ vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr, vms$pointer size)
             ppage = L4_Fpage(pbase, L4_Size(vpage));
         }
 
-        sigma0_map_fpage(vpage, ppage);
+        vms$sigma0_map_fpage(vpage, ppage);
 
         vbase += L4_Size(vpage);
         pbase += L4_Size(ppage);

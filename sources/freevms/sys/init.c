@@ -21,6 +21,8 @@
 
 #include "freevms/freevms.h"
 
+int vms$pd_initialized;
+
 int
 main(void)
 {
@@ -62,6 +64,7 @@ main(void)
     struct vms$meminfo          mem_info;
 
 	dbg$sigma0(0);
+	vms$pd_initialized = 0;
 
     notice("\n");
     notice(">>> FreeVMS %s (R)\n", FREEVMS_VERSION);

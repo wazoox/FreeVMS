@@ -25,7 +25,7 @@
 #define CONCAT(a, b)                XCAT(a, _, b)
 #define XCAT(a, c, b)               a##c##b
 
-inline static vms$pointer
+static inline vms$pointer
 dbg$direct(vms$pointer reg)
 {
     vms$pointer         *ireg;

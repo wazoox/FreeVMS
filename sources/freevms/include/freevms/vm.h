@@ -61,10 +61,22 @@ struct vms$meminfo
     struct initial_obj  *objects;
 };
 
+#define		VMS$HEAP_SIZE	(4 * 1024 * 1024)
+
 #define     VMS$MEM_RAM     1
 #define     VMS$MEM_IO      2
 #define     VMS$MEM_VM      4
 #define     VMS$MEM_OTHER   8
+
+#define		VMS$MEM_NORMAL		0x1
+#define		VMS$MEM_FIXED		0x2
+#define		VMS$MEM_UTCB		0x4
+#define		VMS$MEM_USER		0x8
+
+#define		VMS$MEM_VALID_USER_FLAGS \
+		(VMS$MEM_NORMAL | VMS$EM_FIXED | VMS$MEM_UTCB | VMS$MEM_USER )
+
+#define		VMS$MEM_INTERNAL	0x10
 
 #define     NUM_MI_REGIONS      1024
 #define     NUM_MI_IOREGIONS    1024
@@ -152,6 +164,7 @@ struct memsection_node
     struct memsection           data;
 };
 
+int memsection_back(struct memsection *memsection);
 int vms$remove_chunk(struct memdesc *mem_desc, int pos, int max,
         vms$pointer low, vms$pointer high);
 
@@ -163,11 +176,14 @@ L4_Fpage_t vms$biggest_fpage(vms$pointer addr, vms$pointer base,
 
 void vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr,
         vms$pointer size);
+void vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page);
 void vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size);
+void vms$fpage_clear_internal(struct fpage_alloc *alloc);
 void vms$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
         vms$pointer end);
 void vms$fpage_free_internal(struct fpage_alloc *alloc, vms$pointer base,
         unsigned long end);
+void vms$fpage_free_list(struct fpage_alloc *alloc, struct flist_head list);
 void vms$init(L4_KernelInterfacePage_t *kip,
         struct vms$meminfo *MemInfo, unsigned int page_size);
 void vms$initmem(vms$pointer zone, vms$pointer len);
@@ -177,6 +193,17 @@ void vms$remove_virtmem(struct vms$meminfo *mem_info,
 void *vms$slab_cache_alloc(struct slab_cache *sc);
 void vms$slab_cache_free(struct slab_cache *sc, void *ptr);
 
-vms$pointer vms$fpage_alloc_internal(struct fpage_alloc *alloc, int size);
+struct flist_head vms$fpage_alloc_list(struct fpage_alloc *alloc,
+		vms$pointer base, vms$pointer end);
+
+struct memsection *vms$objtable_lookup(void *addr);
+
+vms$pointer vms$fpage_alloc_chunk(struct fpage_alloc *alloc,
+		unsigned int size);
+vms$pointer vms$fpage_alloc_internal(struct fpage_alloc *alloc,
+		unsigned int size);
 vms$pointer vms$page_round_down(vms$pointer address, unsigned int page_size);
 vms$pointer vms$page_round_up(vms$pointer address, unsigned int page_size);
+
+struct sBTPage *ObjAllocPage(PagePool *pool);
+void ObjFreePage(PagePool *pool, struct sBTPage *page);

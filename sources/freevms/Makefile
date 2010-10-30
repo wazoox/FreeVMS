@@ -18,6 +18,7 @@ OBJ=$(DESTDIR)/debug/backtrace.o \
 	$(DESTDIR)/vm/vm_alloc.o \
 	$(DESTDIR)/vm/vm_btree.o \
 	$(DESTDIR)/vm/vm_init.o \
+	$(DESTDIR)/vm/vm_objtables.o \
 	$(DESTDIR)/vm/vm_server.o \
 	$(DESTDIR)/vm/vm_sigma0.o \
 	$(DESTDIR)/vm/vm_slab.o
@@ -80,6 +81,9 @@ $(DESTDIR)/vm/vm_alloc.o: vm/vm_alloc.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/vm/vm_btree.o: vm/vm_btree.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/vm/vm_objtables.o: vm/vm_objtables.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/vm/vm_sigma0.o: vm/vm_sigma0.c
