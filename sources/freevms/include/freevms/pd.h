@@ -19,13 +19,13 @@
 ================================================================================
 */
 
-extern int					vms$pd_initialized;
+extern int                  vms$pd_initialized;
 
 struct pd
 {
-	struct pd				*owner;	// Our owner
-	struct memsection_list	memsections;
+    struct pd               *owner; // Our owner
+    struct memsection_list  memsections;
 };
 
 struct memsection *vms$pd_create_memsection(struct pd *self, vms$pointer size,
-		vms$pointer base, unsigned int flags);
+        vms$pointer base, unsigned int flags);

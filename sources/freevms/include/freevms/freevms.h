@@ -63,8 +63,8 @@ typedef L4_Word64_t     vms$pointer;
 // Macros
 #define notice(...) printf(__VA_ARGS__)
 
-#define max(a, b)	((a < b) ? b : a)
-#define min(a, b)	((a < b) ? a : b)
+#define max(a, b)   ((a < b) ? b : a)
+#define min(a, b)   ((a < b) ? a : b)
 
 const char *dbg$symbol(vms$pointer address);
 
@@ -76,8 +76,8 @@ void dbg$sigma0(int level);
         notice("\nPanic at %s, %s line %d\n", __FUNCTION__, __FILE__, \
                 __LINE__); \
         notice("Have a nice day !\n\n"); \
-	dbg$backtrace(); \
-	while(1); } } while(0)
+    dbg$backtrace(); \
+    while(1); } } while(0)
 
 #define L4_SIZEOFWORD       (sizeof(L4_Word_t) * 8)
 #define L4_REQUEST_MASK     (~((~0UL) >> (L4_SIZEOFWORD - 20)))

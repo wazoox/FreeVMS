@@ -114,13 +114,13 @@ vms$bootinfo_find_initial_objects(L4_KernelInterfacePage_t *kip,
     L4_Word_t                   type;
 
     unsigned int                count;
-	unsigned int				flags;
+    unsigned int                flags;
     unsigned int                num_recs;
     unsigned int                objects;
 
     void                        *bootinfo;
 
-#	define DIT_INITIAL			32L // Root task
+#   define DIT_INITIAL          32L // Root task
 
     bootinfo = (void*) L4_BootInfo(kip);
     count = 0;
@@ -153,14 +153,14 @@ vms$bootinfo_find_initial_objects(L4_KernelInterfacePage_t *kip,
                 break;
 
             case L4_BootInfo_SimpleExec:
-				if (L4_SimpleExec_Flags(record) & DIT_INITIAL)
-				{
-					flags = VMS$IOF_ROOT | VMS$IOF_VIRT;
-				}
-				else
-				{
-					flags = VMS$IOF_APP;
-				}
+                if (L4_SimpleExec_Flags(record) & DIT_INITIAL)
+                {
+                    flags = VMS$IOF_ROOT | VMS$IOF_VIRT;
+                }
+                else
+                {
+                    flags = VMS$IOF_APP;
+                }
 
                 tstart = L4_SimpleExec_TextVstart(record);
                 tsize = L4_SimpleExec_TextSize(record);
@@ -190,10 +190,10 @@ vms$bootinfo_find_initial_objects(L4_KernelInterfacePage_t *kip,
                 break;
 
             case L4_BootInfo_Multiboot:
-				vms$add_initial_object(initial_objs++, "MultiBoot information",
-						L4_MBI_Address(record), L4_MBI_Address(record) + 0xFFF,
-						0, VMS$IOF_PHYS | VMS$IOF_BOOT | VMS$IOF_VIRT);
-				objects = 1;
+                vms$add_initial_object(initial_objs++, "MultiBoot information",
+                        L4_MBI_Address(record), L4_MBI_Address(record) + 0xFFF,
+                        0, VMS$IOF_PHYS | VMS$IOF_BOOT | VMS$IOF_VIRT);
+                objects = 1;
                 break;
 
             default:
@@ -361,22 +361,22 @@ vms$find_memory_region(L4_KernelInterfacePage_t *kip,
 static void
 vms$set_flags(struct vms$meminfo *mem_info, char match, char set)
 {
-	unsigned int		i;
+    unsigned int        i;
 
-	for(i = 0; i < mem_info->num_objects; i++)
-	{
-		if (mem_info->objects[i].flags & match)
-		{
-			mem_info->objects[i].flags |= set;
-		}
-	}
+    for(i = 0; i < mem_info->num_objects; i++)
+    {
+        if (mem_info->objects[i].flags & match)
+        {
+            mem_info->objects[i].flags |= set;
+        }
+    }
 
-	return;
+    return;
 }
 
 void
 vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info,
-		unsigned int page_size)
+        unsigned int page_size)
 {
     static struct initial_obj       static_objects[NUM_MI_OBJECTS];
 
@@ -413,20 +413,20 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info,
     mem_info->num_objects = vms$find_initial_objects(kip,
             NUM_MI_OBJECTS, static_objects);
 
-	// Remove any initial objects from free physical memory
+    // Remove any initial objects from free physical memory
 
-	for(i = 0; i < mem_info->num_objects; i++)
-	{
-		if (mem_info->objects[i].flags & VMS$IOF_PHYS)
-		{
-			mem_info->num_regions = vms$remove_chunk(mem_info->regions,
-					mem_info->num_regions, NUM_MI_REGIONS,
-					vms$page_round_down(mem_info->objects[i].base, page_size),
-					vms$page_round_up(mem_info->objects[i].end, page_size) - 1);
-		}
-	}
+    for(i = 0; i < mem_info->num_objects; i++)
+    {
+        if (mem_info->objects[i].flags & VMS$IOF_PHYS)
+        {
+            mem_info->num_regions = vms$remove_chunk(mem_info->regions,
+                    mem_info->num_regions, NUM_MI_REGIONS,
+                    vms$page_round_down(mem_info->objects[i].base, page_size),
+                    vms$page_round_up(mem_info->objects[i].end, page_size) - 1);
+        }
+    }
 
-	vms$set_flags(mem_info, VMS$IOF_APP, VMS$IOF_VIRT);
+    vms$set_flags(mem_info, VMS$IOF_APP, VMS$IOF_VIRT);
 
     for(i = 0; i < mem_info->num_regions; i++)
     {
@@ -476,7 +476,7 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info,
 void
 vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 {
-	struct memsection		*heap;
+    struct memsection       *heap;
 
     unsigned int            i;
 
@@ -485,20 +485,20 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 
     notice(SYSBOOT_I_SYSBOOT "reserving memory for preloaded objects\n");
 
-	// Initialization
-	pm_alloc.internal.base = 0;
-	pm_alloc.internal.end = 0;
-	pm_alloc.internal.active = 0;
+    // Initialization
+    pm_alloc.internal.base = 0;
+    pm_alloc.internal.end = 0;
+    pm_alloc.internal.active = 0;
 
-	vm_alloc.internal.base = 0;
-	vm_alloc.internal.end = 0;
-	vm_alloc.internal.active = 0;
+    vm_alloc.internal.base = 0;
+    vm_alloc.internal.end = 0;
+    vm_alloc.internal.active = 0;
 
-	for(i = 0; i <= MAX_FPAGE_ORDER; i++)
-	{
-		TAILQ_INIT(&vm_alloc.flist[i]);
-		TAILQ_INIT(&pm_alloc.flist[i]);
-	}
+    for(i = 0; i <= MAX_FPAGE_ORDER; i++)
+    {
+        TAILQ_INIT(&vm_alloc.flist[i]);
+        TAILQ_INIT(&pm_alloc.flist[i]);
+    }
 
     // Bootimage objects are removed from free virtual memory.
     for(i = 0; i < mem_info->num_objects; i++)
@@ -522,8 +522,8 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
         if ((end - (base + 1)) >= (2 * page_size))
         {
             notice(MEM_I_FALLOC "bootstrapping Fpage allocator at virtual "
-					"adresses\n");
-			notice(MEM_I_FALLOC "$%016lX - $%016lX\n", base, end);
+                    "addresses\n");
+            notice(MEM_I_FALLOC "$%016lX - $%016lX\n", base, end);
             vms$fpage_free_internal(&vm_alloc, base, end);
             mem_info->vm_regions[i].end = mem_info->vm_regions[i].base;
             break;
@@ -544,8 +544,8 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
         if (((end - base) + 1) >= (2 * page_size))
         {
             notice(MEM_I_SALLOC "bootstrapping Slab allocator at physical "
-					"addresses\n");
-			notice(MEM_I_SALLOC "$%016lX - $%016lX\n", base, end);
+                    "addresses\n");
+            notice(MEM_I_SALLOC "$%016lX - $%016lX\n", base, end);
             vms$fpage_free_chunk(&pm_alloc, base, end);
             mem_info->regions[i].end = mem_info->regions[i].base;
             break;
@@ -564,40 +564,40 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
             continue;
         }
 
-		base = vms$page_round_up(mem_info->regions[i].base, page_size);
-		end = vms$page_round_down(mem_info->regions[i].end + 1, page_size) - 1;
+        base = vms$page_round_up(mem_info->regions[i].base, page_size);
+        end = vms$page_round_down(mem_info->regions[i].end + 1, page_size) - 1;
 
         if (base < end)
         {
-			notice(MEM_I_FREE "freeing region $%016lX - $%016lX\n",
-					base, end);
+            notice(MEM_I_FREE "freeing region $%016lX - $%016lX\n",
+                    base, end);
             vms$fpage_free_chunk(&pm_alloc, base, end);
         }
     }
 
     vms$fpage_clear_internal(&vm_alloc);
 
-	// Initialize VM allocator
+    // Initialize VM allocator
 
-	for(i = 0; i < mem_info->num_vm_regions; i++)
-	{
-		if (mem_info->vm_regions[i].base < mem_info->vm_regions[i].end)
-		{
-			notice(MEM_I_VALLOC "adding $%016lX - $%016lX to VM allocator\n",
-					mem_info->vm_regions[i].base, mem_info->vm_regions[i].end);
-			vms$fpage_free_chunk(&vm_alloc, mem_info->vm_regions[i].base,
-					mem_info->vm_regions[i].end);
-		}
-	}
+    for(i = 0; i < mem_info->num_vm_regions; i++)
+    {
+        if (mem_info->vm_regions[i].base < mem_info->vm_regions[i].end)
+        {
+            notice(MEM_I_VALLOC "adding $%016lX - $%016lX to VM allocator\n",
+                    mem_info->vm_regions[i].base, mem_info->vm_regions[i].end);
+            vms$fpage_free_chunk(&vm_alloc, mem_info->vm_regions[i].base,
+                    mem_info->vm_regions[i].end);
+        }
+    }
 
-	// Setup the kernel heap
+    // Setup the kernel heap
 
-	heap = vms$pd_create_memsection((struct pd *) NULL, VMS$HEAP_SIZE, 0,
-			VMS$MEM_NORMAL | VMS$MEM_USER);
+    heap = vms$pd_create_memsection((struct pd *) NULL, VMS$HEAP_SIZE, 0,
+            VMS$MEM_NORMAL | VMS$MEM_USER);
 
-	PANIC(heap == NULL);
-	/*
-	vms$alloc_init((void *)heap->base, (void *)heap->end);
-	*/
+    PANIC(heap == NULL);
+    /*
+    vms$alloc_init((void *)heap->base, (void *)heap->end);
+    */
     return;
 }

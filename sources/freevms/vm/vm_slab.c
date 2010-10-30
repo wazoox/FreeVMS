@@ -59,7 +59,7 @@ vms$memsection_create_cache(struct slab_cache *sc)
     struct memsection_node      *node;
     struct memsection_list      *list;
 
-	// ms has to be declared as volatile to avoid a strange gcc optimization bug
+    // ms has to be declared as volatile to avoid a strange gcc optimization bug
     volatile struct memsection  *ms;
 
     vms$pointer                 phys;
@@ -201,17 +201,17 @@ vms$slab_cache_free(struct slab_cache *sc, void *ptr)
 static struct memsection_node *
 memsection_new(void)
 {
-	int						length;
+    int                     length;
 
-	struct memsection_node	*node;
+    struct memsection_node  *node;
 
-	unsigned char			*ptr;
+    unsigned char           *ptr;
 
-	if ((node = (struct memsection_node *) vms$slab_cache_alloc(&ms_cache))
-			== NULL)
-	{
-		return(NULL);
-	}
+    if ((node = (struct memsection_node *) vms$slab_cache_alloc(&ms_cache))
+            == NULL)
+    {
+        return(NULL);
+    }
 
     length = sizeof(struct memsection_node);
     ptr = (unsigned char *) node;
@@ -223,118 +223,118 @@ memsection_new(void)
         ptr++;
     }
 
-	return(node);
+    return(node);
 }
 
 static void
 delete_memsection_from_allocator(struct memsection_node *node)
 {
-	vms$slab_cache_free(&ms_cache, node);
-	return;
+    vms$slab_cache_free(&ms_cache, node);
+    return;
 }
 
 int
 memsection_back(struct memsection *memsection)
 {
-	L4_Fpage_t				vpage;
+    L4_Fpage_t              vpage;
 
-	struct fpage_list		*node;
+    struct fpage_list       *node;
 
-	vms$pointer				addr;
-	vms$pointer				size;
-	vms$pointer				flags;
+    vms$pointer             addr;
+    vms$pointer             size;
+    vms$pointer             flags;
 
-	addr = memsection->base;
-	size = (memsection->end - memsection->base) + 1;
-	flags = memsection->flags;
+    addr = memsection->base;
+    size = (memsection->end - memsection->base) + 1;
+    flags = memsection->flags;
 
-	if (flags & (VMS$MEM_USER | VMS$MEM_UTCB))
-	{
-		return(-1);
-	}
-	else if (flags & VMS$MEM_INTERNAL)
-	{
-		// Map it 1:1
-		vms$sigma0_map(addr, memsection->phys.base, size);
-		return(0);
-	}
-	else
-	{
-		// Iterate through fpage list
-		TAILQ_FOREACH(node, &memsection->phys.list, flist)
-		{
-			vpage = L4_Fpage(addr, L4_Size(node->fpage));
-			vms$sigma0_map_fpage(vpage, node->fpage);
-			vms$initmem(addr, L4_Size(vpage));
-			addr += L4_Size(vpage);
-		}
-	}
+    if (flags & (VMS$MEM_USER | VMS$MEM_UTCB))
+    {
+        return(-1);
+    }
+    else if (flags & VMS$MEM_INTERNAL)
+    {
+        // Map it 1:1
+        vms$sigma0_map(addr, memsection->phys.base, size);
+        return(0);
+    }
+    else
+    {
+        // Iterate through fpage list
+        TAILQ_FOREACH(node, &memsection->phys.list, flist)
+        {
+            vpage = L4_Fpage(addr, L4_Size(node->fpage));
+            vms$sigma0_map_fpage(vpage, node->fpage);
+            vms$initmem(addr, L4_Size(vpage));
+            addr += L4_Size(vpage);
+        }
+    }
 
-	return(0);
+    return(0);
 }
 
 struct memsection *
 vms$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
-		unsigned int flags)
+        unsigned int flags)
 {
-	int							r;
+    int                         r;
 
-	struct memsection			*memsection;
+    struct memsection           *memsection;
 
-	struct memsection_list		*list;
+    struct memsection_list      *list;
 
-	struct memsection_node		*node;
+    struct memsection_node      *node;
 
-	if ((node = memsection_new()) == NULL)
-	{
-		return(NULL);
-	}
+    if ((node = memsection_new()) == NULL)
+    {
+        return(NULL);
+    }
 
-	memsection = &(node->data);
+    memsection = &(node->data);
 
-	if (flags & VMS$MEM_NORMAL)
-	{
-		//r = objtable_setup(memsection, size, flags);
-		r = 0;
-	}
-	else if (flags & VMS$MEM_FIXED)
-	{
-		//r = objtable_setup_fixed(memsection, size, base, flags);
-	}
-	else if (flags & VMS$MEM_UTCB)
-	{
-		//r = objtable_setup_utcb(memsection, size, flags);
-	}
-	else if (flags & VMS$MEM_INTERNAL)
-	{
-		//r = objtable_setup_internal(memsection, size, base, flags);
-	}
-	else
-	{
-		r = -1;
-	}
+    if (flags & VMS$MEM_NORMAL)
+    {
+        //r = objtable_setup(memsection, size, flags);
+        r = 0;
+    }
+    else if (flags & VMS$MEM_FIXED)
+    {
+        //r = objtable_setup_fixed(memsection, size, base, flags);
+    }
+    else if (flags & VMS$MEM_UTCB)
+    {
+        //r = objtable_setup_utcb(memsection, size, flags);
+    }
+    else if (flags & VMS$MEM_INTERNAL)
+    {
+        //r = objtable_setup_internal(memsection, size, base, flags);
+    }
+    else
+    {
+        r = -1;
+    }
 
-	if (r != 0)
-	{
-		// Insertion into object table failed. Delete memsection from mem_alloc,
-		// need not to delete it from memsection_list.
-		delete_memsection_from_allocator(node);
-		return(NULL);
-	}
+    if (r != 0)
+    {
+        // Insertion into object table failed. Delete memsection from mem_alloc,
+        // need not to delete it from memsection_list.
+        delete_memsection_from_allocator(node);
+        return(NULL);
+    }
 
-	if (self != NULL)
-	{
-		list = &self->memsections;
-	}
-	else
-	{
-		list = &internal_memsections;
-	}
+    if (self != NULL)
+    {
+        list = &self->memsections;
+    }
+    else
+    {
+        list = &internal_memsections;
+    }
 
-	node->next = (struct memsection_node *) list;
-	list->last->next = node;
-	node->prev = list->last;
-	list->last = node;
+    node->next = (struct memsection_node *) list;
+    list->last->next = node;
+    node->prev = list->last;
+    list->last = node;
 
-	return(memsection);
+    return(memsection);
 }

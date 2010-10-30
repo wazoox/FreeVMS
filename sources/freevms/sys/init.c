@@ -63,8 +63,8 @@ main(void)
 
     struct vms$meminfo          mem_info;
 
-	dbg$sigma0(0);
-	vms$pd_initialized = 0;
+    dbg$sigma0(0);
+    vms$pd_initialized = 0;
 
     notice("\n");
     notice(">>> FreeVMS %s (R)\n", FREEVMS_VERSION);

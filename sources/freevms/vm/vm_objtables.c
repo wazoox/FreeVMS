@@ -25,19 +25,19 @@ static BTree _objtable;
 static GBTree objtable = 0;
 
 static struct slab_cache bt_cache =
-		SLAB_CACHE_INITIALIZER(sizeof(struct sBTPage), &bt_cache);
+        SLAB_CACHE_INITIALIZER(sizeof(struct sBTPage), &bt_cache);
 
 struct memsection *
 vms$objtable_lookup(void *addr)
 {
-	extern struct memsection_list		internal_memsections;
+    extern struct memsection_list       internal_memsections;
 
-    struct memsection       			*memsection;
+    struct memsection                   *memsection;
 
-    struct memsection_node  			*first_ms;
-    struct memsection_node  			*ms;
+    struct memsection_node              *first_ms;
+    struct memsection_node              *ms;
 
-    int                     			r;
+    int                                 r;
 
     r = ObjBTSearch(objtable, (vms$pointer) addr, &memsection);
 
@@ -63,82 +63,82 @@ vms$objtable_lookup(void *addr)
 static int
 insert(struct memsection *memsection)
 {
-	struct memsection			*ignored;
+    struct memsection           *ignored;
 
-	if (ObjBTIns(objtable, memsection, &ignored) != BT_FOUND)
-	{
-		return(-1);
-	}
+    if (ObjBTIns(objtable, memsection, &ignored) != BT_FOUND)
+    {
+        return(-1);
+    }
 
-	return(0);
+    return(0);
 }
 
 static int
 objtable_insert(struct memsection *memsection)
 {
-	int				r;
+    int             r;
 
-	r = 0;
+    r = 0;
 
-	if (vms$pd_initialized)
-	{
-		r = insert(memsection);
-	}
+    if (vms$pd_initialized)
+    {
+        r = insert(memsection);
+    }
 
-	return(r);
+    return(r);
 }
 
 int
 objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags)
 {
-	extern struct fpage_alloc   pm_alloc;
-	extern struct fpage_alloc   vm_alloc;
+    extern struct fpage_alloc   pm_alloc;
+    extern struct fpage_alloc   vm_alloc;
 
-	int							r;
+    int                         r;
 
-	PANIC(!(flags & VMS$MEM_NORMAL));
+    PANIC(!(flags & VMS$MEM_NORMAL));
 
-	ms->flags = flags;
-	ms->base = vms$fpage_alloc_chunk(&vm_alloc, size);
+    ms->flags = flags;
+    ms->base = vms$fpage_alloc_chunk(&vm_alloc, size);
 
-	if (ms->base == INVALID_ADDR)
-	{
-		return(-1);
-	}
+    if (ms->base == INVALID_ADDR)
+    {
+        return(-1);
+    }
 
-	ms->end = ms->base + (size - 1);
+    ms->end = ms->base + (size - 1);
 
-	if (!(flags & VMS$MEM_USER))
-	{
-		ms->phys.list = vms$fpage_alloc_list(&pm_alloc, ms->base, ms->end);
+    if (!(flags & VMS$MEM_USER))
+    {
+        ms->phys.list = vms$fpage_alloc_list(&pm_alloc, ms->base, ms->end);
 
-		if (TAILQ_EMPTY(&ms->phys.list))
-		{
-			vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
-			return(-1);
-		}
+        if (TAILQ_EMPTY(&ms->phys.list))
+        {
+            vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
+            return(-1);
+        }
 
-		memsection_back(ms);
-	}
+        memsection_back(ms);
+    }
 
-	if ((r = objtable_insert(ms)) != 0)
-	{
-		vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
-		vms$fpage_free_list(&pm_alloc, ms->phys.list);
-	}
+    if ((r = objtable_insert(ms)) != 0)
+    {
+        vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
+        vms$fpage_free_list(&pm_alloc, ms->phys.list);
+    }
 
-	return(r);
+    return(r);
 }
 
 struct sBTPage *
 ObjAllocPage(PagePool *pool)
 {
-	return((struct sBTPage *) vms$slab_cache_alloc(&bt_cache));
+    return((struct sBTPage *) vms$slab_cache_alloc(&bt_cache));
 }
 
 void
 ObjFreePage(PagePool *pool, struct sBTPage *page)
 {
-	vms$slab_cache_free(&bt_cache, page);
-	return;
+    vms$slab_cache_free(&bt_cache, page);
+    return;
 }

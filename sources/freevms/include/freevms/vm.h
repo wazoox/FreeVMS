@@ -61,22 +61,22 @@ struct vms$meminfo
     struct initial_obj  *objects;
 };
 
-#define		VMS$HEAP_SIZE	(4 * 1024 * 1024)
+#define     VMS$HEAP_SIZE   (4 * 1024 * 1024)
 
 #define     VMS$MEM_RAM     1
 #define     VMS$MEM_IO      2
 #define     VMS$MEM_VM      4
 #define     VMS$MEM_OTHER   8
 
-#define		VMS$MEM_NORMAL		0x1
-#define		VMS$MEM_FIXED		0x2
-#define		VMS$MEM_UTCB		0x4
-#define		VMS$MEM_USER		0x8
+#define     VMS$MEM_NORMAL      0x1
+#define     VMS$MEM_FIXED       0x2
+#define     VMS$MEM_UTCB        0x4
+#define     VMS$MEM_USER        0x8
 
-#define		VMS$MEM_VALID_USER_FLAGS \
-		(VMS$MEM_NORMAL | VMS$EM_FIXED | VMS$MEM_UTCB | VMS$MEM_USER )
+#define     VMS$MEM_VALID_USER_FLAGS \
+        (VMS$MEM_NORMAL | VMS$EM_FIXED | VMS$MEM_UTCB | VMS$MEM_USER )
 
-#define		VMS$MEM_INTERNAL	0x10
+#define     VMS$MEM_INTERNAL    0x10
 
 #define     NUM_MI_REGIONS      1024
 #define     NUM_MI_IOREGIONS    1024
@@ -194,14 +194,14 @@ void *vms$slab_cache_alloc(struct slab_cache *sc);
 void vms$slab_cache_free(struct slab_cache *sc, void *ptr);
 
 struct flist_head vms$fpage_alloc_list(struct fpage_alloc *alloc,
-		vms$pointer base, vms$pointer end);
+        vms$pointer base, vms$pointer end);
 
 struct memsection *vms$objtable_lookup(void *addr);
 
 vms$pointer vms$fpage_alloc_chunk(struct fpage_alloc *alloc,
-		unsigned int size);
+        unsigned int size);
 vms$pointer vms$fpage_alloc_internal(struct fpage_alloc *alloc,
-		unsigned int size);
+        unsigned int size);
 vms$pointer vms$page_round_down(vms$pointer address, unsigned int page_size);
 vms$pointer vms$page_round_up(vms$pointer address, unsigned int page_size);
 
