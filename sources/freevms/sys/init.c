@@ -36,7 +36,6 @@ main(void)
     L4_Clock_t                  time;
 
     L4_Fpage_t                  kip_area;
-    L4_Fpage_t                  threads_stack;
 
     L4_KernelInterfacePage_t    *kip;
 
@@ -59,7 +58,6 @@ main(void)
     L4_Word_t                   page_size;
     L4_Word_t                   pager_utcb;
     L4_Word_t                   running_system;
-    L4_Word_t                   utcb_size;
 
     struct vms$meminfo          mem_info;
 
@@ -88,10 +86,6 @@ main(void)
     notice(SYSBOOT_I_SYSBOOT "computing page size: %d bytes\n",
             (int) page_size);
 
-    // Map kip
-
-    kip_area = L4_FpageLog2((L4_Word_t) kip, L4_KipAreaSizeLog2(kip));
-    utcb_size = L4_UtcbSize(kip);
     num_processors = L4_NumProcessors((void *) kip);
 
     switch(num_processors - 1)
@@ -143,19 +137,26 @@ main(void)
     parsing(command_line, (char *) " root", root_device, ROOT_DEVICE_LENGTH);
     notice(SYSBOOT_I_SYSBOOT "selecting root device: %s\n", root_device);
 
-    threads_stack = L4_Sigma0_GetPage(s0_tid,
-            L4_FpageLog2(THREAD_STACK_BASE, 16));
-    vms$initmem(THREAD_STACK_BASE, 1UL << 16);
-    
     // Starting virtual memory subsystem
     vms$init(kip, &mem_info, (unsigned int) page_size);
     vms$bootstrap(&mem_info, (unsigned int) page_size);
+
+    vms$objtable_init();
+    jobctl$utcb_init(kip);
+    jobctl$pd_init(&mem_info);
+    /*
+    populate_init_objects(&mem_info);
+    thread_init();
+    start_init();
+    iguana_server();
+    */
 
     // A thread must have a pager. This pager requires a
     // specific thread to handle pagefault protocol.
     // This thread is created by hand because there is no memory management
     // to manage thread.
 
+#if 0
     pager_utcb = L4_MyLocalId().raw;
     pager_utcb = (pager_utcb & (~(utcb_size - 1))) + utcb_size;
     pager_tid = L4_GlobalId(L4_ThreadNo(root_tid) + 1, 1);
@@ -275,5 +276,6 @@ main(void)
 
     notice(">>> System halted\n");
 
+#endif
     return(0);
 }

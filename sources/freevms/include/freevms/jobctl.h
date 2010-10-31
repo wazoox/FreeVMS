@@ -29,3 +29,6 @@ struct pd
 
 struct memsection *vms$pd_create_memsection(struct pd *self, vms$pointer size,
         vms$pointer base, unsigned int flags);
+
+void jobctl$utcb_init(L4_KernelInterfacePage_t *kip);
+void jobctl$pd_init(struct vms$meminfo *meminfo);

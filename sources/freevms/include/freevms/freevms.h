@@ -49,7 +49,7 @@ typedef L4_Word64_t     vms$pointer;
 
 // FreeVMS subsystems
 #include "freevms/vm.h"
-#include "freevms/pd.h"
+#include "freevms/jobctl.h"
 
 // Defines
 #define NULL                            ((vms$pointer) 0)
@@ -85,3 +85,4 @@ void dbg$sigma0(int level);
 
 // Prototypes
 void parsing(char *line, char *command, char *argument, int length);
+

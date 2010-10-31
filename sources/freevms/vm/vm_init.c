@@ -596,8 +596,7 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
             VMS$MEM_NORMAL | VMS$MEM_USER);
 
     PANIC(heap == NULL);
-    /*
-    vms$alloc_init((void *)heap->base, (void *)heap->end);
-    */
+
+    vms$alloc_init(heap->base, heap->end);
     return;
 }

@@ -174,6 +174,7 @@ L4_Word_t vms$min_pagebits(void);
 L4_Fpage_t vms$biggest_fpage(vms$pointer addr, vms$pointer base,
         vms$pointer end);
 
+void vms$alloc_init(vms$pointer bss_p, vms$pointer top_p);
 void vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr,
         vms$pointer size);
 void vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page);
@@ -184,6 +185,8 @@ void vms$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
 void vms$fpage_free_internal(struct fpage_alloc *alloc, vms$pointer base,
         unsigned long end);
 void vms$fpage_free_list(struct fpage_alloc *alloc, struct flist_head list);
+void vms$fpage_remove_chunk(struct fpage_alloc *alloc, vms$pointer base,
+        vms$pointer end);
 void vms$init(L4_KernelInterfacePage_t *kip,
         struct vms$meminfo *MemInfo, unsigned int page_size);
 void vms$initmem(vms$pointer zone, vms$pointer len);
@@ -205,5 +208,17 @@ vms$pointer vms$fpage_alloc_internal(struct fpage_alloc *alloc,
 vms$pointer vms$page_round_down(vms$pointer address, unsigned int page_size);
 vms$pointer vms$page_round_up(vms$pointer address, unsigned int page_size);
 
+// Objtable's functions
+
 struct sBTPage *ObjAllocPage(PagePool *pool);
 void ObjFreePage(PagePool *pool, struct sBTPage *page);
+
+void vms$objtable_init(void);
+
+int objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags);
+int objtable_setup_fixed(struct memsection *ms, vms$pointer size,
+        vms$pointer base, unsigned int flags);
+int objtable_setup_internal(struct memsection *ms, vms$pointer size,
+        vms$pointer base, unsigned int flags);
+int objtable_setup_utcb(struct memsection *ms, vms$pointer size,
+        unsigned int flags);

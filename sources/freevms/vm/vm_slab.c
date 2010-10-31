@@ -33,7 +33,7 @@ struct memsection_list internal_memsections =
 void
 vms$initmem(vms$pointer zone, vms$pointer len)
 {
-    unsigned char       *ptr;
+    volatile unsigned char      *ptr;
 
     ptr = (unsigned char *) zone;
     while(len-- > 0)
@@ -59,8 +59,7 @@ vms$memsection_create_cache(struct slab_cache *sc)
     struct memsection_node      *node;
     struct memsection_list      *list;
 
-    // ms has to be declared as volatile to avoid a strange gcc optimization bug
-    volatile struct memsection  *ms;
+    struct memsection           *ms;
 
     vms$pointer                 phys;
     vms$pointer                 virt;
@@ -130,7 +129,7 @@ vms$memsection_create_cache(struct slab_cache *sc)
 
     TAILQ_INIT(&ms->slabs);
 
-    for(; (virt + sc->slab_size) - 1 <= ms->end; virt += sc->slab_size)
+    for(; virt + (sc->slab_size - 1) <= ms->end; virt += sc->slab_size)
     {
         TAILQ_INSERT_TAIL(&ms->slabs, (struct slab *) virt, slabs);
     }
@@ -144,12 +143,8 @@ vms$memsection_create_cache(struct slab_cache *sc)
 void *
 vms$slab_cache_alloc(struct slab_cache *sc)
 {
-    int                     length;
-
     struct memsection       *pool;
     struct slab             *slab;
-
-    unsigned char           *ptr;
 
     TAILQ_FOREACH(pool, &sc->pools, pools)
     {
@@ -171,16 +166,7 @@ vms$slab_cache_alloc(struct slab_cache *sc)
 
     slab = TAILQ_FIRST(&pool->slabs);
     TAILQ_REMOVE(&pool->slabs, TAILQ_FIRST(&pool->slabs), slabs);
-
-    length = sc->slab_size;
-    ptr = (unsigned char *) slab;
-
-    while(length > 0)
-    {
-        (*ptr) = '\0';
-        length--;
-        ptr++;
-    }
+    vms$initmem((vms$pointer) slab, sc->slab_size);
 
     return(slab);
 }
@@ -201,11 +187,7 @@ vms$slab_cache_free(struct slab_cache *sc, void *ptr)
 static struct memsection_node *
 memsection_new(void)
 {
-    int                     length;
-
     struct memsection_node  *node;
-
-    unsigned char           *ptr;
 
     if ((node = (struct memsection_node *) vms$slab_cache_alloc(&ms_cache))
             == NULL)
@@ -213,15 +195,7 @@ memsection_new(void)
         return(NULL);
     }
 
-    length = sizeof(struct memsection_node);
-    ptr = (unsigned char *) node;
-
-    while(length > 0)
-    {
-        (*ptr) = '\0';
-        length--;
-        ptr++;
-    }
+    vms$initmem((vms$pointer) node, sizeof(struct memsection_node));
 
     return(node);
 }
@@ -294,20 +268,19 @@ vms$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
 
     if (flags & VMS$MEM_NORMAL)
     {
-        //r = objtable_setup(memsection, size, flags);
-        r = 0;
+        r = objtable_setup(memsection, size, flags);
     }
     else if (flags & VMS$MEM_FIXED)
     {
-        //r = objtable_setup_fixed(memsection, size, base, flags);
+        r = objtable_setup_fixed(memsection, size, base, flags);
     }
     else if (flags & VMS$MEM_UTCB)
     {
-        //r = objtable_setup_utcb(memsection, size, flags);
+        r = objtable_setup_utcb(memsection, size, flags);
     }
     else if (flags & VMS$MEM_INTERNAL)
     {
-        //r = objtable_setup_internal(memsection, size, base, flags);
+        r = objtable_setup_internal(memsection, size, base, flags);
     }
     else
     {

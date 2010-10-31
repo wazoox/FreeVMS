@@ -9,6 +9,7 @@ INCLUDES=-I./include \
 
 OBJ=$(DESTDIR)/debug/backtrace.o \
     $(DESTDIR)/debug/sigma0.o \
+    $(DESTDIR)/jobctl/jobctl_init.o \
     $(DESTDIR)/libearly/amd64.o \
 	$(DESTDIR)/libearly/get_hex.o \
 	$(DESTDIR)/libearly/print.o \
@@ -17,6 +18,7 @@ OBJ=$(DESTDIR)/debug/backtrace.o \
 	$(DESTDIR)/sys/parsing.o \
 	$(DESTDIR)/vm/vm_alloc.o \
 	$(DESTDIR)/vm/vm_btree.o \
+	$(DESTDIR)/vm/vm_core.o \
 	$(DESTDIR)/vm/vm_init.o \
 	$(DESTDIR)/vm/vm_objtables.o \
 	$(DESTDIR)/vm/vm_server.o \
@@ -46,6 +48,7 @@ $(DESTDIR)/vmskernel.sys: $(OBJ)
 directories:
 	mkdir -p $(DESTDIR)/debug
 	mkdir -p $(DESTDIR)/drv
+	mkdir -p $(DESTDIR)/jobctl
 	mkdir -p $(DESTDIR)/libearly
 	mkdir -p $(DESTDIR)/sys
 	mkdir -p $(DESTDIR)/vm
@@ -56,6 +59,11 @@ $(DESTDIR)/debug/backtrace.o: debug/backtrace.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/debug/sigma0.o: debug/sigma0.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+# ./jobctl
+
+$(DESTDIR)/jobctl/jobctl_init.o: jobctl/jobctl_init.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 # ./sys
@@ -90,6 +98,9 @@ $(DESTDIR)/vm/vm_sigma0.o: vm/vm_sigma0.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/vm/vm_slab.o: vm/vm_slab.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/vm/vm_core.o: vm/vm_core.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 # ./libearly

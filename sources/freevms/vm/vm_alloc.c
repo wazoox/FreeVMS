@@ -381,6 +381,62 @@ vms$fpage_alloc_chunk(struct fpage_alloc *alloc, unsigned int size)
     return(L4_Address(vms$fpage_alloc(alloc, size)));
 }
 
+static void
+vms$fpage_free_extra(struct fpage_alloc *alloc, L4_Fpage_t fpage,
+        vms$pointer base, vms$pointer end)
+{
+    if (L4_Address(fpage) < base)
+    {
+        vms$fpage_free_chunk(alloc, L4_Address(fpage), base - 1);
+    }
+
+    if (L4_Address(fpage) + (L4_Size(fpage) - 1) > end)
+    {
+        vms$fpage_free_chunk(alloc, end + 1, vms$fp_end(fpage));
+    }
+
+    return;
+}
+
+void
+vms$fpage_remove_chunk(struct fpage_alloc *alloc, vms$pointer base,
+        vms$pointer end)
+{
+    L4_Fpage_t                  fpage;
+
+    struct fpage_list           *node;
+    struct fpage_list           *tmp;
+
+    unsigned int                i;
+
+    vms$pointer                 fbase;
+    vms$pointer                 fend;
+
+    for(i = 0; i <= MAX_FPAGE_ORDER; i++)
+    {
+        node = TAILQ_FIRST(&alloc->flist[i]);
+
+        for (; node != NULL; node = tmp)
+        {
+            tmp = TAILQ_NEXT(node, flist);
+            fbase = L4_Address(node->fpage);
+            fend = fbase + (L4_Size(node->fpage) - 1);
+
+            if (max(base, fbase) < min(end, fend))
+            {
+                // remove from list , then trim and free
+                // any excess memory in the fpage.
+                fpage = node->fpage;
+                TAILQ_REMOVE(&alloc->flist[i], node, flist);
+                vms$slab_cache_free(&fp_cache, node);
+                vms$fpage_free_extra(alloc, fpage, base, end);
+            }
+        }
+    }
+
+    return;
+}
+
 // Following function is used to back memsections. It shall try to allocate
 // the largest fpages it can to back [base, end].
 struct flist_head

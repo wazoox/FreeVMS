@@ -27,6 +27,16 @@ static GBTree objtable = 0;
 static struct slab_cache bt_cache =
         SLAB_CACHE_INITIALIZER(sizeof(struct sBTPage), &bt_cache);
 
+void
+vms$objtable_init(void)
+{
+    objtable = &_objtable;
+    objtable->root = NULL;
+    objtable->pool = NULL;
+
+    return;
+}
+
 struct memsection *
 vms$objtable_lookup(void *addr)
 {
@@ -125,6 +135,96 @@ objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags)
     {
         vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
         vms$fpage_free_list(&pm_alloc, ms->phys.list);
+    }
+
+    return(r);
+}
+
+int
+objtable_setup_fixed(struct memsection *ms, vms$pointer size,
+        vms$pointer base, unsigned int flags)
+{
+    extern struct fpage_alloc   pm_alloc;
+    extern struct fpage_alloc   vm_alloc;
+
+    int                         r;
+
+    PANIC(!(flags & VMS$MEM_FIXED));
+
+    ms->flags = flags;
+    ms->base = base;
+    ms->end = base + (size - 1);
+    r = objtable_insert(ms);
+
+    if (r != 0)
+    {
+        return(r);
+    }
+
+    vms$fpage_remove_chunk(&vm_alloc, base, base + size - 1);
+
+    // Check if we need to back the memsection
+    if (!(flags & VMS$MEM_USER))
+    {
+        ms->phys.list = vms$fpage_alloc_list(&pm_alloc, ms->base, ms->end);
+
+        if (TAILQ_EMPTY(&ms->phys.list))
+        {
+            vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
+            return(-1);
+        }
+
+        memsection_back(ms);
+    }
+
+    return(r);
+}
+
+int
+objtable_setup_utcb(struct memsection *ms, vms$pointer size, unsigned int flags)
+{
+    extern struct fpage_alloc   vm_alloc;
+
+    int                         r;
+
+    PANIC(!(flags & VMS$MEM_UTCB));
+
+    ms->flags = flags;
+    ms->base = vms$fpage_alloc_chunk(&vm_alloc, size);
+
+    if (ms->base == INVALID_ADDR)
+    {
+        return(-1);
+    }
+
+    ms->end = ms->base + (size - 1);
+    r = objtable_insert(ms);
+
+    if (r != 0)
+    {
+        vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
+    }
+
+    return(r);
+}
+
+int
+objtable_setup_internal(struct memsection *ms, vms$pointer size,
+        vms$pointer base, unsigned int flags)
+{
+    int                         r;
+
+    PANIC(!(flags & VMS$MEM_INTERNAL));
+
+    ms->flags = flags;
+    ms->base = base;
+    ms->end = base + (size - 1);
+    ms->phys.base = base;
+    r = objtable_insert(ms);
+
+    if (r == 0)
+    {
+        memsection_back(ms);
     }
 
     return(r);
