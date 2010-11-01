@@ -10,12 +10,15 @@ INCLUDES=-I./include \
 OBJ=$(DESTDIR)/debug/backtrace.o \
     $(DESTDIR)/debug/sigma0.o \
     $(DESTDIR)/jobctl/jobctl_init.o \
+    $(DESTDIR)/jobctl/jobctl_bfl.o \
     $(DESTDIR)/libearly/amd64.o \
 	$(DESTDIR)/libearly/get_hex.o \
 	$(DESTDIR)/libearly/print.o \
-	$(DESTDIR)/sys/boot.o \
-	$(DESTDIR)/sys/init.o \
-	$(DESTDIR)/sys/parsing.o \
+	$(DESTDIR)/lock/lock_mutex.o \
+	$(DESTDIR)/lock/lock_mutex_amd64.o \
+	$(DESTDIR)/sys/sys_boot.o \
+	$(DESTDIR)/sys/sys_init.o \
+	$(DESTDIR)/sys/sys_parsing.o \
 	$(DESTDIR)/vm/vm_alloc.o \
 	$(DESTDIR)/vm/vm_btree.o \
 	$(DESTDIR)/vm/vm_core.o \
@@ -50,6 +53,7 @@ directories:
 	mkdir -p $(DESTDIR)/drv
 	mkdir -p $(DESTDIR)/jobctl
 	mkdir -p $(DESTDIR)/libearly
+	mkdir -p $(DESTDIR)/lock
 	mkdir -p $(DESTDIR)/sys
 	mkdir -p $(DESTDIR)/vm
 
@@ -66,15 +70,26 @@ $(DESTDIR)/debug/sigma0.o: debug/sigma0.c
 $(DESTDIR)/jobctl/jobctl_init.o: jobctl/jobctl_init.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
+$(DESTDIR)/jobctl/jobctl_bfl.o: jobctl/jobctl_bfl.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+# ./lock
+
+$(DESTDIR)/lock/lock_mutex.o: lock/lock_mutex.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/lock/lock_mutex_amd64.o: lock/lock_mutex_amd64.S
+	as $< -o $@
+
 # ./sys
 
-$(DESTDIR)/sys/init.o: sys/init.c
+$(DESTDIR)/sys/sys_init.o: sys/sys_init.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
-$(DESTDIR)/sys/parsing.o: sys/parsing.c
+$(DESTDIR)/sys/sys_parsing.o: sys/sys_parsing.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
-$(DESTDIR)/sys/boot.o: sys/boot.S
+$(DESTDIR)/sys/sys_boot.o: sys/sys_boot.S
 	as $< -o $@
 
 # ./vm

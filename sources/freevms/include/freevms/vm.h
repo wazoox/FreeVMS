@@ -97,6 +97,21 @@ struct vms$meminfo
 
 #define     SIGMA0_REQUEST_LABEL (((vms$pointer) -6) << 4)
 
+typedef long long				Align;	// for alignment to long long boundary
+
+union header							// block header
+{
+	struct
+	{
+		union header			*ptr;	// next block if on free list
+		unsigned int			size;	// size of this block
+	} s;
+
+	Align						x;		// force alignment
+};
+
+typedef union header			Header;
+
 struct fpage_list
 {
     L4_Fpage_t                  fpage;
@@ -125,6 +140,14 @@ struct slab_cache
 {
     vms$pointer                         slab_size;
     TAILQ_HEAD(sc_head, memsection)     pools;
+};
+
+struct clist;
+
+struct cap_slot
+{
+	struct clist			*list;
+	int						pos;
 };
 
 #define SLAB_CACHE_INITIALIZER(sz, sc) \
@@ -164,7 +187,10 @@ struct memsection_node
     struct memsection           data;
 };
 
-int memsection_back(struct memsection *memsection);
+int vms$back_mem(vms$pointer base, vms$pointer end);
+int vms$memsection_back(struct memsection *memsection);
+int vms$memsection_page_map(struct memsection *self, L4_Fpage_t from_page,
+		L4_Fpage_t to_page);
 int vms$remove_chunk(struct memdesc *mem_desc, int pos, int max,
         vms$pointer low, vms$pointer high);
 
@@ -174,10 +200,8 @@ L4_Word_t vms$min_pagebits(void);
 L4_Fpage_t vms$biggest_fpage(vms$pointer addr, vms$pointer base,
         vms$pointer end);
 
+void *vms$alloc(vms$pointer nbytes);
 void vms$alloc_init(vms$pointer bss_p, vms$pointer top_p);
-void vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr,
-        vms$pointer size);
-void vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page);
 void vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size);
 void vms$fpage_clear_internal(struct fpage_alloc *alloc);
 void vms$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
@@ -187,19 +211,23 @@ void vms$fpage_free_internal(struct fpage_alloc *alloc, vms$pointer base,
 void vms$fpage_free_list(struct fpage_alloc *alloc, struct flist_head list);
 void vms$fpage_remove_chunk(struct fpage_alloc *alloc, vms$pointer base,
         vms$pointer end);
+void vms$free(void *ptr);
 void vms$init(L4_KernelInterfacePage_t *kip,
         struct vms$meminfo *MemInfo, unsigned int page_size);
 void vms$initmem(vms$pointer zone, vms$pointer len);
 void vms$pager(void);
 void vms$remove_virtmem(struct vms$meminfo *mem_info,
         vms$pointer base, unsigned long end, unsigned int page_size);
+void vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr,
+        vms$pointer size);
+void vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page);
 void *vms$slab_cache_alloc(struct slab_cache *sc);
 void vms$slab_cache_free(struct slab_cache *sc, void *ptr);
 
 struct flist_head vms$fpage_alloc_list(struct fpage_alloc *alloc,
         vms$pointer base, vms$pointer end);
 
-struct memsection *vms$objtable_lookup(void *addr);
+memsection *vms$objtable_lookup(void *addr);
 
 vms$pointer vms$fpage_alloc_chunk(struct fpage_alloc *alloc,
         unsigned int size);
@@ -211,10 +239,11 @@ vms$pointer vms$page_round_up(vms$pointer address, unsigned int page_size);
 // Objtable's functions
 
 struct sBTPage *ObjAllocPage(PagePool *pool);
-void ObjFreePage(PagePool *pool, struct sBTPage *page);
 
+void ObjFreePage(PagePool *pool, struct sBTPage *page);
 void vms$objtable_init(void);
 
+int objtable_insert(struct memsection *memsection);
 int objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags);
 int objtable_setup_fixed(struct memsection *ms, vms$pointer size,
         vms$pointer base, unsigned int flags);

@@ -24,6 +24,10 @@
 #include "libearly/lib.h"
 #include "libearly/l4io.h"
 
+#define arch_specific(func)         CONCAT(func, ARCH)
+#define CONCAT(a, b)                XCAT(a, _, b)
+#define XCAT(a, c, b)               a##c##b
+
 // L4 interfaces
 #include "l4/arch.h"
 #include "l4/bootinfo.h"
@@ -35,6 +39,11 @@
 #include "l4/thread.h"
 
 #include "freevms/arch.h"
+
+#ifdef AMD64
+#   define ARCH     amd64
+#   include         "freevms/amd64.h"
+#endif
 
 typedef L4_Word64_t     vms$pointer;
 
@@ -50,11 +59,13 @@ typedef L4_Word64_t     vms$pointer;
 // FreeVMS subsystems
 #include "freevms/vm.h"
 #include "freevms/jobctl.h"
+#include "freevms/lock.h"
 
 // Defines
 #define NULL                            ((vms$pointer) 0)
 #define FREEVMS_VERSION                 "0.0.1"
 #define THREAD_STACK_BASE               (0xF00000UL)
+#define NUMBER_OF_KERNEL_THREADS		256
 
 // Address
 #define UTCB(x)                 ((void*) (L4_Address(utcb_area) + \
@@ -66,6 +77,7 @@ typedef L4_Word64_t     vms$pointer;
 #define max(a, b)   ((a < b) ? b : a)
 #define min(a, b)   ((a < b) ? a : b)
 
+// Debug capabilities
 const char *dbg$symbol(vms$pointer address);
 
 void dbg$backtrace(void);

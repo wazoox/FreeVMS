@@ -19,12 +19,64 @@
 ================================================================================
 */
 
-extern int                  vms$pd_initialized;
+struct thread
+{
+		struct pd			*owner;
+		void				*utcb;
+};
+
+struct thread_node
+{
+	struct thread_node		*next;
+	struct thread_node		*prev;
+	struct thread			data;
+};
+
+struct thread_list
+{
+	struct thread_node		*first;
+	struct thread_node		*last;
+};
+
+enum pd_state
+{
+	pd_empty,			// newly created
+	pd_active,			// has active threads
+	pd_suspended		// last thread was removed, but not deleted yet
+};
+
+typedef unsigned long		bfl_word;
+#define BITS_PER_BFL_WORD	((int) (sizeof(bfl_word) * 8))
+
+struct bfl
+{
+	unsigned int			curpos;
+	unsigned int			len;
+	unsigned int			array_size;
+
+	bfl_word				bitarray[];
+};
+
+typedef struct bfl			*bfl_t;
+
+bfl_t jobctl$bfl_new(vms$pointer size);
+void jobctl$bfl_free(bfl_t rfl, vms$pointer val);
+vms$pointer jobctl$bfl_alloc(bfl_t rfl);
 
 struct pd
 {
-    struct pd               *owner; // Our owner
+    struct pd               *owner;			// Our owner
+	enum pd_state			state;
+
+	struct memsection		*callback_buffer;
+	struct cb_alloc_handle	*cba;
+
+	// PD information
     struct memsection_list  memsections;
+
+	// Thread information
+	bfl_t					local_threadno; // Freelist for UTCBs
+	struct thread_list		threads;
 };
 
 struct memsection *vms$pd_create_memsection(struct pd *self, vms$pointer size,

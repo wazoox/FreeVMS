@@ -56,10 +56,10 @@ vms$strncpy(char *dest, const char *src, int n)
     do
     {
         if (!n--) return ret;
-    } while ((*dest++ = *src++));
+    } while((*dest++ = *src++));
 
-    while (n--) *dest++ = 0;
-    return ret;
+    while(n--) *dest++ = 0;
+    return(ret);
 }
 
 static char *
@@ -67,16 +67,16 @@ vms$strncat(char *s1, const char *s2, int n)
 {
     char *s = s1;
 
-    while (*s != '\0') s++;
+    while(*s != '\0') s++;
 
-    while (n != 0 && (*s = *s2++) != '\0')
+    while(n != 0 && (*s = *s2++) != '\0')
     {
         n--;
         s++;
     }
 
     if (*s != '\0') *s = '\0';
-    return s1;
+    return(s1);
 }
 
 void

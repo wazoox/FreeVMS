@@ -21,7 +21,9 @@
 
 #include "freevms/freevms.h"
 
-int vms$pd_initialized;
+// Global variables
+int 					vms$pd_initialized = 0;
+struct pd				freevms_pd;
 
 int
 main(void)

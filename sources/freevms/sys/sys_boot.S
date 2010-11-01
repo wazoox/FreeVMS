@@ -19,6 +19,7 @@
 ================================================================================
 */
 
+#ifdef AMD64
     .text
     .global _start
     .global _stext
@@ -48,3 +49,4 @@ _return_from_main:
     .space  4096 * 64 /* 256k */
 
 stack:
+#endif

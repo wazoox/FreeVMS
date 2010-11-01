@@ -502,3 +502,33 @@ vms$fpage_free_list(struct fpage_alloc *alloc, struct flist_head list)
 
     return;
 }
+
+int
+vms$back_mem(vms$pointer base, vms$pointer end)
+{
+	extern struct pd            freevms_pd;
+
+	struct memsection			*ms;
+	struct memsection			*backed;
+
+	ms = vms$objtable_lookup((void*)base);
+	PANIC(!(ms && (ms->flags & VMS$MEM_USER)));
+
+	while(base < end)
+	{
+		backed = vms$pd_create_memsection(&freevms_pd, vms$min_pagesize(),
+				0, VMS$MEM_NORMAL);
+
+		if (backed == NULL)
+		{
+			// FIXME: clean up the partially backed region
+			return(-1);
+		}
+
+		vms$memsection_page_map(ms, L4_Fpage(backed->base, vms$min_pagesize()),
+				L4_Fpage(base, vms$min_pagesize()));
+		base += vms$min_pagesize();
+	}
+
+	return(0);
+}

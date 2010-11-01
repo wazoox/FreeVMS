@@ -37,7 +37,7 @@ vms$objtable_init(void)
     return;
 }
 
-struct memsection *
+memsection *
 vms$objtable_lookup(void *addr)
 {
     extern struct memsection_list       internal_memsections;
@@ -83,9 +83,11 @@ insert(struct memsection *memsection)
     return(0);
 }
 
-static int
+int
 objtable_insert(struct memsection *memsection)
 {
+	extern int		vms$pd_initialized;
+
     int             r;
 
     r = 0;
@@ -128,7 +130,7 @@ objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags)
             return(-1);
         }
 
-        memsection_back(ms);
+        vms$memsection_back(ms);
     }
 
     if ((r = objtable_insert(ms)) != 0)
@@ -174,7 +176,7 @@ objtable_setup_fixed(struct memsection *ms, vms$pointer size,
             return(-1);
         }
 
-        memsection_back(ms);
+        vms$memsection_back(ms);
     }
 
     return(r);
@@ -224,7 +226,7 @@ objtable_setup_internal(struct memsection *ms, vms$pointer size,
 
     if (r == 0)
     {
-        memsection_back(ms);
+        vms$memsection_back(ms);
     }
 
     return(r);
