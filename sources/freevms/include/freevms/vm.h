@@ -97,20 +97,20 @@ struct vms$meminfo
 
 #define     SIGMA0_REQUEST_LABEL (((vms$pointer) -6) << 4)
 
-typedef long long				Align;	// for alignment to long long boundary
+typedef long long               Align;  // for alignment to long long boundary
 
-union header							// block header
+union header                            // block header
 {
-	struct
-	{
-		union header			*ptr;	// next block if on free list
-		unsigned int			size;	// size of this block
-	} s;
+    struct
+    {
+        union header            *ptr;   // next block if on free list
+        unsigned int            size;   // size of this block
+    } s;
 
-	Align						x;		// force alignment
+    Align                       x;      // force alignment
 };
 
-typedef union header			Header;
+typedef union header            Header;
 
 struct fpage_list
 {
@@ -146,8 +146,8 @@ struct clist;
 
 struct cap_slot
 {
-	struct clist			*list;
-	int						pos;
+    struct clist            *list;
+    int                     pos;
 };
 
 #define SLAB_CACHE_INITIALIZER(sz, sc) \
@@ -190,7 +190,7 @@ struct memsection_node
 int vms$back_mem(vms$pointer base, vms$pointer end);
 int vms$memsection_back(struct memsection *memsection);
 int vms$memsection_page_map(struct memsection *self, L4_Fpage_t from_page,
-		L4_Fpage_t to_page);
+        L4_Fpage_t to_page);
 int vms$remove_chunk(struct memdesc *mem_desc, int pos, int max,
         vms$pointer low, vms$pointer high);
 

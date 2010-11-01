@@ -40,61 +40,61 @@ jobctl$utcb_init(L4_KernelInterfacePage_t *kip)
 static struct pd *
 jobctl$pd_setup(struct pd *self, struct pd *parent, int max_threads)
 {
-	self->owner = parent;
-	self->state = pd_empty;
-	self->local_threadno = jobctl$bfl_new(max_threads);
-	self->callback_buffer = NULL;
-	self->cba = NULL;
+    self->owner = parent;
+    self->state = pd_empty;
+    self->local_threadno = jobctl$bfl_new(max_threads);
+    self->callback_buffer = NULL;
+    self->cba = NULL;
 
-	/*
-	jobctl$thread_list_init(&self->threads);
-	jobctl$pd_list_init(&self->pds);
-	jobctl$session_p_list_init(&self->sessions);
-	vms$memsection_list_init(&self->memsections);
-	vms$eas_list_init(&self->eass);
-	clist_list_init(&self->clists);
-	self->quota = new_quota();
-	set_quota(self->quota, QUOTA_INF);
-	*/
+    /*
+    jobctl$thread_list_init(&self->threads);
+    jobctl$pd_list_init(&self->pds);
+    jobctl$session_p_list_init(&self->sessions);
+    vms$memsection_list_init(&self->memsections);
+    vms$eas_list_init(&self->eass);
+    clist_list_init(&self->clists);
+    self->quota = new_quota();
+    set_quota(self->quota, QUOTA_INF);
+    */
 
-	return(self);
+    return(self);
 }
 
 void
 jobctl$pd_init(struct vms$meminfo *meminfo)
 {
-	extern int 						vms$pd_initialized;
-	extern struct pd				freevms_pd;
-	extern struct memsection_list	internal_memsections;
+    extern int                      vms$pd_initialized;
+    extern struct pd                freevms_pd;
+    extern struct memsection_list   internal_memsections;
 
-    struct memsection_list      	*list;
+    struct memsection_list          *list;
 
-    struct memsection_node      	*first_ms;
-    struct memsection_node      	*next;
-    struct memsection_node      	*node;
+    struct memsection_node          *first_ms;
+    struct memsection_node          *next;
+    struct memsection_node          *node;
 
     list = &freevms_pd.memsections;
 
-	// Setup freevms_pd with itself as parent.
-	jobctl$pd_setup(&freevms_pd, &freevms_pd, NUMBER_OF_KERNEL_THREADS);
-	vms$pd_initialized = 1;
+    // Setup freevms_pd with itself as parent.
+    jobctl$pd_setup(&freevms_pd, &freevms_pd, NUMBER_OF_KERNEL_THREADS);
+    vms$pd_initialized = 1;
 
-	// Insert memsections used during bootstrapping into memsection list
-	// and objtable.
+    // Insert memsections used during bootstrapping into memsection list
+    // and objtable.
 
-	first_ms = internal_memsections.first;
-	node = first_ms;
+    first_ms = internal_memsections.first;
+    node = first_ms;
 
-	do
-	{
-		next = node->next;
-		objtable_insert(&node->data);
-		node->next = (struct memsection_node *)list;
-		list->last->next = node;
-		node->prev = list->last;
-		list->last = node;
-		node = next;
-	} while(node != first_ms);
+    do
+    {
+        next = node->next;
+        objtable_insert(&node->data);
+        node->next = (struct memsection_node *)list;
+        list->last->next = node;
+        node->prev = list->last;
+        list->last = node;
+        node = next;
+    } while(node != first_ms);
 
-	return;
+    return;
 }

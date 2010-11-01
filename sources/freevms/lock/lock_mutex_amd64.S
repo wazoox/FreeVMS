@@ -28,30 +28,30 @@
 #include "freevms/arch.h"
 
 #ifdef AMD64
-	.text
-	.global		try_lock_amd64
-	.type		try_lock_amd64, @function
-	.align
+    .text
+    .global     try_lock_amd64
+    .type       try_lock_amd64, @function
+    .align
 
 try_lock_amd64:
-	// Setup the local variables
-	pushq		%rbp
-	movq		%rsp, %rbp
-	movq		24(%rbp), %rcx		/* %rcx = &m->holder	*/
-	movq		40(%rbp), %rdx		/* %rdx = me			*/
+    // Setup the local variables
+    pushq       %rbp
+    movq        %rsp, %rbp
+    movq        24(%rbp), %rcx      /* %rcx = &m->holder    */
+    movq        40(%rbp), %rdx      /* %rdx = me            */
 
-	// Test the lock (only in 32 bits mode)
-	movq		$0, %rax
-	lock
-	cmpxchg		%edx, (%rcx)
+    // Test the lock (only in 32 bits mode)
+    movq        $0, %rax
+    lock
+    cmpxchg     %edx, (%rcx)
 
-	// What is the result
-	movq		24(%rbp), %rax
-	movq		(%rax), %rax		/* %rax = m->holder		*/
-	cmpq		40(%rbp), %rax		/* m->holder == me		*/
-	sete		%al
-	andq		$255, %rax
+    // What is the result
+    movq        24(%rbp), %rax
+    movq        (%rax), %rax        /* %rax = m->holder     */
+    cmpq        40(%rbp), %rax      /* m->holder == me      */
+    sete        %al
+    andq        $255, %rax
 
-	popq		%rbp
-	ret
+    popq        %rbp
+    ret
 #endif

@@ -86,7 +86,7 @@ insert(struct memsection *memsection)
 int
 objtable_insert(struct memsection *memsection)
 {
-	extern int		vms$pd_initialized;
+    extern int      vms$pd_initialized;
 
     int             r;
 

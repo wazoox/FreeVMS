@@ -24,31 +24,31 @@
 void
 lock$mutex_init(mutex_t mutex)
 {
-	mutex->holder = 0;
-	mutex->needed = 0;
-	mutex->count = 0;
+    mutex->holder = 0;
+    mutex->needed = 0;
+    mutex->count = 0;
 
-	return;
+    return;
 }
 
 void
 lock$mutex_count_lock(mutex_t mutex)
 {
-	mutex_lock(mutex);
-	mutex->count++;
+    mutex_lock(mutex);
+    mutex->count++;
 
-	return;
+    return;
 }
 
 void
 lock$mutex_count_unlock(mutex_t mutex)
 {
-	mutex->count--;
+    mutex->count--;
 
-	if (mutex->count == 0)
-	{
-		mutex_unlock(mutex);
-	}
+    if (mutex->count == 0)
+    {
+        mutex_unlock(mutex);
+    }
 
-	return;
+    return;
 }

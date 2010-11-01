@@ -49,88 +49,88 @@ vms$initmem(vms$pointer zone, vms$pointer len)
 static vms$pointer
 vms$memsection_lookup_phys(struct memsection *memsection, vms$pointer addr)
 {
-	struct fpage_list		*node;
+    struct fpage_list       *node;
 
-	vms$pointer				virt;
+    vms$pointer             virt;
 
-	virt = memsection->base;
+    virt = memsection->base;
 
-	TAILQ_FOREACH(node, &memsection->phys.list, flist)
-	{
-		if ((addr >= virt) && (addr < (virt + L4_Size(node->fpage))))
-		{
-			break;
-		}
+    TAILQ_FOREACH(node, &memsection->phys.list, flist)
+    {
+        if ((addr >= virt) && (addr < (virt + L4_Size(node->fpage))))
+        {
+            break;
+        }
 
-		virt += L4_Size(node->fpage);
-	}
+        virt += L4_Size(node->fpage);
+    }
 
-	return(L4_Address(node->fpage) + (addr - virt));
+    return(L4_Address(node->fpage) + (addr - virt));
 }
 
 int
 vms$memsection_page_map(struct memsection *self, L4_Fpage_t from_page,
-		L4_Fpage_t to_page)
+        L4_Fpage_t to_page)
 {
-	struct memsection	*src;
+    struct memsection   *src;
 
-	vms$pointer			from_base;
-	vms$pointer			from_end;
-	vms$pointer			offset;
-	vms$pointer			phys;
-	vms$pointer			size;
-	vms$pointer			to_base;
-	vms$pointer			to_end;
+    vms$pointer         from_base;
+    vms$pointer         from_end;
+    vms$pointer         offset;
+    vms$pointer         phys;
+    vms$pointer         size;
+    vms$pointer         to_base;
+    vms$pointer         to_end;
 
-	if ((self->flags & VMS$MEM_USER))
-	{
-		return(-1);
-	}
+    if ((self->flags & VMS$MEM_USER))
+    {
+        return(-1);
+    }
 
-	if (L4_Size(from_page) != L4_Size(to_page))
-	{
-		return(-1);
-	}
+    if (L4_Size(from_page) != L4_Size(to_page))
+    {
+        return(-1);
+    }
 
-	from_base = L4_Address(from_page);
-	from_end = from_base + (L4_Size(from_page) - 1);
-	to_base = L4_Address(to_page);
-	to_end = to_base + (L4_Size(to_page) - 1);
+    from_base = L4_Address(from_page);
+    from_end = from_base + (L4_Size(from_page) - 1);
+    to_base = L4_Address(to_page);
+    to_end = to_base + (L4_Size(to_page) - 1);
 
-	src = vms$objtable_lookup((void *) from_base);
+    src = vms$objtable_lookup((void *) from_base);
 
-	if (!src)
-	{
-		// can't map from user-paged ms
-		return(-1);
-	}
+    if (!src)
+    {
+        // can't map from user-paged ms
+        return(-1);
+    }
 
-	if (src->flags & VMS$MEM_USER)
-	{
-		// can't map from user-paged ms
-		return(-1);
-	}
+    if (src->flags & VMS$MEM_USER)
+    {
+        // can't map from user-paged ms
+        return(-1);
+    }
 
-	if (src->flags & VMS$MEM_INTERNAL)
-	{
-		return(-1);
-	}
+    if (src->flags & VMS$MEM_INTERNAL)
+    {
+        return(-1);
+    }
 
-	if ((to_base < self->base) || (to_end > self->end))
-	{
-		return(-1);
-	}
+    if ((to_base < self->base) || (to_end > self->end))
+    {
+        return(-1);
+    }
 
-	size = (from_end - from_base) + 1;
+    size = (from_end - from_base) + 1;
 
-	// we map vms$min_pagesize() fpages even when bigger mappings are possible
-	for(offset = 0; offset < size; offset += vms$min_pagesize())
-	{
-		phys = vms$memsection_lookup_phys(src, from_base + offset);
-		vms$sigma0_map(to_base + offset, phys, vms$min_pagesize());
-	}
+    // we map vms$min_pagesize() fpages even when bigger mappings are possible
+    for(offset = 0; offset < size; offset += vms$min_pagesize())
+    {
+        phys = vms$memsection_lookup_phys(src, from_base + offset);
+        vms$sigma0_map(to_base + offset, phys, vms$min_pagesize());
+    }
 
-	return(0);
+    return(0);
 }
 
 struct memsection *
