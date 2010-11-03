@@ -19,7 +19,7 @@
 ================================================================================
 */
 
-/* int try_lock(mutex_t m, uintptr_t me) 
+/* int try_lock(mutex_t m, vms$pointer me) 
  *  - m: the mutex we are trying to grab
  *  - me: the thread id of the thread trying to aquire the lock
  *  => true if the lock was aquired, false otherwise
@@ -31,26 +31,27 @@
     .text
     .global     try_lock_amd64
     .type       try_lock_amd64, @function
-    .align
+    .align		16
 
 try_lock_amd64:
     // Setup the local variables
     pushq       %rbp
     movq        %rsp, %rbp
-    movq        24(%rbp), %rcx      /* %rcx = &m->holder    */
-    movq        40(%rbp), %rdx      /* %rdx = me            */
+    movq        24(%rbp), %rcx      /* %rcx = &m->holder     	*/
+    movq		16(%rbp), %rdx		/* %rdx = me				*/
 
-    // Test the lock (only in 32 bits mode)
-    movq        $0, %rax
-    lock
-    cmpxchg     %edx, (%rcx)
+    // Test the lock :
+	// if (%rcx) == $0, write %rdx into (%rcx)
+	// if not, write (%rcx) into %rax.
+	movq		$0, %rax
+	lock
+	cmpxchgq	%rdx, (%rcx)
 
     // What is the result
-    movq        24(%rbp), %rax
-    movq        (%rax), %rax        /* %rax = m->holder     */
-    cmpq        40(%rbp), %rax      /* m->holder == me      */
+	movq		(%rcx), %rcx		/* %rcx = m->holder         */
+	cmpq		16(%rbp), %rcx		/* m->holder == me          */
     sete        %al
-    andq        $255, %rax
+    andq        $0xff, %rax
 
     popq        %rbp
     ret

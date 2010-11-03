@@ -20,59 +20,28 @@
 */
 
 inline vms$pointer
-dbg$get_registers_amd64(void)
+dbg$get_registers_amd64(int level)
 {
-    vms$pointer         reg;
+	int					i;
+
+	vms$pointer			base;
+    vms$pointer         fp;
     vms$pointer         sp;
 
-    asm("movq %%rax, %0\n" :"=r"(reg)::"%rax");
-    notice("  R0 [RAX] = $%016lX\n", reg);
+    asm("movq %%rbp, %%rax; movq %%rax, %0\n" :"=r"(fp)::"%rax");
+    asm("movq %%rsp, %%rax; movq %%rax, %0\n" :"=r"(sp)::"%rax");
 
-    asm("movq %%rbx, %0\n" :"=r"(reg)::"%rbx");
-    notice("  R1 [RBX] = $%016lX\n", reg);
+	base = min(fp, sp);
 
-    asm("movq %%rcx, %0\n" :"=r"(reg)::"%rcx");
-    notice("  R2 [RCX] = $%016lX\n", reg);
+	for(i = 0; i < level; i++)
+	{
+		notice("  +%03d: [$%016lX] -> $%016lX %s\n",
+				i * 8, base, dbg$direct(base),
+				(base == sp) ? " <- SP" : ((base == fp) ? " <- FP" : ""));
+		base += sizeof(vms$pointer);
+	}
 
-    asm("movq %%rdx, %0\n" :"=r"(reg)::"%rdx");
-    notice("  R3 [RDX] = $%016lX\n", reg);
-
-    asm("movq %%rsi, %0\n" :"=r"(reg)::"%rsi");
-    notice("  R4 [RSI] = $%016lX\n", reg);
-
-    asm("movq %%rdi, %0\n" :"=r"(reg)::"%rdi");
-    notice("  R5 [RDI] = $%016lX\n", reg);
-
-    asm("movq %%rbp, %%rax; movq %%rax, %0\n" :"=r"(reg)::"%rax");
-    notice("  R6 [RBP] = $%016lX\n", reg);
-
-    asm("movq %%rsp, %0\n" :"=r"(sp)::"%rsp");
-    notice("  R7 [RSP] = $%016lX\n", sp);
-
-    asm("movq %%r8, %0\n" :"=r"(reg)::"%r8");
-    notice("  R8       = $%016lX\n", reg);
-
-    asm("movq %%r9, %0\n" :"=r"(reg)::"%r9");
-    notice("  R9       = $%016lX\n", reg);
-
-    asm("movq %%r10, %0\n" :"=r"(reg)::"%r10");
-    notice("  R10      = $%016lX\n", reg);
-
-    asm("movq %%r11, %0\n" :"=r"(reg)::"%r11");
-    notice("  R11      = $%016lX\n", reg);
-
-    asm("movq %%r12, %0\n" :"=r"(reg)::"%r12");
-    notice("  R12      = $%016lX\n", reg);
-
-    asm("movq %%r13, %0\n" :"=r"(reg)::"%r13");
-    notice("  R13      = $%016lX\n", reg);
-
-    asm("movq %%r14, %0\n" :"=r"(reg)::"%r14");
-    notice("  R14      = $%016lX\n", reg);
-
-    asm("movq %%r15, %0\n" :"=r"(reg)::"%r15");
-    notice("  R15      = $%016lX\n", reg);
-
+	for(;;);
     return(sp);
 }
 

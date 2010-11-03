@@ -40,10 +40,16 @@ mutex_lock(mutex_t m)
 
     me = L4_Myself().raw;
 
-    while(!arch_specific(try_lock)((vms$pointer) m, (vms$pointer) me))
+int r;
+	printf("1=%lx 2=%lx\n", (vms$pointer) m, (vms$pointer) me);
+	printf("m->holder=%lx\n", m->holder);
+    while(!(r=arch_specific(try_lock)((vms$pointer) m, (vms$pointer) me)))
     {
+		printf("r=%d mutex->holder=%lx\n", r, m->holder);
         L4_ThreadSwitch(L4_nilthread);
     }
+
+	printf("> %d\n", r);
 
     return;
 }

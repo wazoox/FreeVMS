@@ -37,6 +37,9 @@ lock$mutex_count_lock(mutex_t mutex)
     mutex_lock(mutex);
     mutex->count++;
 
+	printf(">>> %lx\n", mutex->holder);
+	printf(">>> %lx\n", mutex->needed);
+	printf(">>> %lx\n", mutex->count);
     return;
 }
 
@@ -50,5 +53,8 @@ lock$mutex_count_unlock(mutex_t mutex)
         mutex_unlock(mutex);
     }
 
+	printf("<<< %lx\n", mutex->holder);
+	printf("<<< %lx\n", mutex->needed);
+	printf("<<< %lx\n", mutex->count);
     return;
 }
