@@ -34,6 +34,7 @@
 #include "l4/ipc.h"
 #include "l4/kip.h"
 #include "l4/kcp.h"
+#include "l4/schedule.h"
 #include "l4/sigma0.h"
 #include "l4/space.h"
 #include "l4/thread.h"
@@ -60,10 +61,12 @@ typedef L4_Word64_t     vms$pointer;
 #include "freevms/vm.h"
 #include "freevms/jobctl.h"
 #include "freevms/lock.h"
+#include "freevms/quota.h"
+#include "freevms/inlined.h"
 
 // Defines
 #define NULL                            ((vms$pointer) 0)
-#define FREEVMS_VERSION                 "0.0.1"
+#define FREEVMS_VERSION                 "0.4.0"
 #define THREAD_STACK_BASE               (0xF00000UL)
 #define NUMBER_OF_KERNEL_THREADS        256
 
@@ -83,6 +86,8 @@ const char *dbg$symbol(vms$pointer address);
 void dbg$backtrace(void);
 void dbg$sigma0(int level);
 
+#define ERROR_PRINT_L4 notice("L4 microkernel error: %lx\n", L4_ErrorCode())
+
 #define PANIC(a, ...) { if (a) { \
         __VA_ARGS__; \
         notice("\nPanic at %s, %s line %d\n", __FUNCTION__, __FILE__, \
@@ -98,3 +103,5 @@ void dbg$sigma0(int level);
 // Prototypes
 void parsing(char *line, char *command, char *argument, int length);
 
+void sys$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
+        vms$pointer pagesize, char *root_device);

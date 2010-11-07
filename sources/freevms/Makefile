@@ -9,15 +9,21 @@ INCLUDES=-I./include \
 
 OBJ=$(DESTDIR)/debug/backtrace.o \
     $(DESTDIR)/debug/sigma0.o \
-    $(DESTDIR)/jobctl/jobctl_init.o \
     $(DESTDIR)/jobctl/jobctl_bfl.o \
+    $(DESTDIR)/jobctl/jobctl_init.o \
+    $(DESTDIR)/jobctl/jobctl_quota.o \
+    $(DESTDIR)/jobctl/jobctl_thread.o \
+    $(DESTDIR)/jobctl/jobctl_rfl.o \
     $(DESTDIR)/libearly/amd64.o \
 	$(DESTDIR)/libearly/get_hex.o \
 	$(DESTDIR)/libearly/print.o \
+	$(DESTDIR)/list/hash.o \
+	$(DESTDIR)/list/lists.o \
 	$(DESTDIR)/lock/lock_mutex.o \
 	$(DESTDIR)/lock/lock_mutex_amd64.o \
 	$(DESTDIR)/sys/sys_boot.o \
 	$(DESTDIR)/sys/sys_init.o \
+	$(DESTDIR)/sys/sys_main.o \
 	$(DESTDIR)/sys/sys_parsing.o \
 	$(DESTDIR)/vm/vm_alloc.o \
 	$(DESTDIR)/vm/vm_btree.o \
@@ -53,6 +59,7 @@ directories:
 	mkdir -p $(DESTDIR)/drv
 	mkdir -p $(DESTDIR)/jobctl
 	mkdir -p $(DESTDIR)/libearly
+	mkdir -p $(DESTDIR)/list
 	mkdir -p $(DESTDIR)/lock
 	mkdir -p $(DESTDIR)/sys
 	mkdir -p $(DESTDIR)/vm
@@ -73,6 +80,23 @@ $(DESTDIR)/jobctl/jobctl_init.o: jobctl/jobctl_init.c
 $(DESTDIR)/jobctl/jobctl_bfl.o: jobctl/jobctl_bfl.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
+$(DESTDIR)/jobctl/jobctl_rfl.o: jobctl/jobctl_rfl.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/jobctl/jobctl_quota.o: jobctl/jobctl_quota.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/jobctl/jobctl_thread.o: jobctl/jobctl_thread.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+# ./list
+
+$(DESTDIR)/list/hash.o: list/hash.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/list/lists.o: list/lists.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
 # ./lock
 
 $(DESTDIR)/lock/lock_mutex.o: lock/lock_mutex.c
@@ -84,6 +108,9 @@ $(DESTDIR)/lock/lock_mutex_amd64.o: lock/lock_mutex_amd64.S
 # ./sys
 
 $(DESTDIR)/sys/sys_init.o: sys/sys_init.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/sys/sys_main.o: sys/sys_main.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/sys/sys_parsing.o: sys/sys_parsing.c

@@ -62,14 +62,14 @@ EXPORT(BTSearch)(GBTree const btree, BTKey const key, GBTObject *obj)
             {
                 lo = mid + 1;
             }
-
-            if (current->isleaf)
-            {
-                break;
-            }
-
-            current = current->child[hi];
         }
+
+        if (current->isleaf)
+        {
+            break;
+        }
+
+        current = current->child[hi];
     }
 
     (*obj) = (GBTObject)(current->child[hi]);

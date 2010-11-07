@@ -21,6 +21,8 @@
 
 #define DBG_I_VMS           "%%DBG-I-VMS, "
 
+#define JOBCTL_I_MAXPROCID  "%%JOBCTL-I-MAX_PROC_ID, "
+
 #define MEM_I_ALLOC         "%%MEM-I-ALLOC, "
 #define MEM_I_AREA          "%%MEM-I-AREA, "
 #define MEM_I_FALLOC        "%%MEM-I-F_ALLOC, "

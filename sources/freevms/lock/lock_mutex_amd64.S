@@ -31,25 +31,25 @@
     .text
     .global     try_lock_amd64
     .type       try_lock_amd64, @function
-    .align		16
+    .align      16
 
 try_lock_amd64:
     // Setup the local variables
     pushq       %rbp
     movq        %rsp, %rbp
-    movq        24(%rbp), %rcx      /* %rcx = &m->holder     	*/
-    movq		16(%rbp), %rdx		/* %rdx = me				*/
+    movq        24(%rbp), %rcx      /* %rcx = &m->holder        */
+    movq        16(%rbp), %rdx      /* %rdx = me                */
 
     // Test the lock :
-	// if (%rcx) == $0, write %rdx into (%rcx)
-	// if not, write (%rcx) into %rax.
-	movq		$0, %rax
-	lock
-	cmpxchgq	%rdx, (%rcx)
+    // if (%rcx) == $0, write %rdx into (%rcx)
+    // if not, write (%rcx) into %rax.
+    movq        $0, %rax
+    lock
+    cmpxchgq    %rdx, (%rcx)
 
     // What is the result
-	movq		(%rcx), %rcx		/* %rcx = m->holder         */
-	cmpq		16(%rbp), %rcx		/* m->holder == me          */
+    movq        (%rcx), %rcx        /* %rcx = m->holder         */
+    cmpq        16(%rbp), %rcx      /* m->holder == me          */
     sete        %al
     andq        $0xff, %rax
 

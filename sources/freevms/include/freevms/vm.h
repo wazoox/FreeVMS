@@ -216,6 +216,8 @@ void vms$init(L4_KernelInterfacePage_t *kip,
         struct vms$meminfo *MemInfo, unsigned int page_size);
 void vms$initmem(vms$pointer zone, vms$pointer len);
 void vms$pager(void);
+void vms$populate_init_objects(struct vms$meminfo *mem_info,
+        unsigned int pagesize);
 void vms$remove_virtmem(struct vms$meminfo *mem_info,
         vms$pointer base, unsigned long end, unsigned int page_size);
 void vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr,
@@ -251,3 +253,4 @@ int objtable_setup_internal(struct memsection *ms, vms$pointer size,
         vms$pointer base, unsigned int flags);
 int objtable_setup_utcb(struct memsection *ms, vms$pointer size,
         unsigned int flags);
+

@@ -128,7 +128,7 @@ vms$alloc(vms$pointer nbytes)
             // wrapped around free list
             if ((p = (Header *) vms$morecore(nunits)) == NULL)
             {
-				lock$mutex_count_unlock(&alloc_mutex);
+                lock$mutex_count_unlock(&alloc_mutex);
                 return(NULL);
             }
         }

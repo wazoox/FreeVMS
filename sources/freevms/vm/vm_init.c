@@ -600,3 +600,35 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
     vms$alloc_init(heap->base, heap->end);
     return;
 }
+
+void
+vms$populate_init_objects(struct vms$meminfo *mem_info, unsigned int pagesize)
+{
+    extern struct pd    freevms_pd;
+
+    struct initial_obj  *obj;
+    struct memsection   *ret;
+
+    unsigned int        i;
+
+    vms$pointer         base;
+
+    obj = mem_info->objects;
+
+    for(i = 0; i < mem_info->num_objects; i++, obj++)
+    {
+        if (obj->flags & VMS$IOF_VIRT)
+        {
+            base = vms$page_round_down(obj->base, pagesize);
+            ret = vms$pd_create_memsection(&freevms_pd, obj->end - base,
+                    base, VMS$MEM_INTERNAL);
+
+            PANIC(ret == NULL);
+            // Check if it is correctly in object table
+            vms$objtable_lookup((void *) obj->base);
+            PANIC(vms$objtable_lookup((void*) obj->base) == 0);
+        }
+    }
+
+    return;
+}
