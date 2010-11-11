@@ -24,10 +24,13 @@
 static void
 jobctl$thread_free(L4_ThreadId_t thread)
 {
+	extern hashtable	*l4tid_to_thread;
+	extern rfl_t		thread_list;
+
     // Remove thread->pd mapping
     hash_remove(l4tid_to_thread, thread.raw);
     // Add thread back to free pool
-    rfl_free(thread_list, L4_ThreadNo(thread));
+    jobctl$rfl_free(thread_list, L4_ThreadNo(thread));
 
     return;
 }
@@ -35,9 +38,12 @@ jobctl$thread_free(L4_ThreadId_t thread)
 static int
 jobctl$thread_alloc(struct thread *thread)
 {
-    int         thread_no;
+	extern hashtable	*l4tid_to_thread;
+	extern rfl_t		thread_list;
 
-    thread_no = rfl_alloc(thread_list);
+    int         		thread_no;
+
+    thread_no = jobctl$rfl_alloc(thread_list);
 
     if (thread_no == -1)
     {
@@ -114,8 +120,7 @@ jobctl$thread_setup(struct thread *self, int priority)
     if (pd->state != pd_suspended)
     {
         r = L4_ThreadControl(self->id, pd_l4_space(pd), pd_l4_space(pd),
-                L4_Myself(), L4_anythread, L4_anythread,
-                self->utcb);
+                L4_Myself(), self->utcb);
 
         if (r != 1)
         {

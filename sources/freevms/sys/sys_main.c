@@ -23,6 +23,7 @@
 
 // Global variables
 int                     vms$pd_initialized = 0;
+int						dbg$virtual_memory;
 struct pd               freevms_pd;
 
 int
@@ -128,6 +129,9 @@ main(void)
     parsing(command_line, (char *) " root", root_device, ROOT_DEVICE_LENGTH);
     notice(SYSBOOT_I_SYSBOOT "selecting root device: %s\n", root_device);
 
+	dbg$virtual_memory = (strstr(command_line, " dbg$virtual_memory") != NULL)
+			? 1 : 0;
+
     // Starting virtual memory subsystem
     vms$init(kip, &mem_info, (unsigned int) page_size);
     vms$bootstrap(&mem_info, (unsigned int) page_size);
@@ -137,6 +141,7 @@ main(void)
     jobctl$pd_init(&mem_info);
     vms$populate_init_objects(&mem_info, (unsigned int) page_size);
     jobctl$thread_init(kip);
+	dev$init();
     sys$init(kip, &mem_info, page_size, root_device);
     /*
     iguana_server();

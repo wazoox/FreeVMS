@@ -35,10 +35,10 @@ vms$initmem(vms$pointer zone, vms$pointer len)
 {
     volatile unsigned char      *ptr;
 
-    ptr = (unsigned char *) zone;
-    while(len-- > 0)
+    ptr = (volatile unsigned char *) zone;
+    while(len > 0)
     {
-        (*ptr) = '\0';
+		(*ptr) = (unsigned char) 0x0;
         ptr++;
         len--;
     }
@@ -173,6 +173,8 @@ vms$memsection_create_cache(struct slab_cache *sc)
 
     if (sc == (&ms_cache))
     {
+		// If this will be used to back memsections, put
+		// the new memsection into the pool itself.
         node = (struct memsection_node *) virt;
         ms = &(node->data);
         ms->base = virt;
@@ -190,8 +192,6 @@ vms$memsection_create_cache(struct slab_cache *sc)
 
             return((struct memsection *) NULL);
         }
-
-        PANIC(node == NULL);
 
         ms = &(node->data);
         ms->base = virt;
@@ -283,7 +283,6 @@ vms$memsection_new(void)
     }
 
     vms$initmem((vms$pointer) node, sizeof(struct memsection_node));
-
     return(node);
 }
 
@@ -317,7 +316,6 @@ vms$memsection_back(struct memsection *memsection)
     {
         // Map it 1:1
         vms$sigma0_map(addr, memsection->phys.base, size);
-        return(0);
     }
     else
     {
@@ -326,7 +324,7 @@ vms$memsection_back(struct memsection *memsection)
         {
             vpage = L4_Fpage(addr, L4_Size(node->fpage));
             vms$sigma0_map_fpage(vpage, node->fpage);
-            vms$initmem(addr, L4_Size(vpage));
+            vms$initmem(L4_Address(vpage), L4_Size(vpage));
             addr += L4_Size(vpage);
         }
     }
@@ -338,6 +336,8 @@ struct memsection *
 vms$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
         unsigned int flags)
 {
+	extern int					vms$pd_initialized;
+
     int                         r;
 
     struct memsection           *memsection;
@@ -382,7 +382,7 @@ vms$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
         return(NULL);
     }
 
-    if (self != NULL)
+    if (vms$pd_initialized)
     {
         list = &self->memsections;
     }

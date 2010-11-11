@@ -19,25 +19,15 @@
 ================================================================================
 */
 
-#define DBG_I_VMS           "%%DBG-I-VMS, "
+struct device
+{
+};
 
-#define DEV_I_TREE			"%%DEV-I-TREE, "
+struct device_node
+{
+    struct device       *device;
+    unsigned int        number_of_leaf;
+    struct device_node  **leaf;
+};
 
-#define JOBCTL_I_MAXPROCID  "%%JOBCTL-I-MAX_PROC_ID, "
-
-#define MEM_I_ACCMAP        "%%MEM-I-ACCMAP, "
-#define MEM_I_ALLOC         "%%MEM-I-ALLOC, "
-#define MEM_I_AREA          "%%MEM-I-AREA, "
-#define MEM_I_FALLOC        "%%MEM-I-F_ALLOC, "
-#define MEM_I_FREE          "%%MEM-I-FREE, "
-#define MEM_I_NOTEMEM       "%%MEM-I-NOTEMEM, "
-#define MEM_I_REJMAP        "%%MEM-I-REJMAP, "
-#define MEM_I_SALLOC        "%%MEM-I-S_ALLOC, "
-#define MEM_I_VALLOC        "%%MEM-I-VM_ALLOC, "
-
-#define MOUNT_I_MOUNTED     "%%MOUNT-I-MOUNTED, "
-#define MOUNT_I_OPRQST      "%%MOUNT-I-OPRQST, "
-
-#define STDRV_I_STARTUP     "%%STDRV-I-STARTUP, "
-
-#define SYSBOOT_I_SYSBOOT   "%%SYSBOOT-I-SYSBOOT, "
+void dev$init(void);

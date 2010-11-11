@@ -19,12 +19,6 @@
 ================================================================================
 */
 
-#ifdef DEBUG_VM
-#   define vms$debug(msg) notice(DBG_I_VMS "%s\n", msg);
-#else
-#   define vms$debug(msg)
-#endif
-
 struct memdesc
 {
     vms$pointer         base;
@@ -104,7 +98,7 @@ union header                            // block header
     struct
     {
         union header            *ptr;   // next block if on free list
-        unsigned int            size;   // size of this block
+        vms$pointer             size;   // size of this block
     } s;
 
     Align                       x;      // force alignment
@@ -155,7 +149,6 @@ struct cap_slot
 
 struct memsection
 {
-    vms$pointer                 magic;
     vms$pointer                 base;
     vms$pointer                 end;
     vms$pointer                 memory_attributes;
@@ -202,7 +195,7 @@ L4_Fpage_t vms$biggest_fpage(vms$pointer addr, vms$pointer base,
 
 void *vms$alloc(vms$pointer nbytes);
 void vms$alloc_init(vms$pointer bss_p, vms$pointer top_p);
-void vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size);
+void vms$bootstrap(struct vms$meminfo *mem_info, vms$pointer page_size);
 void vms$fpage_clear_internal(struct fpage_alloc *alloc);
 void vms$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
         vms$pointer end);
@@ -213,13 +206,13 @@ void vms$fpage_remove_chunk(struct fpage_alloc *alloc, vms$pointer base,
         vms$pointer end);
 void vms$free(void *ptr);
 void vms$init(L4_KernelInterfacePage_t *kip,
-        struct vms$meminfo *MemInfo, unsigned int page_size);
+        struct vms$meminfo *MemInfo, vms$pointer page_size);
 void vms$initmem(vms$pointer zone, vms$pointer len);
 void vms$pager(void);
 void vms$populate_init_objects(struct vms$meminfo *mem_info,
-        unsigned int pagesize);
+        vms$pointer pagesize);
 void vms$remove_virtmem(struct vms$meminfo *mem_info,
-        vms$pointer base, unsigned long end, unsigned int page_size);
+        vms$pointer base, vms$pointer end, vms$pointer page_size);
 void vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr,
         vms$pointer size);
 void vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page);
@@ -231,12 +224,11 @@ struct flist_head vms$fpage_alloc_list(struct fpage_alloc *alloc,
 
 memsection *vms$objtable_lookup(void *addr);
 
-vms$pointer vms$fpage_alloc_chunk(struct fpage_alloc *alloc,
-        unsigned int size);
+vms$pointer vms$fpage_alloc_chunk(struct fpage_alloc *alloc, vms$pointer size);
 vms$pointer vms$fpage_alloc_internal(struct fpage_alloc *alloc,
-        unsigned int size);
-vms$pointer vms$page_round_down(vms$pointer address, unsigned int page_size);
-vms$pointer vms$page_round_up(vms$pointer address, unsigned int page_size);
+        vms$pointer size);
+vms$pointer vms$page_round_down(vms$pointer address, vms$pointer page_size);
+vms$pointer vms$page_round_up(vms$pointer address, vms$pointer page_size);
 
 // Objtable's functions
 

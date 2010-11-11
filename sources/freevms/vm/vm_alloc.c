@@ -64,13 +64,13 @@ vms$min_pagesize(void)
 }
 
 vms$pointer
-vms$page_round_down(vms$pointer address, unsigned int page_size)
+vms$page_round_down(vms$pointer address, vms$pointer page_size)
 {
     return(address & (~(((vms$pointer) page_size) - 1)));
 }
 
 vms$pointer
-vms$page_round_up(vms$pointer address, unsigned int page_size)
+vms$page_round_up(vms$pointer address, vms$pointer page_size)
 {
     return((address + (((vms$pointer) page_size) - 1)) &
             (~(((vms$pointer) page_size) - 1)));
@@ -90,7 +90,7 @@ vms$biggest_fpage(vms$pointer addr, vms$pointer base, vms$pointer end)
     vms$pointer             next_addr;
     vms$pointer             next_size;
 
-    if ((end < base) || (((end - base) + 1) < vms$min_pagebits()))
+    if ((end < base) || (((end - base) + 1) < vms$min_pagesize()))
     {
         return(L4_Nilpage);
     }
@@ -121,7 +121,7 @@ vms$fpage_clear_internal(struct fpage_alloc *alloc)
             if ((fpage = (struct fpage_list *) vms$slab_cache_alloc(&fp_cache))
                     == (struct fpage_list *) NULL)
             {
-                vms$debug("vms$slab_cache_alloc() returns NULL !");
+				PANIC(1, notice("vms$slab_cache_alloc() returns NULL !\n"));
                 return;
             }
 
@@ -161,7 +161,7 @@ vms$fp_end(L4_Fpage_t fpage)
 }
 
 vms$pointer
-vms$fpage_alloc_internal(struct fpage_alloc *alloc, unsigned int size)
+vms$fpage_alloc_internal(struct fpage_alloc *alloc, vms$pointer size)
 {
     unsigned int            i;
 
@@ -201,7 +201,7 @@ vms$fpage_alloc_internal(struct fpage_alloc *alloc, unsigned int size)
 
 void
 vms$remove_virtmem(struct vms$meminfo *mem_info,
-        vms$pointer base, vms$pointer end, unsigned int page_size)
+        vms$pointer base, vms$pointer end, vms$pointer page_size)
 {
     mem_info->num_vm_regions = vms$remove_chunk(mem_info->vm_regions,
             mem_info->num_vm_regions, mem_info->max_vm_regions,
@@ -280,7 +280,7 @@ vms$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
 }
 
 static int
-sz_order(unsigned int size)
+sz_order(vms$pointer size)
 {
     int                 order;
 
@@ -294,8 +294,10 @@ sz_order(unsigned int size)
     return(order);
 }
 
+// Allocate an fpage of exactly the requested size if possible,
+// otherwise allocate the biggest available fpage.
 static L4_Fpage_t
-vms$fpage_alloc(struct fpage_alloc *alloc, unsigned int size)
+vms$fpage_alloc(struct fpage_alloc *alloc, vms$pointer size)
 {
     int                 i;
     int                 order;
@@ -335,7 +337,6 @@ vms$fpage_alloc(struct fpage_alloc *alloc, unsigned int size)
     // Free up any excess
     while(vms$fp_order(fpage) > order)
     {
-        fpage = L4_FpageLog2(L4_Address(fpage), L4_SizeLog2(fpage) - 1);
         node = (struct fpage_list *) vms$slab_cache_alloc(&fp_cache);
 
         if (node == NULL)
@@ -344,17 +345,16 @@ vms$fpage_alloc(struct fpage_alloc *alloc, unsigned int size)
             return(L4_FpageLog2(L4_Address(fpage), L4_SizeLog2(fpage) + 1));
         }
 
-        PANIC(node == NULL);
-
+        fpage = L4_FpageLog2(L4_Address(fpage), L4_SizeLog2(fpage) - 1);
         node->fpage = buddy(fpage);
         TAILQ_INSERT_TAIL(&alloc->flist[vms$fp_order(fpage)], node, flist);
     }
 
-    return fpage;
+    return(fpage);
 }
 
 vms$pointer
-vms$fpage_alloc_chunk(struct fpage_alloc *alloc, unsigned int size)
+vms$fpage_alloc_chunk(struct fpage_alloc *alloc, vms$pointer size)
 {
     L4_Fpage_t          fpage;
 
@@ -367,8 +367,7 @@ vms$fpage_alloc_chunk(struct fpage_alloc *alloc, unsigned int size)
 
     if (L4_Size(fpage) < size)
     {
-        vms$fpage_free_chunk(alloc, L4_Address(fpage),
-                vms$fp_end(fpage));
+        vms$fpage_free_chunk(alloc, L4_Address(fpage), vms$fp_end(fpage));
         return(INVALID_ADDR);
     }
 
@@ -378,7 +377,7 @@ vms$fpage_alloc_chunk(struct fpage_alloc *alloc, unsigned int size)
                 vms$fp_end(fpage));
     }
 
-    return(L4_Address(vms$fpage_alloc(alloc, size)));
+	return(L4_Address(fpage));
 }
 
 static void

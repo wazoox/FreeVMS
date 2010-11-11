@@ -58,6 +58,7 @@ typedef L4_Word64_t     vms$pointer;
 #include "freevms/b_plus_tree.h"
 
 // FreeVMS subsystems
+#include "freevms/dev.h"
 #include "freevms/vm.h"
 #include "freevms/jobctl.h"
 #include "freevms/lock.h"
@@ -85,6 +86,8 @@ const char *dbg$symbol(vms$pointer address);
 
 void dbg$backtrace(void);
 void dbg$sigma0(int level);
+
+extern int dbg$virtual_memory;
 
 #define ERROR_PRINT_L4 notice("L4 microkernel error: %lx\n", L4_ErrorCode())
 

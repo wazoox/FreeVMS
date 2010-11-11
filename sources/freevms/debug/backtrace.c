@@ -39,8 +39,7 @@ dbg$backtrace(void)
 {
     vms$pointer         sp;
 
-    notice("\nStack:\n\n");
-    sp = arch_specific(dbg$get_registers)(16);
+    sp = arch_specific(dbg$get_registers)();
 
     notice("\nBacktrace:\n\n");
     arch_specific(dbg$backtrace)(sp);

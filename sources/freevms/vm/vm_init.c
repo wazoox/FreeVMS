@@ -376,7 +376,7 @@ vms$set_flags(struct vms$meminfo *mem_info, char match, char set)
 
 void
 vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info,
-        unsigned int page_size)
+        vms$pointer page_size)
 {
     static struct initial_obj       static_objects[NUM_MI_OBJECTS];
 
@@ -474,7 +474,7 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info,
 }
 
 void
-vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
+vms$bootstrap(struct vms$meminfo *mem_info, vms$pointer page_size)
 {
     struct memsection       *heap;
 
@@ -569,8 +569,7 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 
         if (base < end)
         {
-            notice(MEM_I_FREE "freeing region $%016lX - $%016lX\n",
-                    base, end);
+            notice(MEM_I_FREE "freeing region $%016lX - $%016lX\n", base, end);
             vms$fpage_free_chunk(&pm_alloc, base, end);
         }
     }
@@ -602,7 +601,7 @@ vms$bootstrap(struct vms$meminfo *mem_info, unsigned int page_size)
 }
 
 void
-vms$populate_init_objects(struct vms$meminfo *mem_info, unsigned int pagesize)
+vms$populate_init_objects(struct vms$meminfo *mem_info, vms$pointer pagesize)
 {
     extern struct pd    freevms_pd;
 
@@ -625,7 +624,6 @@ vms$populate_init_objects(struct vms$meminfo *mem_info, unsigned int pagesize)
 
             PANIC(ret == NULL);
             // Check if it is correctly in object table
-            vms$objtable_lookup((void *) obj->base);
             PANIC(vms$objtable_lookup((void*) obj->base) == 0);
         }
     }

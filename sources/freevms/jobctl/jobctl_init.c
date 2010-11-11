@@ -21,7 +21,7 @@
 
 #include "freevms/freevms.h"
 
-static rfl_t            thread_list;
+rfl_t 		           thread_list;
 
 vms$pointer             utcb_size;
 vms$pointer             utcb_size_log2;
@@ -32,7 +32,7 @@ static L4_Word_t        max_threadno;
 static L4_Word_t        min_threadno;
 
 #define JOBCTL$THREAD_PD_HASHSIZE   1024
-static struct hashtable *l4tid_to_thread;
+struct hashtable 		*l4tid_to_thread;
 
 void
 jobctl$utcb_init(L4_KernelInterfacePage_t *kip)
@@ -154,8 +154,9 @@ jobctl$setup_utcb_area(struct pd *self, void **base, L4_Fpage_t *area,
     // Find Fpage size.
     for(fpage_size = 1U; fpage_size < area_size; fpage_size = fpage_size << 1);
 
-    notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT.SYS UTCB pages (%ld bytes)\n",
-            fpage_size);
+    notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT.SYS UTCB pages\n");
+	notice(SYSBOOT_I_SYSBOOT "reserving %ld bytes for %ld kernel threads\n",
+			fpage_size, threads);
 
     utcb_obj = vms$pd_create_memsection(self, fpage_size, 0, VMS$MEM_UTCB);
 

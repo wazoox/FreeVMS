@@ -9,6 +9,7 @@ INCLUDES=-I./include \
 
 OBJ=$(DESTDIR)/debug/backtrace.o \
     $(DESTDIR)/debug/sigma0.o \
+    $(DESTDIR)/dev/dev_tables.o \
     $(DESTDIR)/jobctl/jobctl_bfl.o \
     $(DESTDIR)/jobctl/jobctl_init.o \
     $(DESTDIR)/jobctl/jobctl_quota.o \
@@ -56,6 +57,7 @@ $(DESTDIR)/vmskernel.sys: $(OBJ)
 
 directories:
 	mkdir -p $(DESTDIR)/debug
+	mkdir -p $(DESTDIR)/dev
 	mkdir -p $(DESTDIR)/drv
 	mkdir -p $(DESTDIR)/jobctl
 	mkdir -p $(DESTDIR)/libearly
@@ -70,6 +72,11 @@ $(DESTDIR)/debug/backtrace.o: debug/backtrace.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/debug/sigma0.o: debug/sigma0.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+# ./dev
+
+$(DESTDIR)/dev/dev_tables.o: dev/dev_tables.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 # ./jobctl

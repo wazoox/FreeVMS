@@ -68,6 +68,29 @@ sys$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
     thread = jobctl$pd_create_thread(pd, -1);
 
     notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT.SYS stack\n");
+	stack = vms$pd_create_memsection(pd, 2 * pagesize, 0, VMS$MEM_NORMAL);
+
+	// FIXME: heapsize (1 MB)
     notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT.SYS heap\n");
+	heap = vms$pd_create_memsection(pd, 1 * 1024 * 1024, 0,
+			VMS$MEM_NORMAL | VMS$MEM_USER);
+	PANIC(heap == NULL);
+
+	// Back the first 64k
+	heap_phys = vms$pd_create_memsection(pd, 0x10000, 0, VMS$MEM_NORMAL);
+	PANIC(heap_phys->base % 0x10000 != 0);
+	vms$memsection_page_map(heap, L4_Fpage(heap_phys->base, 0x10000),
+			L4_Fpage(heap->base, 0x10000));
+
+	// Create a clist
+	notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT.SYS clist\n");
+	dbg$sigma0(1000);
+	clist_section = vms$pd_create_memsection(pd, pagesize, 0, VMS$MEM_NORMAL);
+	// Check if we have run out of VM already we have trouble...
+	notice("clist_section: %lx\n", clist_section);
+	PANIC(clist_section == NULL);
+
+	clist = (cap_t *) clist_section->base;
+	PANIC(clist == NULL);
     return;
 }

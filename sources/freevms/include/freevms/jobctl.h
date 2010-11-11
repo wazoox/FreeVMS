@@ -19,9 +19,11 @@
 ================================================================================
 */
 
-#define JOBCTL$MAX_THREADS_PER_APD 256
+#define JOBCTL$MAX_THREADS_PER_APD	256
+#define pd_l4_space(pd) 			(pd->threads.first->data.id)
 
-struct ll {
+struct ll
+{
     struct ll               *next;
     struct ll               *prev;
     void                    *data;
@@ -265,7 +267,9 @@ typedef struct ll           *rfl_t;
 #define E_RFL_OVERLAP -2
 #define E_RFL_NOMEM -3
 
+vms$pointer jobctl$rfl_alloc(rfl_t rfl);
 rfl_t jobctl$rfl_new(void);
+int jobctl$rfl_free(rfl_t rfl, vms$pointer val);
 int jobctl$rfl_insert_range(rfl_t rfl, vms$pointer from, vms$pointer to);
 
 struct hashtable
@@ -283,6 +287,9 @@ struct hashentry
 };
 
 struct hashtable *hash_init(unsigned int size);
+int hash_insert(struct hashtable *tablestruct, vms$pointer key, void *value);
+void *hash_lookup(struct hashtable *tablestruct, vms$pointer key);
+void hash_remove(struct hashtable *tablestruct, vms$pointer key);
 
 struct memsection *vms$pd_create_memsection(struct pd *self, vms$pointer size,
         vms$pointer base, unsigned int flags);

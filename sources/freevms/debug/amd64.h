@@ -20,28 +20,12 @@
 */
 
 inline vms$pointer
-dbg$get_registers_amd64(int level)
+dbg$get_registers_amd64(void)
 {
-    int                 i;
-
-    vms$pointer         base;
-    vms$pointer         fp;
     vms$pointer         sp;
 
-    asm("movq %%rbp, %%rax; movq %%rax, %0\n" :"=r"(fp)::"%rax");
     asm("movq %%rsp, %%rax; movq %%rax, %0\n" :"=r"(sp)::"%rax");
 
-    base = min(fp, sp);
-
-    for(i = 0; i < level; i++)
-    {
-        notice("  +%03d: [$%016lX] -> $%016lX %s\n",
-                i * 8, base, dbg$direct(base),
-                (base == sp) ? " <- SP" : ((base == fp) ? " <- FP" : ""));
-        base += sizeof(vms$pointer);
-    }
-
-    for(;;);
     return(sp);
 }
 
