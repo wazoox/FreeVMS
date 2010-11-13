@@ -19,6 +19,11 @@
 ================================================================================
 */
 
+#define SYSBOOT_F_PARAM     "%%SYSBOOT-F-PARAM, "
+
 #define IPC_F_FAILED        "%%IPC-F-FAILED, "
 
+#define MEM_F_BACKMEM		"%%MEM-F-BACKMEM, "
+#define MEM_F_MEMSEC		"%%MEM-F-MEMSEC, "
 #define MEM_F_OUTMEM        "%%MEM-F-OUTMEM, "
+#define MEM_F_SECFLD        "%%MEM-F-SECFLD, "

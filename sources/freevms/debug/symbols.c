@@ -222,7 +222,7 @@ dbg$symbol(vms$pointer address)
         value[i][4] = 0;
     }
 
-	c = '-';
+    c = '-';
 
     for(i = 0; i < (L4_SIZEOFWORD / 4); i++)
     {

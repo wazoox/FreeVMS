@@ -19,35 +19,13 @@
 ================================================================================
 */
 
-#include "freevms/freevms.h"
-
-void
-dbg$sigma0(int level)
+void *
+rtl$alloc()
 {
-    L4_Msg_t                msg;
-
-    L4_MsgTag_t             tag;
-
-    L4_ThreadId_t           sigma0;
-
-#   define L4_S0EXT_VERBOSE     (1)
-#   define L4_SIGMA0_EXT        (((vms$pointer) -1001) << 4)
-
-    sigma0 = L4_Pager();
-    L4_MsgClear(&msg);
-    L4_MsgAppendWord(&msg, (L4_Word_t) L4_S0EXT_VERBOSE);
-    L4_MsgAppendWord(&msg, (L4_Word_t) level);
-    L4_Set_Label(&msg.tag, L4_SIGMA0_EXT);
-    L4_MsgLoad(&msg);
-
-    tag = L4_Send(sigma0);
-
-	if (L4_IpcFailed(tag))
-	{
-		notice(IPC_F_FAILED "IPC failed (error %ld: %s)\n", L4_ErrorCode(),
-				L4_ErrorCode_String(L4_ErrorCode()));
-	}
-
-    return;
 }
 
+void
+rtl$free(void *ptr)
+{
+    return;
+}

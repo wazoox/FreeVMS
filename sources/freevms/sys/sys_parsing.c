@@ -22,14 +22,15 @@
 #include "freevms/freevms.h"
 
 void
-parsing(char *line, char *command, char *argument, int length)
+sys$parsing(char *line, char *command, char *argument, int length)
 {
     char    *ptr;
 
     int     i;
 
     for(i = 0; i < length; argument[i++] = 0);
-    PANIC((ptr = strstr(line, " root")) == NULL);
+    PANIC((ptr = strstr(line, command)) == NULL,
+            notice(SYSBOOT_F_PARAM "%s parameter not found", command));
 
     i = 0; while((*ptr) != '=') { ptr++; PANIC(i >= length); }
     ptr++; while((*ptr) == ' ') { ptr++; PANIC(i >= length); }

@@ -60,9 +60,11 @@ typedef L4_Word64_t     vms$pointer;
 // FreeVMS subsystems
 #include "freevms/dev.h"
 #include "freevms/vm.h"
+#include "freevms/init.h"
 #include "freevms/jobctl.h"
 #include "freevms/lock.h"
 #include "freevms/quota.h"
+#include "freevms/sec.h"
 #include "freevms/inlined.h"
 
 // Defines
@@ -101,10 +103,11 @@ extern int dbg$virtual_memory;
 
 #define L4_SIZEOFWORD       (sizeof(L4_Word_t) * 8)
 #define L4_REQUEST_MASK     (~((~0UL) >> (L4_SIZEOFWORD - 20)))
+#define L4_PAGEFAULT		(-2UL << 20)
 #define L4_IO_PAGEFAULT     (-8UL << 20)
 
 // Prototypes
-void parsing(char *line, char *command, char *argument, int length);
-
 void sys$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
         vms$pointer pagesize, char *root_device);
+void sys$loop();
+void sys$parsing(char *line, char *command, char *argument, int length);

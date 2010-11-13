@@ -21,33 +21,24 @@
 
 #include "freevms/freevms.h"
 
-void
-dbg$sigma0(int level)
+vms$pointer
+vms$pagefault(vms$pointer addr)
 {
-    L4_Msg_t                msg;
+	struct memsection			*ms;
 
-    L4_MsgTag_t             tag;
+	ms = vms$objtable_lookup((void *) addr);
 
-    L4_ThreadId_t           sigma0;
+	// For user backed memsections, we have no way of telling how
+	// big of an area is mapped, so we map as little as possible.
 
-#   define L4_S0EXT_VERBOSE     (1)
-#   define L4_SIGMA0_EXT        (((vms$pointer) -1001) << 4)
-
-    sigma0 = L4_Pager();
-    L4_MsgClear(&msg);
-    L4_MsgAppendWord(&msg, (L4_Word_t) L4_S0EXT_VERBOSE);
-    L4_MsgAppendWord(&msg, (L4_Word_t) level);
-    L4_Set_Label(&msg.tag, L4_SIGMA0_EXT);
-    L4_MsgLoad(&msg);
-
-    tag = L4_Send(sigma0);
-
-	if (L4_IpcFailed(tag))
+	if (ms->flags & VMS$MEM_USER)
 	{
-		notice(IPC_F_FAILED "IPC failed (error %ld: %s)\n", L4_ErrorCode(),
-				L4_ErrorCode_String(L4_ErrorCode()));
+		return(vms$min_pagesize());
+	}
+	else
+	{
+		return(L4_Size(vms$biggest_fpage(addr, ms->base, ms->end)));
 	}
 
-    return;
+	return(0);
 }
-

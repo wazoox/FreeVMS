@@ -70,6 +70,20 @@ jobctl$clist_list_init(struct clist_list *list)
     return;
 }
 
+static inline struct clist_info *
+jobctl$clist_list_create_back(struct clist_list* list)
+{
+	return((struct clist_info *) dl_list_create_back((struct double_list *)
+			list, sizeof(struct clist_info)));
+}
+
+static inline void
+jobctl$clist_list_delete(struct clist_info * data)
+{
+	ll_delete((struct ll *) ((void**) data - 2));
+	return;
+}
+
 static inline void
 vms$memsection_list_init(struct memsection_list *list)
 {

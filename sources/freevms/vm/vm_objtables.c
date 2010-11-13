@@ -101,7 +101,8 @@ objtable_insert(struct memsection *memsection)
 }
 
 int
-objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags)
+objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags,
+        vms$pointer pagesize)
 {
     extern struct fpage_alloc   pm_alloc;
     extern struct fpage_alloc   vm_alloc;
@@ -122,7 +123,8 @@ objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags)
 
     if (!(flags & VMS$MEM_USER))
     {
-        ms->phys.list = vms$fpage_alloc_list(&pm_alloc, ms->base, ms->end);
+        ms->phys.list = vms$fpage_alloc_list(&pm_alloc, ms->base, ms->end,
+                pagesize);
 
         if (TAILQ_EMPTY(&ms->phys.list))
         {
@@ -144,7 +146,7 @@ objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags)
 
 int
 objtable_setup_fixed(struct memsection *ms, vms$pointer size,
-        vms$pointer base, unsigned int flags)
+        vms$pointer base, unsigned int flags, vms$pointer pagesize)
 {
     extern struct fpage_alloc   pm_alloc;
     extern struct fpage_alloc   vm_alloc;
@@ -168,7 +170,8 @@ objtable_setup_fixed(struct memsection *ms, vms$pointer size,
     // Check if we need to back the memsection
     if (!(flags & VMS$MEM_USER))
     {
-        ms->phys.list = vms$fpage_alloc_list(&pm_alloc, ms->base, ms->end);
+        ms->phys.list = vms$fpage_alloc_list(&pm_alloc, ms->base, ms->end,
+                pagesize);
 
         if (TAILQ_EMPTY(&ms->phys.list))
         {

@@ -151,7 +151,6 @@ struct memsection
 {
     vms$pointer                 base;
     vms$pointer                 end;
-    vms$pointer                 memory_attributes;
     vms$pointer                 flags;
     vms$pointer                 phys_active;
     union
@@ -180,7 +179,14 @@ struct memsection_node
     struct memsection           data;
 };
 
-int vms$back_mem(vms$pointer base, vms$pointer end);
+#define VMS$FPAGE_PERM_READ		1
+#define VMS$FPAGE_PERM_WRITE	2
+#define VMS$FPAGE_PERM_EXECUTE	4
+
+#define VMS$FPAGE_MODE_MAP		0
+#define VMS$FPAGE_MODE_GRANT	1
+
+int vms$back_mem(vms$pointer base, vms$pointer end, vms$pointer pagesize);
 int vms$memsection_back(struct memsection *memsection);
 int vms$memsection_page_map(struct memsection *self, L4_Fpage_t from_page,
         L4_Fpage_t to_page);
@@ -220,13 +226,14 @@ void *vms$slab_cache_alloc(struct slab_cache *sc);
 void vms$slab_cache_free(struct slab_cache *sc, void *ptr);
 
 struct flist_head vms$fpage_alloc_list(struct fpage_alloc *alloc,
-        vms$pointer base, vms$pointer end);
+        vms$pointer base, vms$pointer end, vms$pointer pagesize);
 
 memsection *vms$objtable_lookup(void *addr);
 
 vms$pointer vms$fpage_alloc_chunk(struct fpage_alloc *alloc, vms$pointer size);
 vms$pointer vms$fpage_alloc_internal(struct fpage_alloc *alloc,
         vms$pointer size);
+vms$pointer vms$pagefault(vms$pointer addr);
 vms$pointer vms$page_round_down(vms$pointer address, vms$pointer page_size);
 vms$pointer vms$page_round_up(vms$pointer address, vms$pointer page_size);
 
@@ -238,9 +245,10 @@ void ObjFreePage(PagePool *pool, struct sBTPage *page);
 void vms$objtable_init(void);
 
 int objtable_insert(struct memsection *memsection);
-int objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags);
+int objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags,
+        vms$pointer pagesize);
 int objtable_setup_fixed(struct memsection *ms, vms$pointer size,
-        vms$pointer base, unsigned int flags);
+        vms$pointer base, unsigned int flags, vms$pointer pagesize);
 int objtable_setup_internal(struct memsection *ms, vms$pointer size,
         vms$pointer base, unsigned int flags);
 int objtable_setup_utcb(struct memsection *ms, vms$pointer size,

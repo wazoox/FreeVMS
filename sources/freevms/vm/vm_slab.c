@@ -38,7 +38,7 @@ vms$initmem(vms$pointer zone, vms$pointer len)
     ptr = (volatile unsigned char *) zone;
     while(len > 0)
     {
-		(*ptr) = (unsigned char) 0x0;
+        (*ptr) = (unsigned char) 0x0;
         ptr++;
         len--;
     }
@@ -173,8 +173,8 @@ vms$memsection_create_cache(struct slab_cache *sc)
 
     if (sc == (&ms_cache))
     {
-		// If this will be used to back memsections, put
-		// the new memsection into the pool itself.
+        // If this will be used to back memsections, put
+        // the new memsection into the pool itself.
         node = (struct memsection_node *) virt;
         ms = &(node->data);
         ms->base = virt;
@@ -252,6 +252,7 @@ vms$slab_cache_alloc(struct slab_cache *sc)
     }
 
     slab = TAILQ_FIRST(&pool->slabs);
+    // bloque en cas de 'out of memory'
     TAILQ_REMOVE(&pool->slabs, TAILQ_FIRST(&pool->slabs), slabs);
     vms$initmem((vms$pointer) slab, sc->slab_size);
 
@@ -334,9 +335,9 @@ vms$memsection_back(struct memsection *memsection)
 
 struct memsection *
 vms$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
-        unsigned int flags)
+        unsigned int flags, vms$pointer pagesize)
 {
-	extern int					vms$pd_initialized;
+    extern int                  vms$pd_initialized;
 
     int                         r;
 
@@ -355,11 +356,11 @@ vms$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
 
     if (flags & VMS$MEM_NORMAL)
     {
-        r = objtable_setup(memsection, size, flags);
+        r = objtable_setup(memsection, size, flags, pagesize);
     }
     else if (flags & VMS$MEM_FIXED)
     {
-        r = objtable_setup_fixed(memsection, size, base, flags);
+        r = objtable_setup_fixed(memsection, size, base, flags, pagesize);
     }
     else if (flags & VMS$MEM_UTCB)
     {

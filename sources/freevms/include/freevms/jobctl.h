@@ -19,8 +19,8 @@
 ================================================================================
 */
 
-#define JOBCTL$MAX_THREADS_PER_APD	256
-#define pd_l4_space(pd) 			(pd->threads.first->data.id)
+#define JOBCTL$MAX_THREADS_PER_APD  256
+#define pd_l4_space(pd)             (pd->threads.first->data.id)
 
 struct ll
 {
@@ -43,6 +43,9 @@ void dl_list_init(struct double_list *dl);
 struct ll *ll_delete (struct ll *ll);
 struct ll *ll_insert_before (struct ll *ll, void *data);
 struct ll *ll_new(void);
+
+#define IS_VALID_CAP(x)		(x.ref.obj != (vms$pointer) -1)
+#define INVALID_CAP(x)		{ x.ref.obj = (vms$pointer) -1; } while(0)
 
 typedef vms$pointer objref_t;
 typedef objref_t memsection_ref_t;
@@ -292,10 +295,20 @@ void *hash_lookup(struct hashtable *tablestruct, vms$pointer key);
 void hash_remove(struct hashtable *tablestruct, vms$pointer key);
 
 struct memsection *vms$pd_create_memsection(struct pd *self, vms$pointer size,
-        vms$pointer base, unsigned int flags);
+        vms$pointer base, unsigned int flags, vms$pointer pagesize);
 
 void jobctl$utcb_init(L4_KernelInterfacePage_t *kip);
-struct pd *jobctl$pd_create(struct pd *self, int max_threads);
+vms$pointer jobctl$pd_add_clist(struct pd* self, cap_t *clist);
+struct pd *jobctl$pd_create(struct pd *self, int max_threads,
+        vms$pointer pagesize);
 void jobctl$pd_init(struct vms$meminfo *meminfo);
 struct thread *jobctl$pd_create_thread(struct pd* self, int priority);
+void jobctl$thread_delete(struct thread *thread);
 void jobctl$thread_init(L4_KernelInterfacePage_t *kip);
+struct thread *jobctl$thread_lookup(L4_ThreadId_t thread);
+int jobctl$thread_start(struct thread *self, vms$pointer ip,
+		vms$pointer sp);
+
+void jobctl$session_delete(struct session *session);
+
+vms$pointer jobctl$threadno(vms$pointer l4_threadno);

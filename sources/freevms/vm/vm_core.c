@@ -67,7 +67,8 @@ vms$morecore(unsigned int nu)
     // On this system we need to ensure we back memory
     // before touching it, or else we are in trouble
     // FIXME: we should check exactly how much to back here !
-    r = vms$back_mem((vms$pointer) up, ((vms$pointer) (up + nu)) - 1);
+    r = vms$back_mem((vms$pointer) up, ((vms$pointer) (up + nu)) - 1,
+            vms$min_pagesize());
 
     if (r != 0)
     {

@@ -30,7 +30,6 @@ sys$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
 {
     extern struct pd                freevms_pd;
 
-    struct initial_obj              *init_obj;
     struct initial_obj              *obj;
     struct pd                       *pd;
     struct thread                   *thread;
@@ -41,56 +40,104 @@ sys$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
     struct memsection               *stack;
 
     vms$pointer                     *init_vars;
+	vms$pointer						memsect;
     vms$pointer                     *user_stack;
 
     cap_t                           *clist;
 
     unsigned int                    i;
-    int                             j;
-    int                             r;
+    unsigned int                    j;
 
-    notice(SYSBOOT_I_SYSBOOT "spawning VMS$INIT.SYS\n");
+    notice(SYSBOOT_I_SYSBOOT "spawning VMS$INIT with executive privileges\n");
+    notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT process descriptor\n");
+	notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT UTCB pages\n");
 
-    // Find init (vms$init.sys)
-    for(obj = meminfo->objects, i = 0; i < meminfo->num_objects; i++, obj++)
-    {
-        if (strstr(obj->name, "vms$init.sys") != NULL)
-        {
-            break;
-        }
-    }
-
-    PANIC(i == meminfo->num_objects, notice("Couldn't find VMS$INIT.SYS!\n"));
-    init_obj = obj;
-
-    notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT.SYS process descriptor\n");
-    pd = jobctl$pd_create(&freevms_pd, 0);
+    pd = jobctl$pd_create(&freevms_pd, 0, pagesize);
     thread = jobctl$pd_create_thread(pd, -1);
 
-    notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT.SYS stack\n");
-	stack = vms$pd_create_memsection(pd, 2 * pagesize, 0, VMS$MEM_NORMAL);
+	notice(SYSBOOT_I_SYSBOOT "reserving %ld bytes for %ld kernel threads\n", 
+			L4_Size(pd->utcb_area), L4_Size(pd->utcb_area) / L4_UtcbSize(kip)); 
+    notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT stack\n");
+    stack = vms$pd_create_memsection(pd, 2 * pagesize, 0, VMS$MEM_NORMAL,
+            pagesize);
 
-	// FIXME: heapsize (1 MB)
-    notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT.SYS heap\n");
-	heap = vms$pd_create_memsection(pd, 1 * 1024 * 1024, 0,
-			VMS$MEM_NORMAL | VMS$MEM_USER);
-	PANIC(heap == NULL);
+    // FIXME: heapsize (1 MB)
+    notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT heap\n");
+    heap = vms$pd_create_memsection(pd, 1 * 1024 * 1024, 0,
+            VMS$MEM_NORMAL | VMS$MEM_USER, pagesize);
+    PANIC(heap == NULL);
 
-	// Back the first 64k
-	heap_phys = vms$pd_create_memsection(pd, 0x10000, 0, VMS$MEM_NORMAL);
-	PANIC(heap_phys->base % 0x10000 != 0);
-	vms$memsection_page_map(heap, L4_Fpage(heap_phys->base, 0x10000),
-			L4_Fpage(heap->base, 0x10000));
+    // Back the first 64k
+    heap_phys = vms$pd_create_memsection(pd, 0x10000, 0, VMS$MEM_NORMAL,
+            pagesize);
+    PANIC(heap_phys->base % 0x10000 != 0);
+    vms$memsection_page_map(heap, L4_Fpage(heap_phys->base, 0x10000),
+            L4_Fpage(heap->base, 0x10000));
 
-	// Create a clist
-	notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT.SYS clist\n");
-	dbg$sigma0(1000);
-	clist_section = vms$pd_create_memsection(pd, pagesize, 0, VMS$MEM_NORMAL);
-	// Check if we have run out of VM already we have trouble...
-	notice("clist_section: %lx\n", clist_section);
-	PANIC(clist_section == NULL);
+    // Create a clist
+    notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT clist\n");
+    clist_section = vms$pd_create_memsection(pd, pagesize, 0, VMS$MEM_NORMAL,
+            pagesize);
+    // Check if we have run out of VM already we have trouble...
+    PANIC(clist_section == NULL);
 
-	clist = (cap_t *) clist_section->base;
-	PANIC(clist == NULL);
+    clist = (cap_t *) clist_section->base;
+    PANIC(clist == NULL);
+
+	// Create capabilities and add them to clist
+    notice(SYSBOOT_I_SYSBOOT "adding capabilities to VMS$INIT clist\n");
+
+	for(obj = meminfo->objects, i = 0, j = 0;
+			j < meminfo->num_objects; obj++, j++)
+	{
+		if (obj->flags & VMS$IOF_VIRT)
+		{
+			memsect = (vms$pointer) vms$objtable_lookup((void *) obj->base);
+			PANIC(memsect == 0);
+
+			clist[i++] = sec$create_capability(memsect, CAP$OBJ);
+		}
+	}
+
+	clist[i++] = sec$create_capability((vms$pointer) pd, CAP$PD);
+	clist[i++] = sec$create_capability((vms$pointer) thread, CAP$THREAD);
+	clist[i++] = sec$create_capability((vms$pointer) stack, CAP$MEMSECTION);
+	clist[i++] = sec$create_capability((vms$pointer) heap, CAP$MEMSECTION);
+	// Reserve a slot for morecore to use
+	clist[i++] = sec$create_capability((vms$pointer) heap, CAP$MEMSECTION);
+	clist[i++] = sec$create_capability((vms$pointer) clist_section,
+			CAP$MEMSECTION);
+
+	jobctl$pd_add_clist(pd, clist);
+
+	// Setup the stack
+	user_stack = (vms$pointer *) (stack->end + 1);
+
+dbg$sigma0(100);
+	if (vms$back_mem(heap->base, heap->base + (12 * sizeof(vms$pointer)),
+			pagesize) != 0)
+	{
+		PANIC(1, notice(MEM_F_BACKMEM "unable to back heap during startup\n"));
+	}
+
+	init_vars = (vms$pointer *) (heap->base);
+	*(init_vars + 0) = NULL;						// Callback pointer
+	*(init_vars + 1) = 0;							// SYS$INPUT
+	*(init_vars + 2) = 0;							// SYS$OUTPUT
+	*(init_vars + 3) = 0;							// SYS$ERROR
+	*(init_vars + 4) = heap->base;
+	*(init_vars + 5) = heap->end;
+	*(init_vars + 6) = 0;							// cap_slot
+	*(init_vars + 7) = i - 1;						// cap_used
+	*(init_vars + 8) = pagesize / sizeof(cap_t);	// cap_size
+	*(init_vars + 9) = clist_section->base;			// cap_addr
+	*(init_vars + 10) = 0;							// naming_server
+
+	*(--user_stack) = 0;							// argc
+	*(--user_stack) = (vms$pointer) init_vars;		// arguments
+
+	jobctl$thread_start(thread, (vms$pointer) init$process,
+			(vms$pointer) user_stack);
+
     return;
 }

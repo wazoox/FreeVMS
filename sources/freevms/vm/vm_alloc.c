@@ -121,7 +121,7 @@ vms$fpage_clear_internal(struct fpage_alloc *alloc)
             if ((fpage = (struct fpage_list *) vms$slab_cache_alloc(&fp_cache))
                     == (struct fpage_list *) NULL)
             {
-				PANIC(1, notice("vms$slab_cache_alloc() returns NULL !\n"));
+                PANIC(1, notice("vms$slab_cache_alloc() returns NULL !\n"));
                 return;
             }
 
@@ -172,7 +172,8 @@ vms$fpage_alloc_internal(struct fpage_alloc *alloc, vms$pointer size)
     if (alloc->internal.active == 0)
     {
         for(i = 0; TAILQ_EMPTY(&alloc->flist[i]) && (i < MAX_FPAGE_ORDER); i++);
-        PANIC(i == MAX_FPAGE_ORDER, notice(MEM_F_OUTMEM "out of memory\n"));
+        PANIC(i == MAX_FPAGE_ORDER, notice(MEM_F_OUTMEM
+                "catching out of memory error\n"));
 
         node = TAILQ_FIRST(&alloc->flist[i]);
         alloc->internal.base = L4_Address(node->fpage);
@@ -377,7 +378,7 @@ vms$fpage_alloc_chunk(struct fpage_alloc *alloc, vms$pointer size)
                 vms$fp_end(fpage));
     }
 
-	return(L4_Address(fpage));
+    return(L4_Address(fpage));
 }
 
 static void
@@ -440,7 +441,7 @@ vms$fpage_remove_chunk(struct fpage_alloc *alloc, vms$pointer base,
 // the largest fpages it can to back [base, end].
 struct flist_head
 vms$fpage_alloc_list(struct fpage_alloc *alloc, vms$pointer base,
-        vms$pointer end)
+        vms$pointer end, vms$pointer pagesize)
 {
     struct flist_head           list = TAILQ_HEAD_INITIALIZER(list);
 
@@ -450,6 +451,13 @@ vms$fpage_alloc_list(struct fpage_alloc *alloc, vms$pointer base,
 
     while(base < end)
     {
+        // If region is smaller than page size, we cannot allocate any fpage
+        // but we have found any out of memory error.
+        if (((end - base) + 1) < pagesize)
+        {
+            return(list);
+        }
+
         fpage = vms$fpage_alloc(alloc, L4_Size(vms$biggest_fpage(base,
                 base, end)));
 
@@ -472,6 +480,9 @@ vms$fpage_alloc_list(struct fpage_alloc *alloc, vms$pointer base,
     return(list);
 
 out_of_memory:
+    notice(MEM_F_OUTMEM "catching out of memory error at $%016lX "
+            "($%lX bytes)\n", base, (end - base) + 1);
+
     while(!TAILQ_EMPTY(&list))
     {
         node = TAILQ_FIRST(&list);
@@ -503,7 +514,7 @@ vms$fpage_free_list(struct fpage_alloc *alloc, struct flist_head list)
 }
 
 int
-vms$back_mem(vms$pointer base, vms$pointer end)
+vms$back_mem(vms$pointer base, vms$pointer end, vms$pointer pagesize)
 {
     extern struct pd            freevms_pd;
 
@@ -516,7 +527,7 @@ vms$back_mem(vms$pointer base, vms$pointer end)
     while(base < end)
     {
         backed = vms$pd_create_memsection(&freevms_pd, vms$min_pagesize(),
-                0, VMS$MEM_NORMAL);
+                0, VMS$MEM_NORMAL, pagesize);
 
         if (backed == NULL)
         {

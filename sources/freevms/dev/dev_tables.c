@@ -23,78 +23,78 @@
 
 // All devices are registered is a tree
 
-#define SIZE_OF_DEVICE_ALPHABET		256
+#define SIZE_OF_DEVICE_ALPHABET     256
 
-static device_node		*devices;
-static int				indirection[SIZE_OF_DEVICE_ALPHABET];
+static device_node      *devices;
+static int              indirection[SIZE_OF_DEVICE_ALPHABET];
 
 void
 dev$init(void)
 {
-	// DG : FCAL disks
-	// DK : SCSI, SAS and SATA disks
-	// DN : USB disks
-	// DQ : IDE, PATA and ATAPI disks
-	// DR : software raid disk driver
-	// E? : ethernet device
-	//      EW : wired
-	//      ER : wifi
-	// F~ : fiber device driver
-	// GK : generic SCSI driver
-	// MK : SCSI tapes
-	// OP : operator console driver
-	// TT : serial terminal driver
+    // DG : FCAL disks
+    // DK : SCSI, SAS and SATA disks
+    // DN : USB disks
+    // DQ : IDE, PATA and ATAPI disks
+    // DR : software raid disk driver
+    // E? : ethernet device
+    //      EW : wired
+    //      ER : wifi
+    // F~ : fiber device driver
+    // GK : generic SCSI driver
+    // MK : SCSI tapes
+    // OP : operator console driver
+    // TT : serial terminal driver
 
-	unsigned int			i;
+    unsigned int            i;
 
-	notice(DEV_I_TREE "initializing devices tree\n");
+    notice(DEV_I_TREE "initializing devices tree\n");
 
-	for(i = 0; i < SIZE_OF_DEVICE_ALPHABET; indirection[i++] = 0);
+    for(i = 0; i < SIZE_OF_DEVICE_ALPHABET; indirection[i++] = 0);
 
-	devices = NULL;
-	i = 0;
+    devices = NULL;
+    i = 0;
 
-	// Characters : A-Z, 0-9 and '.'
+    // Characters : A-Z, 0-9 and '.'
 
-	indirection['A'] = i++;
-	indirection['B'] = i++;
-	indirection['C'] = i++;
-	indirection['D'] = i++;
-	indirection['E'] = i++;
-	indirection['F'] = i++;
-	indirection['G'] = i++;
-	indirection['H'] = i++;
-	indirection['I'] = i++;
-	indirection['J'] = i++;
-	indirection['K'] = i++;
-	indirection['L'] = i++;
-	indirection['M'] = i++;
-	indirection['N'] = i++;
-	indirection['O'] = i++;
-	indirection['P'] = i++;
-	indirection['Q'] = i++;
-	indirection['R'] = i++;
-	indirection['S'] = i++;
-	indirection['T'] = i++;
-	indirection['U'] = i++;
-	indirection['V'] = i++;
-	indirection['W'] = i++;
-	indirection['X'] = i++;
-	indirection['Y'] = i++;
-	indirection['Z'] = i++;
+    indirection['A'] = i++;
+    indirection['B'] = i++;
+    indirection['C'] = i++;
+    indirection['D'] = i++;
+    indirection['E'] = i++;
+    indirection['F'] = i++;
+    indirection['G'] = i++;
+    indirection['H'] = i++;
+    indirection['I'] = i++;
+    indirection['J'] = i++;
+    indirection['K'] = i++;
+    indirection['L'] = i++;
+    indirection['M'] = i++;
+    indirection['N'] = i++;
+    indirection['O'] = i++;
+    indirection['P'] = i++;
+    indirection['Q'] = i++;
+    indirection['R'] = i++;
+    indirection['S'] = i++;
+    indirection['T'] = i++;
+    indirection['U'] = i++;
+    indirection['V'] = i++;
+    indirection['W'] = i++;
+    indirection['X'] = i++;
+    indirection['Y'] = i++;
+    indirection['Z'] = i++;
 
-	indirection['0'] = i++;
-	indirection['1'] = i++;
-	indirection['2'] = i++;
-	indirection['3'] = i++;
-	indirection['4'] = i++;
-	indirection['5'] = i++;
-	indirection['6'] = i++;
-	indirection['7'] = i++;
-	indirection['8'] = i++;
-	indirection['9'] = i++;
+    indirection['0'] = i++;
+    indirection['1'] = i++;
+    indirection['2'] = i++;
+    indirection['3'] = i++;
+    indirection['4'] = i++;
+    indirection['5'] = i++;
+    indirection['6'] = i++;
+    indirection['7'] = i++;
+    indirection['8'] = i++;
+    indirection['9'] = i++;
 
-	indirection['.'] = i++;
+    indirection['.'] = i++;
 
-	return;
+    return;
 }

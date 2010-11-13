@@ -30,7 +30,7 @@ jobctl$rfl_new(void)
 int
 jobctl$rfl_free(rfl_t rfl, vms$pointer val)
 {
-	return(jobctl$rfl_insert_range(rfl, val, val));
+    return(jobctl$rfl_insert_range(rfl, val, val));
 }
 
 int
@@ -119,30 +119,30 @@ jobctl$rfl_insert_range(rfl_t rfl, vms$pointer from, vms$pointer to)
 vms$pointer
 jobctl$rfl_alloc(rfl_t rfl)
 {
-	struct range			*range;
+    struct range            *range;
 
-	vms$pointer				retval;
+    vms$pointer             retval;
 
-	if (rfl->next == rfl)
-	{
-		// This is the no items left case
-		return(-1);
-	}
+    if (rfl->next == rfl)
+    {
+        // This is the no items left case
+        return(-1);
+    }
 
-	range = (struct range *) rfl->next->data;
-	retval = range->from;
+    range = (struct range *) rfl->next->data;
+    retval = range->from;
 
-	if (range->from == range->to)
-	{
-		// None left in this range now, free resources
-		vms$free(range);
-		ll_delete(rfl->next);
-	}
-	else
-	{
-		// There are more left in the range, just increment the from value
-		range->from++;
-	}
+    if (range->from == range->to)
+    {
+        // None left in this range now, free resources
+        vms$free(range);
+        ll_delete(rfl->next);
+    }
+    else
+    {
+        // There are more left in the range, just increment the from value
+        range->from++;
+    }
 
-	return(retval);
+    return(retval);
 }

@@ -15,6 +15,7 @@ OBJ=$(DESTDIR)/debug/backtrace.o \
     $(DESTDIR)/jobctl/jobctl_quota.o \
     $(DESTDIR)/jobctl/jobctl_thread.o \
     $(DESTDIR)/jobctl/jobctl_rfl.o \
+	$(DESTDIR)/init/init.o \
     $(DESTDIR)/libearly/amd64.o \
 	$(DESTDIR)/libearly/get_hex.o \
 	$(DESTDIR)/libearly/print.o \
@@ -22,8 +23,11 @@ OBJ=$(DESTDIR)/debug/backtrace.o \
 	$(DESTDIR)/list/lists.o \
 	$(DESTDIR)/lock/lock_mutex.o \
 	$(DESTDIR)/lock/lock_mutex_amd64.o \
+	$(DESTDIR)/sec/sec_caps.o \
+	$(DESTDIR)/sec/sec_rand.o \
 	$(DESTDIR)/sys/sys_boot.o \
 	$(DESTDIR)/sys/sys_init.o \
+	$(DESTDIR)/sys/sys_loop.o \
 	$(DESTDIR)/sys/sys_main.o \
 	$(DESTDIR)/sys/sys_parsing.o \
 	$(DESTDIR)/vm/vm_alloc.o \
@@ -31,6 +35,7 @@ OBJ=$(DESTDIR)/debug/backtrace.o \
 	$(DESTDIR)/vm/vm_core.o \
 	$(DESTDIR)/vm/vm_init.o \
 	$(DESTDIR)/vm/vm_objtables.o \
+	$(DESTDIR)/vm/vm_pagefault.o \
 	$(DESTDIR)/vm/vm_server.o \
 	$(DESTDIR)/vm/vm_sigma0.o \
 	$(DESTDIR)/vm/vm_slab.o
@@ -59,10 +64,12 @@ directories:
 	mkdir -p $(DESTDIR)/debug
 	mkdir -p $(DESTDIR)/dev
 	mkdir -p $(DESTDIR)/drv
+	mkdir -p $(DESTDIR)/init
 	mkdir -p $(DESTDIR)/jobctl
 	mkdir -p $(DESTDIR)/libearly
 	mkdir -p $(DESTDIR)/list
 	mkdir -p $(DESTDIR)/lock
+	mkdir -p $(DESTDIR)/sec
 	mkdir -p $(DESTDIR)/sys
 	mkdir -p $(DESTDIR)/vm
 
@@ -77,6 +84,11 @@ $(DESTDIR)/debug/sigma0.o: debug/sigma0.c
 # ./dev
 
 $(DESTDIR)/dev/dev_tables.o: dev/dev_tables.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+# ./init
+
+$(DESTDIR)/init/init.o: init/init.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 # ./jobctl
@@ -112,12 +124,23 @@ $(DESTDIR)/lock/lock_mutex.o: lock/lock_mutex.c
 $(DESTDIR)/lock/lock_mutex_amd64.o: lock/lock_mutex_amd64.S
 	as $< -o $@
 
+# ./sec
+
+$(DESTDIR)/sec/sec_caps.o: sec/sec_caps.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/sec/sec_rand.o: sec/sec_rand.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
 # ./sys
 
 $(DESTDIR)/sys/sys_init.o: sys/sys_init.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/sys/sys_main.o: sys/sys_main.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/sys/sys_loop.o: sys/sys_loop.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/sys/sys_parsing.o: sys/sys_parsing.c
@@ -141,6 +164,9 @@ $(DESTDIR)/vm/vm_btree.o: vm/vm_btree.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/vm/vm_objtables.o: vm/vm_objtables.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(DESTDIR)/vm/vm_pagefault.o: vm/vm_pagefault.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/vm/vm_sigma0.o: vm/vm_sigma0.c

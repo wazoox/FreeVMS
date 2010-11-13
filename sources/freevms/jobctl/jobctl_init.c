@@ -21,7 +21,7 @@
 
 #include "freevms/freevms.h"
 
-rfl_t 		           thread_list;
+rfl_t                  thread_list;
 
 vms$pointer             utcb_size;
 vms$pointer             utcb_size_log2;
@@ -32,7 +32,7 @@ static L4_Word_t        max_threadno;
 static L4_Word_t        min_threadno;
 
 #define JOBCTL$THREAD_PD_HASHSIZE   1024
-struct hashtable 		*l4tid_to_thread;
+struct hashtable        *l4tid_to_thread;
 
 void
 jobctl$utcb_init(L4_KernelInterfacePage_t *kip)
@@ -90,7 +90,6 @@ jobctl$pd_init(struct vms$meminfo *meminfo)
 
     // Setup freevms_pd with itself as parent.
     jobctl$pd_setup(&freevms_pd, &freevms_pd, NUMBER_OF_KERNEL_THREADS);
-    vms$pd_initialized = 1;
 
     // Insert memsections used during bootstrapping into memsection list
     // and objtable.
@@ -109,6 +108,7 @@ jobctl$pd_init(struct vms$meminfo *meminfo)
         node = next;
     } while(node != first_ms);
 
+    vms$pd_initialized = 1;
     return;
 }
 
@@ -127,7 +127,7 @@ jobctl$thread_init(L4_KernelInterfacePage_t *kip)
     min_threadno = L4_ThreadNo(L4_Myself()) + 2;
     max_threadno = ((vms$pointer) 1) << L4_ThreadIdBits(kip);
 
-    notice(JOBCTL_I_MAXPROCID "setting maximal process number $%lX\n",
+    notice(JOBCTL_I_MAXPROCID "setting maximal process identifier $%lX\n",
             jobctl$threadno(max_threadno));
     thread_list = jobctl$rfl_new();
     r = jobctl$rfl_insert_range(thread_list, min_threadno, max_threadno);
@@ -139,7 +139,7 @@ jobctl$thread_init(L4_KernelInterfacePage_t *kip)
 
 static struct memsection *
 jobctl$setup_utcb_area(struct pd *self, void **base, L4_Fpage_t *area,
-        int threads)
+        int threads, vms$pointer pagesize)
 {
     struct memsection       *utcb_obj;
 
@@ -154,11 +154,8 @@ jobctl$setup_utcb_area(struct pd *self, void **base, L4_Fpage_t *area,
     // Find Fpage size.
     for(fpage_size = 1U; fpage_size < area_size; fpage_size = fpage_size << 1);
 
-    notice(SYSBOOT_I_SYSBOOT "creating VMS$INIT.SYS UTCB pages\n");
-	notice(SYSBOOT_I_SYSBOOT "reserving %ld bytes for %ld kernel threads\n",
-			fpage_size, threads);
-
-    utcb_obj = vms$pd_create_memsection(self, fpage_size, 0, VMS$MEM_UTCB);
+    utcb_obj = vms$pd_create_memsection(self, fpage_size, 0, VMS$MEM_UTCB,
+            pagesize);
 
     if (!utcb_obj)
     {
@@ -177,11 +174,11 @@ jobctl$setup_utcb_area(struct pd *self, void **base, L4_Fpage_t *area,
 }
 
 struct pd *
-jobctl$pd_create(struct pd *self, int max_threads)
+jobctl$pd_create(struct pd *self, int max_threads, vms$pointer pagesize)
 {
     struct pd       *new_pd;
 
-    if (max_threads >= JOBCTL$MAX_THREADS_PER_APD)
+    if (max_threads > JOBCTL$MAX_THREADS_PER_APD)
     {
         return(NULL);
     }
@@ -204,7 +201,8 @@ jobctl$pd_create(struct pd *self, int max_threads)
     jobctl$pd_setup(new_pd, self, max_threads);
 
     new_pd->utcb_memsection = jobctl$setup_utcb_area(new_pd,
-            &new_pd->utcb_base, &new_pd->utcb_area, max_threads);
+            &new_pd->utcb_base, &new_pd->utcb_area, max_threads,
+            pagesize);
 
     if (!new_pd->utcb_memsection)
     {

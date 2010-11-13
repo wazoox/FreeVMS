@@ -376,7 +376,7 @@ vms$set_flags(struct vms$meminfo *mem_info, char match, char set)
 
 void
 vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info,
-        vms$pointer page_size)
+        vms$pointer pagesize)
 {
     static struct initial_obj       static_objects[NUM_MI_OBJECTS];
 
@@ -406,7 +406,7 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info,
     // Create a guard page
 
     mem_info->num_vm_regions = vms$remove_chunk(mem_info->vm_regions,
-            mem_info->num_vm_regions, NUM_MI_VMREGIONS, 0, page_size - 1);
+            mem_info->num_vm_regions, NUM_MI_VMREGIONS, 0, pagesize - 1);
 
     mem_info->objects = static_objects;
     mem_info->max_objects = NUM_MI_OBJECTS;
@@ -421,8 +421,8 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info,
         {
             mem_info->num_regions = vms$remove_chunk(mem_info->regions,
                     mem_info->num_regions, NUM_MI_REGIONS,
-                    vms$page_round_down(mem_info->objects[i].base, page_size),
-                    vms$page_round_up(mem_info->objects[i].end, page_size) - 1);
+                    vms$page_round_down(mem_info->objects[i].base, pagesize),
+                    vms$page_round_up(mem_info->objects[i].end, pagesize) - 1);
         }
     }
 
@@ -474,7 +474,7 @@ vms$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info,
 }
 
 void
-vms$bootstrap(struct vms$meminfo *mem_info, vms$pointer page_size)
+vms$bootstrap(struct vms$meminfo *mem_info, vms$pointer pagesize)
 {
     struct memsection       *heap;
 
@@ -508,18 +508,18 @@ vms$bootstrap(struct vms$meminfo *mem_info, vms$pointer page_size)
             notice(MEM_I_ALLOC "allocating $%016lX - $%016lX\n",
                     mem_info->objects[i].base, mem_info->objects[i].end);
             vms$remove_virtmem(mem_info, mem_info->objects[i].base,
-                    mem_info->objects[i].end, page_size);
+                    mem_info->objects[i].end, pagesize);
         }
     }
 
     // Free up som virtual memory to bootstrap the fpage allocator.
     for(i = 0; i < mem_info->num_vm_regions; i++)
     {
-        base = vms$page_round_up(mem_info->vm_regions[i].base, page_size);
-        end = vms$page_round_down(mem_info->vm_regions[i].end + 1, page_size)
+        base = vms$page_round_up(mem_info->vm_regions[i].base, pagesize);
+        end = vms$page_round_down(mem_info->vm_regions[i].end + 1, pagesize)
             - 1;
 
-        if ((end - (base + 1)) >= (2 * page_size))
+        if ((end - (base + 1)) >= (2 * pagesize))
         {
             notice(MEM_I_FALLOC "bootstrapping Fpage allocator at virtual "
                     "addresses\n");
@@ -533,15 +533,15 @@ vms$bootstrap(struct vms$meminfo *mem_info, vms$pointer page_size)
     PANIC(i >= mem_info->num_regions);
 
     // We need to make sure the first chunk of physical memory we free
-    // is at least 2 * page_size to bootstrap the slab allocators for
+    // is at least 2 * pagesize to bootstrap the slab allocators for
     // memsections and the fpage lists.
 
     for(i = 0; i < mem_info->num_regions; i++)
     {
-        base = vms$page_round_up(mem_info->regions[i].base, page_size);
-        end = vms$page_round_down(mem_info->regions[i].end + 1, page_size) - 1;
+        base = vms$page_round_up(mem_info->regions[i].base, pagesize);
+        end = vms$page_round_down(mem_info->regions[i].end + 1, pagesize) - 1;
 
-        if (((end - base) + 1) >= (2 * page_size))
+        if (((end - base) + 1) >= (2 * pagesize))
         {
             notice(MEM_I_SALLOC "bootstrapping Slab allocator at physical "
                     "addresses\n");
@@ -564,8 +564,8 @@ vms$bootstrap(struct vms$meminfo *mem_info, vms$pointer page_size)
             continue;
         }
 
-        base = vms$page_round_up(mem_info->regions[i].base, page_size);
-        end = vms$page_round_down(mem_info->regions[i].end + 1, page_size) - 1;
+        base = vms$page_round_up(mem_info->regions[i].base, pagesize);
+        end = vms$page_round_down(mem_info->regions[i].end + 1, pagesize) - 1;
 
         if (base < end)
         {
@@ -592,7 +592,7 @@ vms$bootstrap(struct vms$meminfo *mem_info, vms$pointer page_size)
     // Setup the kernel heap
 
     heap = vms$pd_create_memsection((struct pd *) NULL, VMS$HEAP_SIZE, 0,
-            VMS$MEM_NORMAL | VMS$MEM_USER);
+            VMS$MEM_NORMAL | VMS$MEM_USER, pagesize);
 
     PANIC(heap == NULL);
 
@@ -620,7 +620,7 @@ vms$populate_init_objects(struct vms$meminfo *mem_info, vms$pointer pagesize)
         {
             base = vms$page_round_down(obj->base, pagesize);
             ret = vms$pd_create_memsection(&freevms_pd, obj->end - base,
-                    base, VMS$MEM_INTERNAL);
+                    base, VMS$MEM_INTERNAL, pagesize);
 
             PANIC(ret == NULL);
             // Check if it is correctly in object table

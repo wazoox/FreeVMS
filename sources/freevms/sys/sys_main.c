@@ -23,7 +23,7 @@
 
 // Global variables
 int                     vms$pd_initialized = 0;
-int						dbg$virtual_memory;
+int                     dbg$virtual_memory;
 struct pd               freevms_pd;
 
 int
@@ -33,6 +33,8 @@ main(void)
 
 #   define                      ROOT_DEVICE_LENGTH 80
     char                        root_device[ROOT_DEVICE_LENGTH];
+#   define                      CONSOLE_DEVICE_LENGTH 80
+    char                        console_device[CONSOLE_DEVICE_LENGTH];
 
     L4_BootRec_t                *boot_record;
 
@@ -51,7 +53,7 @@ main(void)
     L4_Word_t                   num_boot_info_entries;
     L4_Word_t                   num_processors;
     L4_Word_t                   page_bits;
-    L4_Word_t                   page_size;
+    L4_Word_t                   pagesize;
 
     struct vms$meminfo          mem_info;
 
@@ -74,9 +76,9 @@ main(void)
     notice(SYSBOOT_I_SYSBOOT "booting main processor\n");
 
     for(page_bits = 0; !((1 << page_bits) & L4_PageSizeMask(kip)); page_bits++);
-    page_size = (1 << page_bits);
+    pagesize = (((vms$pointer) 1) << page_bits);
     notice(SYSBOOT_I_SYSBOOT "computing page size: %d bytes\n",
-            (int) page_size);
+            (int) pagesize);
 
     num_processors = L4_NumProcessors((void *) kip);
 
@@ -104,7 +106,7 @@ main(void)
                 (int) (main_proc_desc->X.InternalFreq / 1000));
     }
 
-    L4_Sigma0_GetPage(L4_nilthread, L4_Fpage(L4_BootInfo(kip), page_size));
+    L4_Sigma0_GetPage(L4_nilthread, L4_Fpage(L4_BootInfo(kip), pagesize));
 
     boot_info = L4_BootInfo((void *) kip);
     num_boot_info_entries = L4_BootInfo_Entries((void *) boot_info);
@@ -126,152 +128,29 @@ main(void)
     PANIC(L4_BootRec_Type(boot_record) != L4_BootInfo_SimpleExec);
     command_line = L4_SimpleExec_Cmdline(boot_record);
     notice(SYSBOOT_I_SYSBOOT "parsing command line: %s\n", command_line);
-    parsing(command_line, (char *) " root", root_device, ROOT_DEVICE_LENGTH);
+    sys$parsing(command_line, (char *) " root", root_device,
+			ROOT_DEVICE_LENGTH);
     notice(SYSBOOT_I_SYSBOOT "selecting root device: %s\n", root_device);
+    sys$parsing(command_line, (char *) " console", console_device,
+            CONSOLE_DEVICE_LENGTH);
+    notice(SYSBOOT_I_SYSBOOT "selecting console device: %s\n", console_device);
 
-	dbg$virtual_memory = (strstr(command_line, " dbg$virtual_memory") != NULL)
-			? 1 : 0;
+    dbg$virtual_memory = (strstr(command_line, " dbg$virtual_memory") != NULL)
+            ? 1 : 0;
 
     // Starting virtual memory subsystem
-    vms$init(kip, &mem_info, (unsigned int) page_size);
-    vms$bootstrap(&mem_info, (unsigned int) page_size);
+    vms$init(kip, &mem_info, pagesize);
+    vms$bootstrap(&mem_info, pagesize);
 
     vms$objtable_init();
     jobctl$utcb_init(kip);
     jobctl$pd_init(&mem_info);
-    vms$populate_init_objects(&mem_info, (unsigned int) page_size);
+    vms$populate_init_objects(&mem_info, pagesize);
     jobctl$thread_init(kip);
-	dev$init();
-    sys$init(kip, &mem_info, page_size, root_device);
-    /*
-    iguana_server();
-    */
-
-    // A thread must have a pager. This pager requires a
-    // specific thread to handle pagefault protocol.
-    // This thread is created by hand because there is no memory management
-    // to manage thread.
-
-#if 0
-    pager_utcb = L4_MyLocalId().raw;
-    pager_utcb = (pager_utcb & (~(utcb_size - 1))) + utcb_size;
-    pager_tid = L4_GlobalId(L4_ThreadNo(root_tid) + 1, 1);
-    L4_ThreadControl(pager_tid, root_tid, root_tid, root_tid,
-            (void *) pager_utcb);
-    PANIC(L4_ErrorCode(),
-            notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
-
-    L4_Start(pager_tid, (L4_Word_t) ((THREAD_STACK_BASE + 4096)
-            - (2 * L4_SIZEOFWORD)), (L4_Word_t) vms$pager);
-
-    PANIC(L4_ErrorCode(),
-            notice("ERR=%s\n", L4_ErrorCode_String(L4_ErrorCode())));
-    L4_Call(pager_tid);
-    notice(RUN_S_PROC_ID "identification of created process is %08X\n",
-            (unsigned int) L4_ThreadNo(pager_tid));
-
-    // Starting job controller
-    jobctl_tid = L4_GlobalId(L4_ThreadNo(root_tid) + 2, 1);
-    notice(SYSBOOT_I_SYSBOOT "spawning job controller\n");
-    notice(RUN_S_PROC_ID "identification of created process is %08X\n",
-            (unsigned int) L4_ThreadNo(jobctl_tid));
-    // tid = jobctl$create(JOBCTL$THREAD/PROC)
-    // jobctl$delete(tid)
-    // jobctl$schedule()
-
-    name_tid = L4_GlobalId(L4_ThreadNo(root_tid) + 3, 1);
-    notice(SYSBOOT_I_SYSBOOT "spawning name service\n");
-    notice(RUN_S_PROC_ID "identification of created process is %08X\n",
-            (unsigned int) L4_ThreadNo(name_tid));
-
-    //passer le thread_id aux serveurs créés.
-
-    // Adding to name server:
-    // - SYS$KERNEL
-    // - SYS$PAGER
-    // - SYS$NMSRV
-    // - SYS$JOBCTL
-
-    switch(num_boot_info_entries - 3)
-    {
-        case 0:
-            break;
-
-        case 1:
-            notice(SYSBOOT_I_SYSBOOT "trying to load %d driver\n",
-                    (int) (num_boot_info_entries - 3));
-            break;
-
-        default:
-            notice(SYSBOOT_I_SYSBOOT "trying to load %d drivers\n",
-                    (int) (num_boot_info_entries - 3));
-            break;
-    }
-
-    for(; i < num_boot_info_entries; i++)
-    {
-        boot_record = L4_BootRec_Next(boot_record);
-        PANIC(L4_BootRec_Type(boot_record) != L4_BootInfo_Module);
-        notice(SYSBOOT_I_SYSBOOT "loading %s\n",
-                L4_Module_Cmdline(boot_record));
-        /*
-        elf_loader();
-        notice(SYSBOOT_I_SYSBOOT "address %016lX:%016lX\n",
-                (long unsigned int) L4_Module_Start(boot_record),
-                (long unsigned int) L4_Module_Size(boot_record));
-                */
-    }
-
-    notice(SYSBOOT_I_SYSBOOT "freeing kernel memory\n");
-
-    notice(SYSBOOT_I_SYSBOOT "trying to mount root filesystem\n");
-    notice(MOUNT_I_MOUNTED "SYS$ROOT mounted on _%s:\n", root_device);
-    notice(SYSBOOT_I_SYSBOOT "trying to read SYS$ROOT:[VMS$COMMON.SYSMGR]"
-            "VMSKERNEL.CNF\n");
-    notice(SYSBOOT_I_SYSBOOT "trying to read SYS$ROOT:[VMS$COMMON.SYSMGR]"
-            "VMSSWAPPER.CNF\n");
-
-    /*
-     * Chargement des modules
-     * start_task()
-     */
-
-    time = L4_SystemClock();
-    notice(STDRV_I_STARTUP "FreeVMS startup begun at %d, %d (UTC)\n",
-            time.X.low, time.X.high);
-    notice("\n");
-
-    notice("The FreeVMS system is now executing the site-specific "
-            "startup commands.\n");
-    notice("\n");
-
-    notice(SYSBOOT_I_SYSBOOT "executing SYS$ROOT:[VMS$COMMON.SYSMGR]"
-            "SYSTARTUP_VMS.COM\n");
-/*
-    notice(SYSBOOT_I_SYSBOOT "creating logical name "
-            "SYS$SYSTEM=SYS$ROOT:[VMS$COMMON]\n");
-    notice(SYSBOOT_I_SYSBOOT "creating logical name "
-            "SYS$MANAGER=SYS$SYSTEM:[.SYSMGR]\n");
-
-    notice(SYSBOOT_I_SYSBOOT "SYS$SYSTEM:PAGEFILE.SYS\n");
-    notice(SYSBOOT_I_SYSBOOT "SYS$SYSTEM:PAGEFILE.SYS\n");
-    notice(SYSBOOT_I_SYSBOOT "SYS$SYSTEM:SWAPFILE.SYS\n");
-    */
-
-
-    /*
-    notice("%%DCL-S-SPAWNED, process SYSTEM_1 spawned\n");
-    */
-
-    L4_KDB_Enter("Debug");
-    running_system = 1;
-
-    while(running_system == 1);
-    {
-    }
+    dev$init();
+    sys$init(kip, &mem_info, pagesize, root_device);
+    sys$loop();
 
     notice(">>> System halted\n");
-
-#endif
     return(0);
 }
