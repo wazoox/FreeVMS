@@ -66,7 +66,7 @@ jobctl$eas_list_init(struct eas_list *list)
 static inline void
 jobctl$clist_list_init(struct clist_list *list)
 {
-    dl_list_clear((struct double_list *) list);
+    dl_list_init((struct double_list *) list);
     return;
 }
 

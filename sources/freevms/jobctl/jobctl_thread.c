@@ -229,15 +229,8 @@ jobctl$pd_add_clist(struct pd* self, cap_t *clist)
 	struct memsection		*memsection;
 
 	memsection = vms$objtable_lookup(clist);
-notice("jobctl$pd_add_clist %lx\n", self->clists);
-notice("jobctl$pd_add_clist %lx\n", self->clists.first);
-notice("jobctl$pd_add_clist %lx\n", self->clists.last);
 	clist_info = jobctl$clist_list_create_back(&self->clists);
 
-notice("jobctl$pd_add_clist %lx\n", self->clists);
-notice("jobctl$pd_add_clist %lx\n", self->clists.first);
-notice("jobctl$pd_add_clist %lx\n", self->clists.last);
-notice("jobctl$pd_add_clist %lx\n", clist_info);
 	if (clist_info == NULL)
 	{
 		return(0);

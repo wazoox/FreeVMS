@@ -26,7 +26,6 @@ sec$create_capability(vms$pointer reference, enum cap_type type)
 {
 	cap_t			cap;
 
-	notice("create_capability %lx\n", reference);
 	cap.ref.obj = reference;
 	cap.type = type;
 	cap.passwd = rand$extract_number(sizeof(cap.passwd));
@@ -51,24 +50,19 @@ sec$validate_access(vms$pointer ref, struct pd *pd)
 	iid_bits = 3;
 	master_ref = (ref >> iid_bits) << iid_bits;
 
-	notice("clists=%lx\n", pd->clists.first);
 	for (clists = pd->clists.first;
 			clists->next != pd->clists.first;
 			clists = clists->next)
 	{
 		temp = clists->data.clist;
-		notice("clists->data=%lx\n", clists->data);
-		notice("temp = %lx\n", temp);
 
 		if (temp == NULL)
 		{
-			notice("temp == NULL!\n");
 			break;
 		}
 
 		for(i = 0; (i < clists->data.length) && IS_VALID_CAP(temp[i]); i++)
 		{
-			notice("%lx %lx %lx\n", temp[i].ref.obj, ref, master_ref);
 			if ((temp[i].ref.obj == ref) || (temp[i].ref.obj == master_ref))
 			{
 				cap = temp[i];
@@ -99,8 +93,6 @@ sec$check(L4_ThreadId_t tid, vms$pointer ref)
 
 	pd = thread->owner;
 	memsection = vms$objtable_lookup((void *) ref);
-	notice("ref=%lx memsection=%lx\n", ref, memsection);
-	notice("base=%lx\n", memsection->base);
 
 	if (memsection == NULL)
 	{
@@ -111,12 +103,10 @@ sec$check(L4_ThreadId_t tid, vms$pointer ref)
 
 	if (IS_VALID_CAP(cap))
 	{
-		notice("valid\n");
 		return(0);
 	}
 	else
 	{
-		notice("unvalid\n");
 		return(-1);
 	}
 

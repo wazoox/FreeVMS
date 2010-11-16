@@ -22,7 +22,8 @@
 #include "freevms/freevms.h"
 
 void
-vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page)
+vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page,
+		unsigned int priv)
 {
     L4_ThreadId_t           tid;
 
@@ -34,7 +35,7 @@ vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page)
 
     // Find Pager's ID
     tid = L4_Pager();
-    L4_Set_Rights(&phys_page, L4_FullyAccessible);
+    L4_Set_Rights(&phys_page, priv);
     L4_Accept(L4_MapGrantItems(virt_page));
     L4_MsgClear(&msg);
     L4_MsgAppendWord(&msg, (L4_Word_t) phys_page.raw);
@@ -78,7 +79,8 @@ vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page)
 }
 
 void
-vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr, vms$pointer size)
+vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr, vms$pointer size,
+		unsigned int priv)
 {
     L4_Fpage_t              ppage;
     L4_Fpage_t              vpage;
@@ -115,7 +117,7 @@ vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr, vms$pointer size)
             ppage = L4_Fpage(pbase, L4_Size(vpage));
         }
 
-        vms$sigma0_map_fpage(vpage, ppage);
+        vms$sigma0_map_fpage(vpage, ppage, L4_FullyAccessible);
 
         vbase += L4_Size(vpage);
         pbase += L4_Size(ppage);

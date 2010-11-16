@@ -21,24 +21,92 @@
 
 #include "freevms/freevms.h"
 
-vms$pointer
-vms$pagefault(vms$pointer addr)
+void
+vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
+		vms$pointer tag)
 {
-	struct memsection			*ms;
+	// fpage [...........0RWX]
 
-	ms = vms$objtable_lookup((void *) addr);
+	L4_Fpage_t				fpage;
 
-	// For user backed memsections, we have no way of telling how
-	// big of an area is mapped, so we map as little as possible.
+	L4_Msg_t				msg;
 
-	if (ms->flags & VMS$MEM_USER)
+	struct memsection		*memsection;
+
+	struct thread			*thread;
+
+	vms$pointer				priv;
+	vms$pointer				ref;
+	vms$pointer				size;
+
+	// Read privileges
+	priv = (tag & 0xf0000) >> 16;
+
+	// Find memory section it belongs too
+	if ((memsection = vms$objtable_lookup((void *) addr)) == NULL)
 	{
-		return(vms$min_pagesize());
+		notice(MEM_F_MEMSEC "no memory section\n");
+		goto fail;
+	}
+
+	ref = (vms$pointer) memsection;
+
+dbg$sigma0(10000000);
+	if (sec$check(caller, ref) == 0)
+	{
+		extern fpage_alloc			pm_alloc;
+		vms$pointer phys;
+		vms$pointer virt;
+
+		// The memory is now backed in our address space.
+		if (memsection->flags == VMS$MEM_USER)
+		{
+			// For user backed memsections, we have no way of telling how
+			// big of an area is mapped, so we map as little as possible.
+
+			size = vms$min_pagesize();
+			virt = vms$page_round_down(addr, vms$min_pagesize());
+		}
+		else
+		{
+			fpage = vms$biggest_fpage(addr, memsection->base,
+					memsection->end);
+			virt = L4_Address(fpage);
+			size = L4_Size(fpage);
+		}
+
+notice("vms$pagefault(addr:%lx, s:%lx) [priv=%lx]\n", addr, size, priv);
+notice("memsection %lx %lx\n", memsection->base, memsection->end);
+
+		if (size == 0)
+		{
+			notice(MEM_F_OUTMEM "out of memory at IP=$%016lX, TID=$%lX\n",
+					ip, jobctl$threadno(L4_ThreadNo(caller)));
+			goto fail;
+		}
+
+		phys = vms$fpage_alloc_chunk(&pm_alloc, size);
+notice("V=%lx P=%lx\n", virt, phys);
+		vms$sigma0_map(virt, phys, size, priv);
+notice("After vms$sigma0_map\n");
+
+		fpage = L4_Fpage(virt, size);
+
+		L4_Clear(&msg);
+		L4_Append(&msg, L4_MapItem(fpage, addr));
+		L4_Load(&msg);
 	}
 	else
 	{
-		return(L4_Size(vms$biggest_fpage(addr, ms->base, ms->end)));
+		notice(MEM_F_SECFLD "security check failed\n");
+		goto fail;
 	}
 
-	return(0);
+	return;
+
+fail:
+	L4_Stop(caller);
+	thread = jobctl$thread_lookup(caller);
+	jobctl$thread_delete(thread);
+	return;
 }

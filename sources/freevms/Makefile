@@ -36,7 +36,6 @@ OBJ=$(DESTDIR)/debug/backtrace.o \
 	$(DESTDIR)/vm/vm_init.o \
 	$(DESTDIR)/vm/vm_objtables.o \
 	$(DESTDIR)/vm/vm_pagefault.o \
-	$(DESTDIR)/vm/vm_server.o \
 	$(DESTDIR)/vm/vm_sigma0.o \
 	$(DESTDIR)/vm/vm_slab.o
 
@@ -152,9 +151,6 @@ $(DESTDIR)/sys/sys_boot.o: sys/sys_boot.S
 # ./vm
 
 $(DESTDIR)/vm/vm_init.o: vm/vm_init.c
-	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
-
-$(DESTDIR)/vm/vm_server.o: vm/vm_server.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(DESTDIR)/vm/vm_alloc.o: vm/vm_alloc.c

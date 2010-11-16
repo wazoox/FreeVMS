@@ -127,7 +127,8 @@ vms$memsection_page_map(struct memsection *self, L4_Fpage_t from_page,
     for(offset = 0; offset < size; offset += vms$min_pagesize())
     {
         phys = vms$memsection_lookup_phys(src, from_base + offset);
-        vms$sigma0_map(to_base + offset, phys, vms$min_pagesize());
+        vms$sigma0_map(to_base + offset, phys, vms$min_pagesize(),
+				L4_FullyAccessible);
     }
 
     return(0);
@@ -168,7 +169,7 @@ vms$memsection_create_cache(struct slab_cache *sc)
         return((struct memsection *) NULL);
     }
 
-    vms$sigma0_map(virt, phys, page_size);
+    vms$sigma0_map(virt, phys, page_size, L4_FullyAccessible);
     vms$initmem(virt, page_size);
 
     if (sc == (&ms_cache))
@@ -316,7 +317,7 @@ vms$memsection_back(struct memsection *memsection)
     else if (flags & VMS$MEM_INTERNAL)
     {
         // Map it 1:1
-        vms$sigma0_map(addr, memsection->phys.base, size);
+        vms$sigma0_map(addr, memsection->phys.base, size, L4_FullyAccessible);
     }
     else
     {
@@ -324,7 +325,7 @@ vms$memsection_back(struct memsection *memsection)
         TAILQ_FOREACH(node, &memsection->phys.list, flist)
         {
             vpage = L4_Fpage(addr, L4_Size(node->fpage));
-            vms$sigma0_map_fpage(vpage, node->fpage);
+            vms$sigma0_map_fpage(vpage, node->fpage, L4_FullyAccessible);
             vms$initmem(L4_Address(vpage), L4_Size(vpage));
             addr += L4_Size(vpage);
         }

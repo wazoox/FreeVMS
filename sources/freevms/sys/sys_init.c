@@ -113,7 +113,6 @@ sys$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
 	// Setup the stack
 	user_stack = (vms$pointer *) (stack->end + 1);
 
-dbg$sigma0(100);
 	if (vms$back_mem(heap->base, heap->base + (12 * sizeof(vms$pointer)),
 			pagesize) != 0)
 	{

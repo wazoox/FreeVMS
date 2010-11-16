@@ -99,7 +99,7 @@ extern int dbg$virtual_memory;
                 __LINE__); \
         notice("Have a nice day !\n\n"); \
     dbg$backtrace(); \
-    while(1); } } while(0)
+    while(1) L4_KDB_Enter("Panic"); } } while(0)
 
 #define L4_SIZEOFWORD       (sizeof(L4_Word_t) * 8)
 #define L4_REQUEST_MASK     (~((~0UL) >> (L4_SIZEOFWORD - 20)))
