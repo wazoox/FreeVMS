@@ -157,10 +157,7 @@ struct memsection
     {
         vms$pointer                     base;
         struct flist_head               list;
-        TAILQ_HEAD(ml_head, map_list)   mappings;
     } phys;
-    struct pd                   *owner;
-    struct thread               *server;
     struct slab_cache           *slab_cache;
     TAILQ_ENTRY(memsection)     pools;
     TAILQ_HEAD(sl_head, slab)   slabs;

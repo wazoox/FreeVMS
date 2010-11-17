@@ -66,6 +66,7 @@ dbg$sigma0(10000000);
 
 			size = vms$min_pagesize();
 			virt = vms$page_round_down(addr, vms$min_pagesize());
+			fpage = L4_Fpage(virt, size);
 		}
 		else
 		{
@@ -85,12 +86,25 @@ notice("memsection %lx %lx\n", memsection->base, memsection->end);
 			goto fail;
 		}
 
-		phys = vms$fpage_alloc_chunk(&pm_alloc, size);
-notice("V=%lx P=%lx\n", virt, phys);
-		vms$sigma0_map(virt, phys, size, priv);
-notice("After vms$sigma0_map\n");
+notice("%lx %lx\n", memsection->flags, memsection->phys_active);
 
-		fpage = L4_Fpage(virt, size);
+		// If VMS$MEM_INTERNAL is set, memory is mapped 1:1
+		if (memsection->flags != VMS$MEM_INTERNAL)
+		{
+			// Find a free physical memory to map requested page.
+			phys = vms$fpage_alloc_chunk(&pm_alloc, size);
+
+			if (phys == INVALID_ADDR)
+			{
+				notice(MEM_F_OUTMEM "out of memory at IP=$%016lX, TID=$%lX\n",
+						ip, jobctl$threadno(L4_ThreadNo(caller)));
+				goto fail;
+			}
+
+notice("V=%lx P=%lx\n", virt, phys);
+			vms$sigma0_map(virt, phys, size, priv);
+		}
+notice("After vms$sigma0_map\n");
 
 		L4_Clear(&msg);
 		L4_Append(&msg, L4_MapItem(fpage, addr));
