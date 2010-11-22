@@ -58,23 +58,8 @@ dbg$sigma0(10000000);
 		vms$pointer phys;
 		vms$pointer virt;
 
-		// The memory is now backed in our address space.
-		if (memsection->flags == VMS$MEM_USER)
-		{
-			// For user backed memsections, we have no way of telling how
-			// big of an area is mapped, so we map as little as possible.
-
-			size = vms$min_pagesize();
-			virt = vms$page_round_down(addr, vms$min_pagesize());
-			fpage = L4_Fpage(virt, size);
-		}
-		else
-		{
-			fpage = vms$biggest_fpage(addr, memsection->base,
-					memsection->end);
-			virt = L4_Address(fpage);
-			size = L4_Size(fpage);
-		}
+		size = vms$min_pagesize();
+		virt = vms$page_round_down(addr, vms$min_pagesize());
 
 notice("vms$pagefault(addr:%lx, s:%lx) [priv=%lx]\n", addr, size, priv);
 notice("memsection %lx %lx\n", memsection->base, memsection->end);
@@ -88,26 +73,20 @@ notice("memsection %lx %lx\n", memsection->base, memsection->end);
 
 notice("%lx %lx\n", memsection->flags, memsection->phys_active);
 
-		// If VMS$MEM_INTERNAL is set, memory is mapped 1:1
-		if (memsection->flags != VMS$MEM_INTERNAL)
-		{
-			// Find a free physical memory to map requested page.
-			phys = vms$fpage_alloc_chunk(&pm_alloc, size);
+		// Find a free physical memory to map requested page.
+		phys = vms$fpage_alloc_chunk(&pm_alloc, size);
 
-			if (phys == INVALID_ADDR)
-			{
-				notice(MEM_F_OUTMEM "out of memory at IP=$%016lX, TID=$%lX\n",
-						ip, jobctl$threadno(L4_ThreadNo(caller)));
-				goto fail;
-			}
+		if (phys == INVALID_ADDR)
+		{
+			notice(MEM_F_OUTMEM "out of memory at IP=$%016lX, TID=$%lX\n",
+					ip, jobctl$threadno(L4_ThreadNo(caller)));
+			goto fail;
+		}
 
 notice("V=%lx P=%lx\n", virt, phys);
-			vms$sigma0_map(virt, phys, size, priv);
-		}
-notice("After vms$sigma0_map\n");
 
 		L4_Clear(&msg);
-		L4_Append(&msg, L4_MapItem(fpage, addr));
+		L4_Append(&msg, L4_MapItem(L4_Fpage(virt, size) + priv, virt));
 		L4_Load(&msg);
 	}
 	else
@@ -119,6 +98,10 @@ notice("After vms$sigma0_map\n");
 	return;
 
 fail:
+	L4_Clear(&msg);
+	L4_Append(&msg, L4_MapItem(L4_Nilpage, L4_Address(L4_Nilpage)));
+	L4_Load(&msg);
+
 	L4_Stop(caller);
 	thread = jobctl$thread_lookup(caller);
 	jobctl$thread_delete(thread);
