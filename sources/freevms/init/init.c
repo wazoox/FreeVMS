@@ -22,11 +22,9 @@
 #include "freevms/freevms.h"
 
 int
-init$process(int argc, char **argv)
+main(int argc, char **argv)
 {
-	notice("init process started\n");
-
-	while(1) { L4_Sleep(L4_TimePeriod(10000)); }
-
-	return(0);
+    rtl$print("init process started\n", 0);
+    for(;;);
+    return(0);
 }

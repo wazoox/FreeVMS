@@ -42,11 +42,11 @@ dbg$sigma0(int level)
 
     tag = L4_Send(sigma0);
 
-	if (L4_IpcFailed(tag))
-	{
-		notice(IPC_F_FAILED "IPC failed (error %ld: %s)\n", L4_ErrorCode(),
-				L4_ErrorCode_String(L4_ErrorCode()));
-	}
+    if (L4_IpcFailed(tag))
+    {
+        notice(IPC_F_FAILED "IPC failed (error %ld: %s)\n", L4_ErrorCode(),
+                L4_ErrorCode_String(L4_ErrorCode()));
+    }
 
     return;
 }

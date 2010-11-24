@@ -46,6 +46,25 @@ vms$initmem(vms$pointer zone, vms$pointer len)
     return;
 }
 
+void
+vms$memcopy(vms$pointer dest, vms$pointer src, vms$pointer size)
+{
+    char            *ptr1;
+    char            *ptr2;
+
+    ptr1 = (char *) src;
+    ptr2 = (char *) dest;
+
+    while(size--)
+    {
+        (*ptr2) = (*ptr1);
+        ptr1++;
+        ptr2++;
+    }
+
+    return;
+}
+
 static vms$pointer
 vms$memsection_lookup_phys(struct memsection *memsection, vms$pointer addr)
 {
@@ -128,7 +147,7 @@ vms$memsection_page_map(struct memsection *self, L4_Fpage_t from_page,
     {
         phys = vms$memsection_lookup_phys(src, from_base + offset);
         vms$sigma0_map(to_base + offset, phys, vms$min_pagesize(),
-				L4_FullyAccessible);
+                L4_FullyAccessible);
     }
 
     return(0);

@@ -82,6 +82,7 @@ image:
 	cp -f build/kernel/build/libexec/l4/sigma0 ../mnt/boot
 	cp -f build/kernel/build/lib/l4/* ../mnt
 	cp -f build/freevms/vmskernel.sys ../mnt/boot
+	cp -f build/freevms/init.exe ../mnt/boot
 
 userland:
 	@echo "Nothing to do, but you can write it ;-)"

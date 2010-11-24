@@ -90,6 +90,7 @@ jobctl$pd_init(struct vms$meminfo *meminfo)
 
     // Setup freevms_pd with itself as parent.
     jobctl$pd_setup(&freevms_pd, &freevms_pd, NUMBER_OF_KERNEL_THREADS);
+    freevms_pd.state = pd_active;
 
     // Insert memsections used during bootstrapping into memsection list
     // and objtable.

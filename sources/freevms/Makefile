@@ -7,15 +7,15 @@ INCLUDES=-I./include \
 		-I$(DESTDIR)/../kernel/include \
 		-I/usr/lib/gcc/x86_64-linux-gnu/4.4.5/include
 
-OBJ=$(DESTDIR)/debug/backtrace.o \
+OBJ_SYS=$(DESTDIR)/debug/backtrace.o \
     $(DESTDIR)/debug/sigma0.o \
     $(DESTDIR)/dev/dev_tables.o \
+    $(DESTDIR)/elf/elf_loader.o \
     $(DESTDIR)/jobctl/jobctl_bfl.o \
     $(DESTDIR)/jobctl/jobctl_init.o \
     $(DESTDIR)/jobctl/jobctl_quota.o \
     $(DESTDIR)/jobctl/jobctl_thread.o \
     $(DESTDIR)/jobctl/jobctl_rfl.o \
-	$(DESTDIR)/init/init.o \
     $(DESTDIR)/libearly/amd64.o \
 	$(DESTDIR)/libearly/get_hex.o \
 	$(DESTDIR)/libearly/print.o \
@@ -39,35 +39,49 @@ OBJ=$(DESTDIR)/debug/backtrace.o \
 	$(DESTDIR)/vm/vm_sigma0.o \
 	$(DESTDIR)/vm/vm_slab.o
 
-all: directories $(OBJ) $(DESTDIR)/vmskernel.sys
+OBJ_INIT=$(DESTDIR)/init/init.o
+
+OBJ_LIBRTL=$(DESTDIR)/librtl/rtl_print.o
+
+all: directories $(DESTDIR)/vmskernel.sys $(DESTDIR)/init.exe
 
 clean:
-	rm -f $(OBJ) freevms
+	rm -f $(OBJ_SYS) $(OBJ_INIT) $(OBJ_LIBRTL) $(DESTDIR)/init.exe \
+			$(DESTDIR)/librtl/librtl.a $(DESTDIR)/vmskernel.sys
 
-$(DESTDIR)/vmskernel.sys: $(OBJ)
+$(DESTDIR)/vmskernel.sys: $(OBJ_SYS)
 	@rm -f debug/symbols.h
 	@echo "static const char *symbols[] = { 0 };" > debug/symbols.h
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c debug/symbols.c \
 			-o $(DESTDIR)/debug/symbols.o
 	ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4 \
-			$+ -nostdlib -T linker/elf_x86_64 -ll4 \
+			$+ -nostdlib -T linker/elf_x86_64_kernel -ll4 \
 			$(DESTDIR)/debug/symbols.o -static -o $@
 	linker/symbols > debug/symbols.h
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c debug/symbols.c \
 			-o $(DESTDIR)/debug/symbols.o
 	ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4 \
-			$+ -nostdlib -T linker/elf_x86_64 -ll4 \
+			$+ -nostdlib -T linker/elf_x86_64_kernel -ll4 \
 			$(DESTDIR)/debug/symbols.o -static -o $@
+
+$(DESTDIR)/librtl/librtl.a: $(OBJ_LIBRTL)
+	ar -crus $@ $+
+
+$(DESTDIR)/init.exe: $(OBJ_INIT) $(DESTDIR)/librtl/librtl.a
+	ld -emain -N -L$(DESTDIR)/../kernel/build/lib/l4\
+	   		$+ -nostdlib -T linker/elf_x86_64 -ll4 -static -o $@
 
 directories:
 	mkdir -p $(DESTDIR)/debug
 	mkdir -p $(DESTDIR)/dev
 	mkdir -p $(DESTDIR)/drv
+	mkdir -p $(DESTDIR)/elf
 	mkdir -p $(DESTDIR)/init
 	mkdir -p $(DESTDIR)/jobctl
 	mkdir -p $(DESTDIR)/libearly
 	mkdir -p $(DESTDIR)/list
 	mkdir -p $(DESTDIR)/lock
+	mkdir -p $(DESTDIR)/librtl
 	mkdir -p $(DESTDIR)/sec
 	mkdir -p $(DESTDIR)/sys
 	mkdir -p $(DESTDIR)/vm
@@ -83,6 +97,11 @@ $(DESTDIR)/debug/sigma0.o: debug/sigma0.c
 # ./dev
 
 $(DESTDIR)/dev/dev_tables.o: dev/dev_tables.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+# ./elf
+
+$(DESTDIR)/elf/elf_loader.o: elf/elf_loader.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 # ./init
@@ -122,6 +141,11 @@ $(DESTDIR)/lock/lock_mutex.o: lock/lock_mutex.c
 
 $(DESTDIR)/lock/lock_mutex_amd64.o: lock/lock_mutex_amd64.S
 	as $< -o $@
+
+# ./rtl
+
+$(DESTDIR)/librtl/rtl_print.o: librtl/rtl_print.c
+	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 # ./sec
 

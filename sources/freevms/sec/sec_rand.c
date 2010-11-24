@@ -30,85 +30,85 @@ static int initialized = 0;
 void
 rand$init(int seed)
 {
-	int				i;
+    int             i;
 
-	mt[0] = seed;
+    mt[0] = seed;
 
-	for(i = 1; i < 624; i++)
-	{
-		mt[i] = 0xffffffff & (1812433253U * (mt[i - 1] ^ (mt[i - 1] >> 30)));
-	}
+    for(i = 1; i < 624; i++)
+    {
+        mt[i] = 0xffffffff & (1812433253U * (mt[i - 1] ^ (mt[i - 1] >> 30)));
+    }
 
-	initialized = 1;
-	return;
+    initialized = 1;
+    return;
 }
 
 static void
 rand$generate_number()
 {
-	int				i;
-	int				y;
+    int             i;
+    int             y;
 
-	if (initialized == 0)
-	{
-		rand$init(1);
-	}
+    if (initialized == 0)
+    {
+        rand$init(1);
+    }
 
-	for(i = 0; i < 624; i++)
-	{
-		y = (mt[i] & 0x80000000) + (mt[(i + 1) % 624] & 0x7fffffff);
-		mt[i] = mt[(i + 397) % 624] ^ (y >> 1);
+    for(i = 0; i < 624; i++)
+    {
+        y = (mt[i] & 0x80000000) + (mt[(i + 1) % 624] & 0x7fffffff);
+        mt[i] = mt[(i + 397) % 624] ^ (y >> 1);
 
-		if ((y % 2) == 1)
-		{
-			mt[i] = mt[i] ^ 2567483615U;
-		}
-	}
+        if ((y % 2) == 1)
+        {
+            mt[i] = mt[i] ^ 2567483615U;
+        }
+    }
 
-	return;
+    return;
 }
 
 vms$pointer
 rand$extract_number()
 {
-	int				y;
+    int             y;
 
-	if (index == 0)
-	{
-		rand$generate_number();
-	}
+    if (index == 0)
+    {
+        rand$generate_number();
+    }
 
-	y = mt[index];
-	y = y ^ (y >> 11);
-	y = y ^ ((y << 7) & 2636928640U);
-	y = y ^ ((y << 15) & 4022730752U);
-	y = y ^ (y >> 18);
-	index = (index + 1) % 624;
+    y = mt[index];
+    y = y ^ (y >> 11);
+    y = y ^ ((y << 7) & 2636928640U);
+    y = y ^ ((y << 15) & 4022730752U);
+    y = y ^ (y >> 18);
+    index = (index + 1) % 624;
 
-	return((vms$pointer) y);
+    return((vms$pointer) y);
 }
 
 vms$pointer
 rand$extract_number(unsigned int size)
 {
-	unsigned int	i;
+    unsigned int    i;
 
-	unsigned char	*c;
+    unsigned char   *c;
 
-	vms$pointer		r;
-	vms$pointer		t;
+    vms$pointer     r;
+    vms$pointer     t;
 
-	c = (unsigned char *) &r;
+    c = (unsigned char *) &r;
 
-	for(i = 0; i < size / 4; i++)
-	{
-		t = rand$extract_number();
+    for(i = 0; i < size / 4; i++)
+    {
+        t = rand$extract_number();
 
-		(*c) = t & 0xff; c++; t >>= 2;
-		(*c) = t & 0xff; c++; t >>= 2;
-		(*c) = t & 0xff; c++; t >>= 2;
-		(*c) = t & 0xff; c++; t >>= 2;
-	}
+        (*c) = t & 0xff; c++; t >>= 2;
+        (*c) = t & 0xff; c++; t >>= 2;
+        (*c) = t & 0xff; c++; t >>= 2;
+        (*c) = t & 0xff; c++; t >>= 2;
+    }
 
-	return(r);
+    return(r);
 }

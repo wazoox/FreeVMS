@@ -21,36 +21,33 @@
 
 #include "freevms/freevms.h"
 
-void
-sys$loop()
+int
+rtl$print(const char *fmt, int size, ...)
 {
-    int                     running;
+    char                str[1024];
 
-    L4_ThreadId_t           partner;
-    L4_MsgTag_t             tag;
-    L4_Msg_t                msg;
+    L4_Msg_t            msg;
+    L4_StringItem_t     si;
 
-    running = 1;
-    tag = L4_Wait(&partner);
+    va_list     ap;
 
-    while(running)
+    if (fmt == NULL)
     {
-        L4_Clear(&msg);
-        L4_Store(tag, &msg);
-
-        if ((tag.raw & L4_REQUEST_MASK) == L4_PAGEFAULT)
-        {
-            vms$pagefault(partner, L4_Get(&msg, 0), L4_Get(&msg, 1),
-                    tag.raw);
-        }
-        else
-        {
-            notice("IPC not catched [%lx]\n", tag.raw);
-            PANIC(1);
-        }
-
-        L4_ReplyWait(partner, &partner);
+        return(0);
     }
 
-    return;
+    va_start(ap, size);
+    //vsnprintf(str, size, fmt, ap);
+    va_end(ap);
+
+    si = L4_StringItem(1024, (void *) str);
+
+    L4_Clear(&msg);
+    L4_Append(&msg, si);
+    L4_Set_Label(&msg, 1);
+    L4_Load(&msg);
+
+    L4_Call(L4_Pager());
+
+    return(0);
 }

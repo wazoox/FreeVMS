@@ -21,6 +21,8 @@
 
 #define DEBUG_VM
 
+#include <stdarg.h>
+
 #include "libearly/lib.h"
 #include "libearly/l4io.h"
 
@@ -60,11 +62,12 @@ typedef L4_Word64_t     vms$pointer;
 // FreeVMS subsystems
 #include "freevms/dev.h"
 #include "freevms/vm.h"
-#include "freevms/init.h"
 #include "freevms/jobctl.h"
 #include "freevms/lock.h"
 #include "freevms/quota.h"
+#include "freevms/librtl.h"
 #include "freevms/sec.h"
+#include "freevms/elf.h"
 #include "freevms/inlined.h"
 
 // Defines
@@ -91,7 +94,8 @@ void dbg$sigma0(int level);
 
 extern int dbg$virtual_memory;
 
-#define ERROR_PRINT_L4 notice("L4 microkernel error: %lx\n", L4_ErrorCode())
+#define ERROR_PRINT_L4 notice("L4 microkernel error: %s [%lx]\n", \
+        L4_ErrorCode_String(L4_ErrorCode()), L4_ErrorCode())
 
 #define PANIC(a, ...) { if (a) { \
         __VA_ARGS__; \
@@ -103,7 +107,7 @@ extern int dbg$virtual_memory;
 
 #define L4_SIZEOFWORD       (sizeof(L4_Word_t) * 8)
 #define L4_REQUEST_MASK     (~((~0UL) >> (L4_SIZEOFWORD - 20)))
-#define L4_PAGEFAULT		(-2UL << 20)
+#define L4_PAGEFAULT        (-2UL << 20)
 #define L4_IO_PAGEFAULT     (-8UL << 20)
 
 // Prototypes

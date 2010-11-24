@@ -23,7 +23,7 @@
 
 void
 vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page,
-		unsigned int priv)
+        unsigned int priv)
 {
     L4_ThreadId_t           tid;
 
@@ -80,7 +80,7 @@ vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page,
 
 void
 vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr, vms$pointer size,
-		unsigned int priv)
+        unsigned int priv)
 {
     L4_Fpage_t              ppage;
     L4_Fpage_t              vpage;

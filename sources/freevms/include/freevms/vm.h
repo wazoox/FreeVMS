@@ -176,9 +176,9 @@ struct memsection_node
     struct memsection           data;
 };
 
-#define VMS$FPAGE_PERM_READ		1
-#define VMS$FPAGE_PERM_WRITE	2
-#define VMS$FPAGE_PERM_EXECUTE	4
+#define VMS$FPAGE_PERM_READ     1
+#define VMS$FPAGE_PERM_WRITE    2
+#define VMS$FPAGE_PERM_EXECUTE  4
 
 int vms$back_mem(vms$pointer base, vms$pointer end, vms$pointer pagesize);
 int vms$memsection_back(struct memsection *memsection);
@@ -208,6 +208,7 @@ void vms$free(void *ptr);
 void vms$init(L4_KernelInterfacePage_t *kip,
         struct vms$meminfo *MemInfo, vms$pointer page_size);
 void vms$initmem(vms$pointer zone, vms$pointer len);
+void vms$memcopy(vms$pointer dest, vms$pointer src, vms$pointer size);
 void vms$populate_init_objects(struct vms$meminfo *mem_info,
         vms$pointer pagesize);
 void vms$remove_virtmem(struct vms$meminfo *mem_info,
@@ -215,7 +216,7 @@ void vms$remove_virtmem(struct vms$meminfo *mem_info,
 void vms$sigma0_map(vms$pointer virt_addr, vms$pointer phys_addr,
         vms$pointer size, unsigned int priv);
 void vms$sigma0_map_fpage(L4_Fpage_t virt_page, L4_Fpage_t phys_page,
-		unsigned int priv);
+        unsigned int priv);
 void *vms$slab_cache_alloc(struct slab_cache *sc);
 void vms$slab_cache_free(struct slab_cache *sc, void *ptr);
 
@@ -228,7 +229,7 @@ vms$pointer vms$fpage_alloc_chunk(struct fpage_alloc *alloc, vms$pointer size);
 vms$pointer vms$fpage_alloc_internal(struct fpage_alloc *alloc,
         vms$pointer size);
 void vms$pagefault(L4_ThreadId_t caller, vms$pointer addr,
-		vms$pointer ip, vms$pointer tag);
+        vms$pointer ip, vms$pointer tag);
 vms$pointer vms$page_round_down(vms$pointer address, vms$pointer page_size);
 vms$pointer vms$page_round_up(vms$pointer address, vms$pointer page_size);
 

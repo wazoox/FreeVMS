@@ -23,87 +23,92 @@
 
 void
 vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
-		vms$pointer tag)
+        vms$pointer tag)
 {
-	// fpage [...........0RWX]
+    // fpage [...........0RWX]
 
-	L4_Fpage_t				fpage;
+    L4_Fpage_t              fpage;
 
-	L4_Msg_t				msg;
+    L4_Msg_t                msg;
 
-	struct memsection		*memsection;
+    struct memsection       *memsection;
 
-	struct thread			*thread;
+    struct thread           *thread;
 
-	vms$pointer				priv;
-	vms$pointer				ref;
-	vms$pointer				size;
+    vms$pointer             priv;
+    vms$pointer             ref;
+    vms$pointer             size;
 
-	// Read privileges
-	priv = (tag & 0xf0000) >> 16;
+    // Read privileges
+    priv = (tag & 0xf0000) >> 16;
 
-	// Find memory section it belongs too
-	if ((memsection = vms$objtable_lookup((void *) addr)) == NULL)
-	{
-		notice(MEM_F_MEMSEC "no memory section\n");
-		goto fail;
-	}
+notice("vms$pagefault(addr:%lx) [priv=%lx]\n", addr, priv);
+    // Find memory section it belongs too
+    if ((memsection = vms$objtable_lookup((void *) addr)) == NULL)
+    {
+        notice(MEM_F_MEMSEC "no memory section\n");
+        PANIC(1);
+        goto fail;
+    }
 
-	ref = (vms$pointer) memsection;
+    ref = (vms$pointer) memsection + priv;
 
 dbg$sigma0(10000000);
-	if (sec$check(caller, ref) == 0)
-	{
-		extern fpage_alloc			pm_alloc;
-		vms$pointer phys;
-		vms$pointer virt;
+notice("ref=%lx\n", ref);
+    if (sec$check(caller, ref) == 0)
+    {
+        extern fpage_alloc          pm_alloc;
+        vms$pointer phys;
+        vms$pointer virt;
 
-		size = vms$min_pagesize();
-		virt = vms$page_round_down(addr, vms$min_pagesize());
+        // Si la page est une page destinée à lancer un programme ELF, on
+        // cherche toutes les pages de l'exécutable et l'on envoie un
+        // grantitem.
 
-notice("vms$pagefault(addr:%lx, s:%lx) [priv=%lx]\n", addr, size, priv);
 notice("memsection %lx %lx\n", memsection->base, memsection->end);
-
-		if (size == 0)
-		{
-			notice(MEM_F_OUTMEM "out of memory at IP=$%016lX, TID=$%lX\n",
-					ip, jobctl$threadno(L4_ThreadNo(caller)));
-			goto fail;
-		}
-
 notice("%lx %lx\n", memsection->flags, memsection->phys_active);
 
-		// Find a free physical memory to map requested page.
-		phys = vms$fpage_alloc_chunk(&pm_alloc, size);
+        size = vms$min_pagesize();
+        virt = vms$page_round_down(addr, size);
+        fpage = L4_Fpage(virt, size);
+            // FIXME: check if physical memory is available
+/*
+            // Find a free physical memory to map requested page.
+            phys = vms$fpage_alloc_chunk(&pm_alloc, size);
 
-		if (phys == INVALID_ADDR)
-		{
-			notice(MEM_F_OUTMEM "out of memory at IP=$%016lX, TID=$%lX\n",
-					ip, jobctl$threadno(L4_ThreadNo(caller)));
-			goto fail;
-		}
-
+            if (phys == INVALID_ADDR)
+            {
+                notice(MEM_F_OUTMEM "out of memory at IP=$%016lX, TID=$%lX\n",
+                        ip, jobctl$threadno(L4_ThreadNo(caller)));
+                goto fail;
+            }
 notice("V=%lx P=%lx\n", virt, phys);
+        */
 
-		L4_Clear(&msg);
-		L4_Append(&msg, L4_MapItem(L4_Fpage(virt, size) + priv, virt));
-		L4_Load(&msg);
-	}
-	else
-	{
-		notice(MEM_F_SECFLD "security check failed\n");
-		goto fail;
-	}
+notice("addr=%lx size=%lx\n", virt, size);
+notice("Priv=%d %d\n", priv, L4_FullyAccessible);
+        // Why priv does not work instead of L4_FullyAccessible ?
+        L4_Set_Rights(&fpage, L4_FullyAccessible);
 
-	return;
+        L4_Clear(&msg);
+        L4_Append(&msg, L4_MapItem(fpage, virt));
+        L4_Load(&msg);
+    }
+    else
+    {
+        notice(MEM_F_SECFLD "security check failed\n");
+        goto fail;
+    }
+
+    return;
 
 fail:
-	L4_Clear(&msg);
-	L4_Append(&msg, L4_MapItem(L4_Nilpage, L4_Address(L4_Nilpage)));
-	L4_Load(&msg);
+    L4_Clear(&msg);
+    L4_Append(&msg, L4_MapItem(L4_Nilpage, L4_Address(L4_Nilpage)));
+    L4_Load(&msg);
 
-	L4_Stop(caller);
-	thread = jobctl$thread_lookup(caller);
-	jobctl$thread_delete(thread);
-	return;
+    L4_Stop(caller);
+    thread = jobctl$thread_lookup(caller);
+    jobctl$thread_delete(thread);
+    return;
 }

@@ -24,91 +24,91 @@
 cap_t
 sec$create_capability(vms$pointer reference, enum cap_type type)
 {
-	cap_t			cap;
+    cap_t           cap;
 
-	cap.ref.obj = reference;
-	cap.type = type;
-	cap.passwd = rand$extract_number(sizeof(cap.passwd));
+    cap.ref.obj = reference;
+    cap.type = type;
+    cap.passwd = rand$extract_number(sizeof(cap.passwd));
 
-	return(cap);
+    return(cap);
 }
 
 static cap_t
 sec$validate_access(vms$pointer ref, struct pd *pd)
 {
-	cap_t				cap;
-	cap_t				*temp;
+    cap_t               cap;
+    cap_t               *temp;
 
-	unsigned int		i;
-	unsigned int		iid_bits = 3;
+    unsigned int        i;
+    unsigned int        iid_bits = 3;
 
-	vms$pointer			master_ref;
+    vms$pointer         master_ref;
 
-	struct clist_node	*clists;
+    struct clist_node   *clists;
 
-	INVALID_CAP(cap);
-	iid_bits = 3;
-	master_ref = (ref >> iid_bits) << iid_bits;
+    INVALID_CAP(cap);
+    iid_bits = 3;
+    master_ref = (ref >> iid_bits) << iid_bits;
 
-	for (clists = pd->clists.first;
-			clists->next != pd->clists.first;
-			clists = clists->next)
-	{
-		temp = clists->data.clist;
+    for (clists = pd->clists.first;
+            clists->next != pd->clists.first;
+            clists = clists->next)
+    {
+        temp = clists->data.clist;
 
-		if (temp == NULL)
-		{
-			break;
-		}
+        if (temp == NULL)
+        {
+            break;
+        }
 
-		for(i = 0; (i < clists->data.length) && IS_VALID_CAP(temp[i]); i++)
-		{
-			if ((temp[i].ref.obj == ref) || (temp[i].ref.obj == master_ref))
-			{
-				cap = temp[i];
-				goto found;
-			}
-		}
-	}
+        for(i = 0; (i < clists->data.length) && IS_VALID_CAP(temp[i]); i++)
+        {
+            if ((temp[i].ref.obj == ref) || (temp[i].ref.obj == master_ref))
+            {
+                cap = temp[i];
+                goto found;
+            }
+        }
+    }
 
 found:
-	return cap;
+    return cap;
 }
 
 int
 sec$check(L4_ThreadId_t tid, vms$pointer ref)
 {
-	cap_t				cap;
+    cap_t               cap;
 
-	struct thread		*thread;
-	struct pd			*pd;
-	struct memsection	*memsection;
+    struct thread       *thread;
+    struct pd           *pd;
+    struct memsection   *memsection;
 
-	thread = jobctl$thread_lookup(tid);
+    thread = jobctl$thread_lookup(tid);
 
-	if (thread == NULL)
-	{
-		return(-1);
-	}
+    if (thread == NULL)
+    {
+        return(-1);
+    }
 
-	pd = thread->owner;
-	memsection = vms$objtable_lookup((void *) ref);
+    pd = thread->owner;
+    memsection = vms$objtable_lookup((void *) ref);
 
-	if (memsection == NULL)
-	{
-		return(-2);
-	}
+    if (memsection == NULL)
+    {
+        return(-2);
+    }
 
-	cap = sec$validate_access(ref, pd);
+    cap = sec$validate_access(ref, pd);
 
-	if (IS_VALID_CAP(cap))
-	{
-		return(0);
-	}
-	else
-	{
-		return(-1);
-	}
+    if (IS_VALID_CAP(cap))
+    {
+        return(0);
+    }
+    else
+    {
+        return(-1);
+    }
 
-	return(0);
+    return(0);
 }

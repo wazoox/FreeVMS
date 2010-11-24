@@ -19,4 +19,4 @@
 ================================================================================
 */
 
-int init$process(int argc, char **argv);
+int rtl$print(const char *fmt, int size, ...);

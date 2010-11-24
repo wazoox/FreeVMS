@@ -129,7 +129,7 @@ main(void)
     command_line = L4_SimpleExec_Cmdline(boot_record);
     notice(SYSBOOT_I_SYSBOOT "parsing command line: %s\n", command_line);
     sys$parsing(command_line, (char *) " root", root_device,
-			ROOT_DEVICE_LENGTH);
+            ROOT_DEVICE_LENGTH);
     notice(SYSBOOT_I_SYSBOOT "selecting root device: %s\n", root_device);
     sys$parsing(command_line, (char *) " console", console_device,
             CONSOLE_DEVICE_LENGTH);

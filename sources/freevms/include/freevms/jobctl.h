@@ -44,8 +44,8 @@ struct ll *ll_delete (struct ll *ll);
 struct ll *ll_insert_before (struct ll *ll, void *data);
 struct ll *ll_new(void);
 
-#define IS_VALID_CAP(x)		(x.ref.obj != (vms$pointer) -1)
-#define INVALID_CAP(x)		{ x.ref.obj = (vms$pointer) -1; } while(0)
+#define IS_VALID_CAP(x)     (x.ref.obj != (vms$pointer) -1)
+#define INVALID_CAP(x)      { x.ref.obj = (vms$pointer) -1; } while(0)
 
 typedef vms$pointer objref_t;
 typedef objref_t memsection_ref_t;
@@ -307,7 +307,7 @@ void jobctl$thread_delete(struct thread *thread);
 void jobctl$thread_init(L4_KernelInterfacePage_t *kip);
 struct thread *jobctl$thread_lookup(L4_ThreadId_t thread);
 int jobctl$thread_start(struct thread *self, vms$pointer ip,
-		vms$pointer sp);
+        vms$pointer sp);
 
 void jobctl$session_delete(struct session *session);
 
