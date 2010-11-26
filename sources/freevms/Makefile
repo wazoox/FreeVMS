@@ -69,7 +69,7 @@ $(DESTDIR)/librtl/librtl.a: $(OBJ_LIBRTL)
 
 $(DESTDIR)/init.exe: $(OBJ_INIT) $(DESTDIR)/librtl/librtl.a
 	ld -emain -N -L$(DESTDIR)/../kernel/build/lib/l4\
-	   		$+ -nostdlib -T linker/elf_x86_64 -ll4 -static -o $@
+	   		$+ -nostdlib -T linker/elf_x86_64_init -ll4 -static -o $@
 
 directories:
 	mkdir -p $(DESTDIR)/debug

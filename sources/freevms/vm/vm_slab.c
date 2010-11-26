@@ -180,6 +180,7 @@ vms$memsection_create_cache(struct slab_cache *sc)
         return((struct memsection *) NULL);
     }
 
+    PANIC(virt % vms$min_pagesize(), notice("virt not aligned (%lx)!\n", virt));
     phys = vms$fpage_alloc_internal(&pm_alloc, page_size);
 
     if (phys == INVALID_ADDR)
@@ -188,6 +189,7 @@ vms$memsection_create_cache(struct slab_cache *sc)
         return((struct memsection *) NULL);
     }
 
+    PANIC(phys % vms$min_pagesize(), notice("phys not aligned (%lx)!\n", virt));
     vms$sigma0_map(virt, phys, page_size, L4_FullyAccessible);
     vms$initmem(virt, page_size);
 
@@ -220,7 +222,6 @@ vms$memsection_create_cache(struct slab_cache *sc)
     ms->end = ms->base + (page_size - 1);
     ms->flags = 0;
     ms->slab_cache = sc;
-    ms->phys_active = 1;
     ms->phys.base = phys;
 
     // Insert into internal memsections until it is safe to go
@@ -272,7 +273,6 @@ vms$slab_cache_alloc(struct slab_cache *sc)
     }
 
     slab = TAILQ_FIRST(&pool->slabs);
-    // bloque en cas de 'out of memory'
     TAILQ_REMOVE(&pool->slabs, TAILQ_FIRST(&pool->slabs), slabs);
     vms$initmem((vms$pointer) slab, sc->slab_size);
 

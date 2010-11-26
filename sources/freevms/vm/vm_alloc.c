@@ -121,7 +121,6 @@ vms$fpage_clear_internal(struct fpage_alloc *alloc)
             if ((fpage = (struct fpage_list *) vms$slab_cache_alloc(&fp_cache))
                     == (struct fpage_list *) NULL)
             {
-                PANIC(1, notice("vms$slab_cache_alloc() returns NULL !\n"));
                 return;
             }
 
@@ -185,7 +184,6 @@ vms$fpage_alloc_internal(struct fpage_alloc *alloc, vms$pointer size)
 
     if (((alloc->internal.end - alloc->internal.base) + 1) < (vms$pointer) size)
     {
-        notice(MEM_I_NOTEMEM "not enough memory\n");
         return INVALID_ADDR;
     }
 
@@ -424,7 +422,7 @@ vms$fpage_remove_chunk(struct fpage_alloc *alloc, vms$pointer base,
 
             if (max(base, fbase) < min(end, fend))
             {
-                // remove from list , then trim and free
+                // remove from list, then trim and free
                 // any excess memory in the fpage.
                 fpage = node->fpage;
                 TAILQ_REMOVE(&alloc->flist[i], node, flist);

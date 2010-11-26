@@ -152,7 +152,6 @@ struct memsection
     vms$pointer                 base;
     vms$pointer                 end;
     vms$pointer                 flags;
-    vms$pointer                 phys_active;
     union
     {
         vms$pointer                     base;

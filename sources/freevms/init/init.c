@@ -24,7 +24,9 @@
 int
 main(int argc, char **argv)
 {
-    rtl$print("init process started\n", 0);
+    vms$string(s, 5);
+
+    //rtl$print("init process started\n", 0);
     for(;;);
     return(0);
 }

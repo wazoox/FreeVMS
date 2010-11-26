@@ -21,13 +21,24 @@
 
 #include "freevms/freevms.h"
 
+struct mapped_pages
+{
+    L4_Fpage_t      phys;
+    L4_Fpage_t      virt;
+
+    struct pd       *owner;
+
+    vms$pointer     flags; // VMS$MAPPED | VMS$SWAPPED
+};
+
 void
 vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
         vms$pointer tag)
 {
     // fpage [...........0RWX]
 
-    L4_Fpage_t              fpage;
+    L4_Fpage_t              pfpage;
+    L4_Fpage_t              vfpage;
 
     L4_Msg_t                msg;
 
@@ -42,7 +53,7 @@ vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
     // Read privileges
     priv = (tag & 0xf0000) >> 16;
 
-notice("vms$pagefault(addr:%lx) [priv=%lx]\n", addr, priv);
+notice("vms$pagefault(addr:%lx) from %lx [priv=%lx]\n", addr, caller, priv);
     // Find memory section it belongs too
     if ((memsection = vms$objtable_lookup((void *) addr)) == NULL)
     {
@@ -61,37 +72,31 @@ notice("ref=%lx\n", ref);
         vms$pointer phys;
         vms$pointer virt;
 
-        // Si la page est une page destinée à lancer un programme ELF, on
-        // cherche toutes les pages de l'exécutable et l'on envoie un
-        // grantitem.
-
 notice("memsection %lx %lx\n", memsection->base, memsection->end);
-notice("%lx %lx\n", memsection->flags, memsection->phys_active);
+notice("flags %lx\n", memsection->flags);
 
         size = vms$min_pagesize();
         virt = vms$page_round_down(addr, size);
-        fpage = L4_Fpage(virt, size);
-            // FIXME: check if physical memory is available
-/*
-            // Find a free physical memory to map requested page.
-            phys = vms$fpage_alloc_chunk(&pm_alloc, size);
 
-            if (phys == INVALID_ADDR)
-            {
-                notice(MEM_F_OUTMEM "out of memory at IP=$%016lX, TID=$%lX\n",
-                        ip, jobctl$threadno(L4_ThreadNo(caller)));
-                goto fail;
-            }
+        phys = vms$fpage_alloc_chunk(&pm_alloc, size);
+
+        if (phys == INVALID_ADDR)
+        {
+            notice(MEM_F_OUTMEM "out of memory at IP=$%016lX, TID=$%lX\n",
+                    ip, jobctl$threadno(L4_ThreadNo(caller)));
+            goto fail;
+        }
 notice("V=%lx P=%lx\n", virt, phys);
-        */
-
 notice("addr=%lx size=%lx\n", virt, size);
 notice("Priv=%d %d\n", priv, L4_FullyAccessible);
-        // Why priv does not work instead of L4_FullyAccessible ?
-        L4_Set_Rights(&fpage, L4_FullyAccessible);
+        pfpage = L4_Fpage(phys, size);
+        vfpage = L4_Fpage(virt, size);
 
+        vms$sigma0_map_fpage(vfpage, pfpage, L4_FullyAccessible);
+        // Why priv does not work instead of L4_FullyAccessible ?
+        L4_Set_Rights(&pfpage, L4_FullyAccessible);
         L4_Clear(&msg);
-        L4_Append(&msg, L4_MapItem(fpage, virt));
+        L4_Append(&msg, L4_MapItem(vfpage, virt));
         L4_Load(&msg);
     }
     else

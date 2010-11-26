@@ -129,7 +129,7 @@ objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags,
         if (TAILQ_EMPTY(&ms->phys.list))
         {
             vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
-            return(-1);
+            return(-2);
         }
 
         vms$memsection_back(ms);

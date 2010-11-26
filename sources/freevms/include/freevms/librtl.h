@@ -19,4 +19,20 @@
 ================================================================================
 */
 
+// string descriptor
+
+#define vms$string(s, l) \
+struct vms$string \
+{ \
+    vms$pointer             length; \
+    vms$pointer             length_trim; \
+    unsigned char           c[l]; \
+} s; s.length = l; s.length_trim = 0
+
+int str$cmp(struct vms$string, struct vms$string);
+int str$cpy(struct vms$string, struct vms$string);
+int str$cpy(struct vms$string, const unsigned char *s);
+int str$len(struct vms$string, struct vms$string);
+int str$lentrim(struct vms$string, struct vms$string);
+
 int rtl$print(const char *fmt, int size, ...);

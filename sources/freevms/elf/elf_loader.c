@@ -32,14 +32,16 @@ vms$pointer
 elf$loader(struct thread *thread, vms$pointer start, vms$pointer end,
         cap_t *clist, vms$pointer *pos)
 {
-    ehdr_t          *eh;
-    phdr_t          *ph;
+    ehdr_t              *eh;
+    phdr_t              *ph;
 
-    vms$pointer     dst_end;
-    vms$pointer     dst_start;
-    vms$pointer     i;
-    vms$pointer     src_end;
-    vms$pointer     src_start;
+    struct memsection   *memsection;
+
+    vms$pointer         dst_end;
+    vms$pointer         dst_start;
+    vms$pointer         i;
+    vms$pointer         src_end;
+    vms$pointer         src_start;
 
     eh = (ehdr_t *) start;
 
@@ -63,11 +65,13 @@ elf$loader(struct thread *thread, vms$pointer start, vms$pointer end,
             dst_end = dst_start + ph->msize;
 
             // Allocating memory
+            memsection = vms$pd_create_memsection(thread->owner,
+                    vms$page_round_up((dst_end - dst_start) + 1,
+                    vms$min_pagesize()),
+                    vms$page_round_down(dst_start, vms$min_pagesize()),
+                    VMS$MEM_FIXED, vms$min_pagesize());
             clist[(*pos)++] = sec$create_capability((vms$pointer)
-                    vms$pd_create_memsection(thread->owner,
-                    (dst_end - dst_start) + 1,
-                    dst_start, VMS$MEM_INTERNAL, vms$min_pagesize()),
-                    CAP$MEMSECTION);
+                    memsection, CAP$MEMSECTION);
             vms$memcopy(dst_start, src_start, ph->fsize);
             vms$initmem(dst_start + ph->fsize, ph->msize - ph->fsize);
         }

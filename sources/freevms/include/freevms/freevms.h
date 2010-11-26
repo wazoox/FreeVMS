@@ -97,6 +97,8 @@ extern int dbg$virtual_memory;
 #define ERROR_PRINT_L4 notice("L4 microkernel error: %s [%lx]\n", \
         L4_ErrorCode_String(L4_ErrorCode()), L4_ErrorCode())
 
+#define FIXME do { notice("TO BE FIXED ! %s line %d\n", __FILE__, __LINE__); } \
+        while(0)
 #define PANIC(a, ...) { if (a) { \
         __VA_ARGS__; \
         notice("\nPanic at %s, %s line %d\n", __FUNCTION__, __FILE__, \
