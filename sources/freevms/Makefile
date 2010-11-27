@@ -3,8 +3,8 @@ DESTDIR=../../build/freevms
 CFLAGS=-Wall -fno-stack-protector -nostdinc -O2 -g -Wall -Wshadow \
 		-Wconversion  -Wno-conversion -fno-exceptions -fno-omit-frame-pointer
 
-GCC_TARGET=x86_64-linux-gnu
-GCC_VERSION=$(shell gcc -v 2>&1 | awk '/gcc version/ { print $$3; }')
+GCC_TARGET=$(shell gcc -dumpmachine)
+GCC_VERSION=$(shell gcc -dumpversion)
 
 INCLUDES=-I./include \
 		-I$(DESTDIR)/../kernel \
