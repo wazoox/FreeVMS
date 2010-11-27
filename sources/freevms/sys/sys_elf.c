@@ -29,7 +29,7 @@
 // If thread != NULL, image is granted to new address space.
 
 vms$pointer
-elf$loader(struct thread *thread, vms$pointer start, vms$pointer end,
+sys$elf_loader(struct thread *thread, vms$pointer start, vms$pointer end,
         cap_t *clist, vms$pointer *pos)
 {
     ehdr_t              *eh;
@@ -37,9 +37,11 @@ elf$loader(struct thread *thread, vms$pointer start, vms$pointer end,
 
     struct memsection   *memsection;
 
+	vms$pointer			base;
     vms$pointer         dst_end;
     vms$pointer         dst_start;
     vms$pointer         i;
+	vms$pointer			size;
     vms$pointer         src_end;
     vms$pointer         src_start;
 
@@ -64,16 +66,17 @@ elf$loader(struct thread *thread, vms$pointer start, vms$pointer end,
             dst_start = ph->paddr;
             dst_end = dst_start + ph->msize;
 
-            // Allocating memory
-            memsection = vms$pd_create_memsection(thread->owner,
-                    vms$page_round_up((dst_end - dst_start) + 1,
-                    vms$min_pagesize()),
-                    vms$page_round_down(dst_start, vms$min_pagesize()),
+            // Allocating aligned memory
+
+			base = sys$page_round_down(dst_start, vms$min_pagesize());
+			size = (sys$page_round_up(dst_end, vms$min_pagesize()) - base);
+
+            memsection = sys$pd_create_memsection(thread->owner, size, base,
                     VMS$MEM_FIXED, vms$min_pagesize());
             clist[(*pos)++] = sec$create_capability((vms$pointer)
                     memsection, CAP$MEMSECTION);
-            vms$memcopy(dst_start, src_start, ph->fsize);
-            vms$initmem(dst_start + ph->fsize, ph->msize - ph->fsize);
+            sys$memcopy(dst_start, src_start, ph->fsize);
+            sys$initmem(dst_start + ph->fsize, ph->msize - ph->fsize);
         }
     }
 

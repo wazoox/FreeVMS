@@ -28,7 +28,7 @@ static struct slab_cache bt_cache =
         SLAB_CACHE_INITIALIZER(sizeof(struct sBTPage), &bt_cache);
 
 void
-vms$objtable_init(void)
+sys$objtable_init(void)
 {
     objtable = &_objtable;
     objtable->root = NULL;
@@ -38,7 +38,7 @@ vms$objtable_init(void)
 }
 
 memsection *
-vms$objtable_lookup(void *addr)
+sys$objtable_lookup(void *addr)
 {
     extern struct memsection_list       internal_memsections;
 
@@ -112,7 +112,7 @@ objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags,
     PANIC(!(flags & VMS$MEM_NORMAL));
 
     ms->flags = flags;
-    ms->base = vms$fpage_alloc_chunk(&vm_alloc, size);
+    ms->base = sys$fpage_alloc_chunk(&vm_alloc, size);
 
     if (ms->base == INVALID_ADDR)
     {
@@ -123,22 +123,22 @@ objtable_setup(struct memsection *ms, vms$pointer size, unsigned int flags,
 
     if (!(flags & VMS$MEM_USER))
     {
-        ms->phys.list = vms$fpage_alloc_list(&pm_alloc, ms->base, ms->end,
+        ms->phys.list = sys$fpage_alloc_list(&pm_alloc, ms->base, ms->end,
                 pagesize);
 
         if (TAILQ_EMPTY(&ms->phys.list))
         {
-            vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
+            sys$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
             return(-2);
         }
 
-        vms$memsection_back(ms);
+        sys$memsection_back(ms);
     }
 
     if ((r = objtable_insert(ms)) != 0)
     {
-        vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
-        vms$fpage_free_list(&pm_alloc, ms->phys.list);
+        sys$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
+        sys$fpage_free_list(&pm_alloc, ms->phys.list);
     }
 
     return(r);
@@ -165,21 +165,21 @@ objtable_setup_fixed(struct memsection *ms, vms$pointer size,
         return(r);
     }
 
-    vms$fpage_remove_chunk(&vm_alloc, base, base + size - 1);
+    sys$fpage_remove_chunk(&vm_alloc, base, base + size - 1);
 
     // Check if we need to back the memsection
     if (!(flags & VMS$MEM_USER))
     {
-        ms->phys.list = vms$fpage_alloc_list(&pm_alloc, ms->base, ms->end,
+        ms->phys.list = sys$fpage_alloc_list(&pm_alloc, ms->base, ms->end,
                 pagesize);
 
         if (TAILQ_EMPTY(&ms->phys.list))
         {
-            vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
+            sys$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
             return(-1);
         }
 
-        vms$memsection_back(ms);
+        sys$memsection_back(ms);
     }
 
     return(r);
@@ -195,7 +195,7 @@ objtable_setup_utcb(struct memsection *ms, vms$pointer size, unsigned int flags)
     PANIC(!(flags & VMS$MEM_UTCB));
 
     ms->flags = flags;
-    ms->base = vms$fpage_alloc_chunk(&vm_alloc, size);
+    ms->base = sys$fpage_alloc_chunk(&vm_alloc, size);
 
     if (ms->base == INVALID_ADDR)
     {
@@ -207,7 +207,7 @@ objtable_setup_utcb(struct memsection *ms, vms$pointer size, unsigned int flags)
 
     if (r != 0)
     {
-        vms$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
+        sys$fpage_free_chunk(&vm_alloc, ms->base, ms->end);
     }
 
     return(r);
@@ -229,7 +229,7 @@ objtable_setup_internal(struct memsection *ms, vms$pointer size,
 
     if (r == 0)
     {
-        vms$memsection_back(ms);
+        sys$memsection_back(ms);
     }
 
     return(r);
@@ -238,12 +238,12 @@ objtable_setup_internal(struct memsection *ms, vms$pointer size,
 struct sBTPage *
 ObjAllocPage(PagePool *pool)
 {
-    return((struct sBTPage *) vms$slab_cache_alloc(&bt_cache));
+    return((struct sBTPage *) sys$slab_cache_alloc(&bt_cache));
 }
 
 void
 ObjFreePage(PagePool *pool, struct sBTPage *page)
 {
-    vms$slab_cache_free(&bt_cache, page);
+    sys$slab_cache_free(&bt_cache, page);
     return;
 }

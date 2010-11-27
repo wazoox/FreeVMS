@@ -31,12 +31,12 @@ static Header           *_kr_alloc_freep = NULL;
 static struct mutex     alloc_mutex;
 
 void
-vms$alloc_init(vms$pointer bss_p, vms$pointer top_p)
+sys$alloc_init(vms$pointer bss_p, vms$pointer top_p)
 {
     vms$bss = bss_p;
     vms$top = top_p;
 
-    lock$mutex_init(&alloc_mutex);
+    sys$mutex_init(&alloc_mutex);
     return;
 }
 
@@ -44,7 +44,7 @@ vms$alloc_init(vms$pointer bss_p, vms$pointer top_p)
 #define round_up(address, size)     ((((address) + (size - 1)) & (~(size - 1))))
 
 static void *
-vms$morecore(unsigned int nu)
+sys$morecore(unsigned int nu)
 {
     int                     r;
 
@@ -67,7 +67,7 @@ vms$morecore(unsigned int nu)
     // On this system we need to ensure we back memory
     // before touching it, or else we are in trouble
     // FIXME: we should check exactly how much to back here !
-    r = vms$back_mem((vms$pointer) up, ((vms$pointer) (up + nu)) - 1,
+    r = sys$back_mem((vms$pointer) up, ((vms$pointer) (up + nu)) - 1,
             vms$min_pagesize());
 
     if (r != 0)
@@ -78,19 +78,19 @@ vms$morecore(unsigned int nu)
     vms$bss += (nu * sizeof(Header));
     up->s.size = nu;
 
-    vms$free((void *) (up + 1));
+    sys$free((void *) (up + 1));
     return(_kr_alloc_freep);
 }
 
 void *
-vms$alloc(vms$pointer nbytes)
+sys$alloc(vms$pointer nbytes)
 {
     Header                  *p;
     Header                  *prevp;
 
     unsigned int            nunits;
 
-    lock$mutex_count_lock(&alloc_mutex);
+    sys$mutex_count_lock(&alloc_mutex);
 
     nunits = ((nbytes + sizeof(Header) - 1) / sizeof(Header)) + 1;
 
@@ -120,27 +120,27 @@ vms$alloc(vms$pointer nbytes)
             }
 
             freep = prevp;
-            lock$mutex_count_unlock(&alloc_mutex);
+            sys$mutex_count_unlock(&alloc_mutex);
             return((void *) (p + 1));
         }
 
         if (p == freep)
         {
             // wrapped around free list
-            if ((p = (Header *) vms$morecore(nunits)) == NULL)
+            if ((p = (Header *) sys$morecore(nunits)) == NULL)
             {
-                lock$mutex_count_unlock(&alloc_mutex);
+                sys$mutex_count_unlock(&alloc_mutex);
                 return(NULL);
             }
         }
     }
 
-    lock$mutex_count_unlock(&alloc_mutex);
+    sys$mutex_count_unlock(&alloc_mutex);
     return(NULL);
 }
 
 void
-vms$free(void *ap)
+sys$free(void *ap)
 {
     Header          *bp;
     Header          *p;
@@ -150,7 +150,7 @@ vms$free(void *ap)
         return;
     }
 
-    lock$mutex_count_lock(&alloc_mutex);
+    sys$mutex_count_lock(&alloc_mutex);
     bp = (Header *) ap - 1;     // point to block header
 
     for(p = freep; !(bp > p && bp < p->s.ptr); p = p->s.ptr)
@@ -185,7 +185,7 @@ vms$free(void *ap)
     }
 
     freep = p;
-    lock$mutex_count_unlock(&alloc_mutex);
+    sys$mutex_count_unlock(&alloc_mutex);
 
     return;
 }

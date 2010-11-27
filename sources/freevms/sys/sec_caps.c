@@ -84,7 +84,7 @@ sec$check(L4_ThreadId_t tid, vms$pointer ref)
     struct pd           *pd;
     struct memsection   *memsection;
 
-    thread = jobctl$thread_lookup(tid);
+    thread = sys$thread_lookup(tid);
 
     if (thread == NULL)
     {
@@ -92,7 +92,7 @@ sec$check(L4_ThreadId_t tid, vms$pointer ref)
     }
 
     pd = thread->owner;
-    memsection = vms$objtable_lookup((void *) ref);
+    memsection = sys$objtable_lookup((void *) ref);
 
     if (memsection == NULL)
     {

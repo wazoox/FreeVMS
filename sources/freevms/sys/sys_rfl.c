@@ -22,19 +22,19 @@
 #include "freevms/freevms.h"
 
 rfl_t
-jobctl$rfl_new(void)
+sys$rfl_new(void)
 {
     return(ll_new());
 }
 
 int
-jobctl$rfl_free(rfl_t rfl, vms$pointer val)
+sys$rfl_free(rfl_t rfl, vms$pointer val)
 {
-    return(jobctl$rfl_insert_range(rfl, val, val));
+    return(sys$rfl_insert_range(rfl, val, val));
 }
 
 int
-jobctl$rfl_insert_range(rfl_t rfl, vms$pointer from, vms$pointer to)
+sys$rfl_insert_range(rfl_t rfl, vms$pointer from, vms$pointer to)
 {
     int             added;
 
@@ -84,7 +84,7 @@ jobctl$rfl_insert_range(rfl_t rfl, vms$pointer from, vms$pointer to)
                 // Merge with next range
                 range->to = next_range->to;
                 // Now delete the next range
-                vms$free(next_range);
+                sys$free(next_range);
                 ll_delete(temp->next);
             }
 
@@ -102,7 +102,7 @@ jobctl$rfl_insert_range(rfl_t rfl, vms$pointer from, vms$pointer to)
 
     if (added == 0)
     {
-        if ((new_range = (struct range *) vms$alloc(sizeof(struct range)))
+        if ((new_range = (struct range *) sys$alloc(sizeof(struct range)))
                 == NULL)
         {
             return(E_RFL_NOMEM);
@@ -117,7 +117,7 @@ jobctl$rfl_insert_range(rfl_t rfl, vms$pointer from, vms$pointer to)
 }
 
 vms$pointer
-jobctl$rfl_alloc(rfl_t rfl)
+sys$rfl_alloc(rfl_t rfl)
 {
     struct range            *range;
 
@@ -135,7 +135,7 @@ jobctl$rfl_alloc(rfl_t rfl)
     if (range->from == range->to)
     {
         // None left in this range now, free resources
-        vms$free(range);
+        sys$free(range);
         ll_delete(rfl->next);
     }
     else

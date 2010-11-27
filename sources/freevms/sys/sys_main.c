@@ -139,15 +139,16 @@ main(void)
             ? 1 : 0;
 
     // Starting virtual memory subsystem
-    vms$init(kip, &mem_info, pagesize);
-    vms$bootstrap(&mem_info, pagesize);
+    sys$mem_init(kip, &mem_info, pagesize);
+    sys$bootstrap(&mem_info, pagesize);
+    sys$objtable_init();
+    sys$utcb_init(kip);
+    sys$pd_init(&mem_info);
+    sys$thread_init(kip);
+    sys$populate_init_objects(&mem_info, pagesize);
 
-    vms$objtable_init();
-    jobctl$utcb_init(kip);
-    jobctl$pd_init(&mem_info);
-    vms$populate_init_objects(&mem_info, pagesize);
-    jobctl$thread_init(kip);
     dev$init();
+    sys$pager(kip, &mem_info, pagesize, root_device);
     sys$init(kip, &mem_info, pagesize, root_device);
     sys$loop();
 

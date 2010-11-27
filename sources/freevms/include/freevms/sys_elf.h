@@ -54,5 +54,5 @@ enum phdr_type_e
     PT_LOAD = 1     // Loadable program segment
 };
 
-vms$pointer elf$loader(struct thread *thread, vms$pointer start,
+vms$pointer sys$elf_loader(struct thread *thread, vms$pointer start,
         vms$pointer end, cap_t *clist, vms$pointer *pos);

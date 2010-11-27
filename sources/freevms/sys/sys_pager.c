@@ -25,7 +25,7 @@
 // bootstrap the rest of the system.
 
 void
-sys$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
+sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
         vms$pointer pagesize, char *root_device)
 {
     extern struct pd                freevms_pd;
@@ -48,32 +48,33 @@ sys$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
 
     cap_t                           *clist;
 
-    notice(SYSBOOT_I_SYSBOOT "spawning INIT.EXE with supervisor privileges\n");
+    notice(SYSBOOT_I_SYSBOOT "spawning PAGER.SYS with supervisor privileges\n");
 
     // Find INIT.EXE
     for(obj = meminfo->objects, i = 0; i < meminfo->num_objects; i++, obj++)
     {
-        if (strstr(obj->name, "init.exe") != NULL)
+        if (strstr(obj->name, "pager.sys") != NULL)
         {
             break;
         }
     }
 
     PANIC(i == meminfo->num_objects,
-            notice(INIT_F_NOTFOUND "INIT.EXE not found\n"));
+            notice(PAGER_F_NOTFOUND "PAGER.SYS not found\n"));
     init = obj;
 
     // Start VMS$INIT in a new address space
-    pd = sys$pd_create(&freevms_pd, 0, pagesize);
+    pd = sys$pd_create(&freevms_pd, 1, pagesize);
 
-    notice(SYSBOOT_I_SYSBOOT "creating INIT.EXE UTCB pages\n");
+    notice(SYSBOOT_I_SYSBOOT "creating PAGER.SYS UTCB pages\n");
     thread = sys$pd_create_thread(pd, -1);
-    notice(SYSBOOT_I_SYSBOOT "reserving %ld bytes for %ld kernel threads\n", 
+    notice(SYSBOOT_I_SYSBOOT "reserving %ld bytes for %ld pager threads\n", 
             L4_Size(pd->utcb_area), L4_Size(pd->utcb_area) / L4_UtcbSize(kip)); 
 
     stack = sys$pd_create_memsection(pd, 2 * pagesize, 0, VMS$MEM_NORMAL,
             pagesize);
 
+	FIXME;
     heap = sys$pd_create_memsection(pd, 1 * 1024 * 1024, 0,
             VMS$MEM_NORMAL | VMS$MEM_USER, pagesize);
     PANIC(heap == NULL);

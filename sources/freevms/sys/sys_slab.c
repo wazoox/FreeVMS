@@ -31,7 +31,7 @@ struct memsection_list internal_memsections =
 };
 
 void
-vms$initmem(vms$pointer zone, vms$pointer len)
+sys$initmem(vms$pointer zone, vms$pointer len)
 {
     volatile unsigned char      *ptr;
 
@@ -47,7 +47,7 @@ vms$initmem(vms$pointer zone, vms$pointer len)
 }
 
 void
-vms$memcopy(vms$pointer dest, vms$pointer src, vms$pointer size)
+sys$memcopy(vms$pointer dest, vms$pointer src, vms$pointer size)
 {
     char            *ptr1;
     char            *ptr2;
@@ -66,7 +66,7 @@ vms$memcopy(vms$pointer dest, vms$pointer src, vms$pointer size)
 }
 
 static vms$pointer
-vms$memsection_lookup_phys(struct memsection *memsection, vms$pointer addr)
+sys$memsection_lookup_phys(struct memsection *memsection, vms$pointer addr)
 {
     struct fpage_list       *node;
 
@@ -88,7 +88,7 @@ vms$memsection_lookup_phys(struct memsection *memsection, vms$pointer addr)
 }
 
 int
-vms$memsection_page_map(struct memsection *self, L4_Fpage_t from_page,
+sys$memsection_page_map(struct memsection *self, L4_Fpage_t from_page,
         L4_Fpage_t to_page)
 {
     struct memsection   *src;
@@ -116,7 +116,7 @@ vms$memsection_page_map(struct memsection *self, L4_Fpage_t from_page,
     to_base = L4_Address(to_page);
     to_end = to_base + (L4_Size(to_page) - 1);
 
-    src = vms$objtable_lookup((void *) from_base);
+    src = sys$objtable_lookup((void *) from_base);
 
     if (!src)
     {
@@ -145,8 +145,8 @@ vms$memsection_page_map(struct memsection *self, L4_Fpage_t from_page,
     // we map vms$min_pagesize() fpages even when bigger mappings are possible
     for(offset = 0; offset < size; offset += vms$min_pagesize())
     {
-        phys = vms$memsection_lookup_phys(src, from_base + offset);
-        vms$sigma0_map(to_base + offset, phys, vms$min_pagesize(),
+        phys = sys$memsection_lookup_phys(src, from_base + offset);
+        sys$sigma0_map(to_base + offset, phys, vms$min_pagesize(),
                 L4_FullyAccessible);
     }
 
@@ -154,7 +154,7 @@ vms$memsection_page_map(struct memsection *self, L4_Fpage_t from_page,
 }
 
 struct memsection *
-vms$memsection_create_cache(struct slab_cache *sc)
+sys$memsection_create_cache(struct slab_cache *sc)
 {
     // Create a memsection for use by the internal slab allocator
 
@@ -173,7 +173,7 @@ vms$memsection_create_cache(struct slab_cache *sc)
 
     page_size = (int) vms$min_pagesize();
 
-    virt = vms$fpage_alloc_internal(&vm_alloc, page_size);
+    virt = sys$fpage_alloc_internal(&vm_alloc, page_size);
 
     if (virt == INVALID_ADDR)
     {
@@ -181,17 +181,17 @@ vms$memsection_create_cache(struct slab_cache *sc)
     }
 
     PANIC(virt % vms$min_pagesize(), notice("virt not aligned (%lx)!\n", virt));
-    phys = vms$fpage_alloc_internal(&pm_alloc, page_size);
+    phys = sys$fpage_alloc_internal(&pm_alloc, page_size);
 
     if (phys == INVALID_ADDR)
     {
-        vms$fpage_free_internal(&vm_alloc, virt, virt + (page_size - 1));
+        sys$fpage_free_internal(&vm_alloc, virt, virt + (page_size - 1));
         return((struct memsection *) NULL);
     }
 
     PANIC(phys % vms$min_pagesize(), notice("phys not aligned (%lx)!\n", virt));
-    vms$sigma0_map(virt, phys, page_size, L4_FullyAccessible);
-    vms$initmem(virt, page_size);
+    sys$sigma0_map(virt, phys, page_size, L4_FullyAccessible);
+    sys$initmem(virt, page_size);
 
     if (sc == (&ms_cache))
     {
@@ -204,13 +204,13 @@ vms$memsection_create_cache(struct slab_cache *sc)
     }
     else
     {
-        node = (struct memsection_node *) vms$slab_cache_alloc(&ms_cache);
+        node = (struct memsection_node *) sys$slab_cache_alloc(&ms_cache);
 
         if (node == (struct memsection_node *) NULL)
         {
             L4_Flush(L4_Fpage(virt, page_size));
-            vms$fpage_free_chunk(&vm_alloc, virt, virt + (page_size - 1));
-            vms$fpage_free_chunk(&pm_alloc, phys, phys + (page_size - 1));
+            sys$fpage_free_chunk(&vm_alloc, virt, virt + (page_size - 1));
+            sys$fpage_free_chunk(&pm_alloc, phys, phys + (page_size - 1));
 
             return((struct memsection *) NULL);
         }
@@ -249,7 +249,7 @@ vms$memsection_create_cache(struct slab_cache *sc)
 }
 
 void *
-vms$slab_cache_alloc(struct slab_cache *sc)
+sys$slab_cache_alloc(struct slab_cache *sc)
 {
     struct memsection       *pool;
     struct slab             *slab;
@@ -264,7 +264,7 @@ vms$slab_cache_alloc(struct slab_cache *sc)
 
     if (pool == NULL)
     {
-        pool = vms$memsection_create_cache(sc);
+        pool = sys$memsection_create_cache(sc);
     }
 
     if (pool == NULL)
@@ -274,48 +274,48 @@ vms$slab_cache_alloc(struct slab_cache *sc)
 
     slab = TAILQ_FIRST(&pool->slabs);
     TAILQ_REMOVE(&pool->slabs, TAILQ_FIRST(&pool->slabs), slabs);
-    vms$initmem((vms$pointer) slab, sc->slab_size);
+    sys$initmem((vms$pointer) slab, sc->slab_size);
 
     return(slab);
 }
 
 void
-vms$slab_cache_free(struct slab_cache *sc, void *ptr)
+sys$slab_cache_free(struct slab_cache *sc, void *ptr)
 {
     struct memsection       *pool;
     struct slab             *slab;
 
     slab = (struct slab *) ptr;
-    pool = vms$objtable_lookup((void *) ((vms$pointer) ptr));
+    pool = sys$objtable_lookup((void *) ((vms$pointer) ptr));
 
     TAILQ_INSERT_TAIL(&pool->slabs, slab, slabs);
     return;
 }
 
 static struct memsection_node *
-vms$memsection_new(void)
+sys$memsection_new(void)
 {
     struct memsection_node  *node;
 
-    if ((node = (struct memsection_node *) vms$slab_cache_alloc(&ms_cache))
+    if ((node = (struct memsection_node *) sys$slab_cache_alloc(&ms_cache))
             == NULL)
     {
         return(NULL);
     }
 
-    vms$initmem((vms$pointer) node, sizeof(struct memsection_node));
+    sys$initmem((vms$pointer) node, sizeof(struct memsection_node));
     return(node);
 }
 
 static void
-vms$delete_memsection_from_allocator(struct memsection_node *node)
+sys$delete_memsection_from_allocator(struct memsection_node *node)
 {
-    vms$slab_cache_free(&ms_cache, node);
+    sys$slab_cache_free(&ms_cache, node);
     return;
 }
 
 int
-vms$memsection_back(struct memsection *memsection)
+sys$memsection_back(struct memsection *memsection)
 {
     L4_Fpage_t              vpage;
 
@@ -336,7 +336,7 @@ vms$memsection_back(struct memsection *memsection)
     else if (flags & VMS$MEM_INTERNAL)
     {
         // Map it 1:1
-        vms$sigma0_map(addr, memsection->phys.base, size, L4_FullyAccessible);
+        sys$sigma0_map(addr, memsection->phys.base, size, L4_FullyAccessible);
     }
     else
     {
@@ -344,8 +344,8 @@ vms$memsection_back(struct memsection *memsection)
         TAILQ_FOREACH(node, &memsection->phys.list, flist)
         {
             vpage = L4_Fpage(addr, L4_Size(node->fpage));
-            vms$sigma0_map_fpage(vpage, node->fpage, L4_FullyAccessible);
-            vms$initmem(L4_Address(vpage), L4_Size(vpage));
+            sys$sigma0_map_fpage(vpage, node->fpage, L4_FullyAccessible);
+            sys$initmem(L4_Address(vpage), L4_Size(vpage));
             addr += L4_Size(vpage);
         }
     }
@@ -354,7 +354,7 @@ vms$memsection_back(struct memsection *memsection)
 }
 
 struct memsection *
-vms$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
+sys$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
         unsigned int flags, vms$pointer pagesize)
 {
     extern int                  vms$pd_initialized;
@@ -367,7 +367,7 @@ vms$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
 
     struct memsection_node      *node;
 
-    if ((node = vms$memsection_new()) == NULL)
+    if ((node = sys$memsection_new()) == NULL)
     {
         return(NULL);
     }
@@ -399,7 +399,7 @@ vms$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
     {
         // Insertion into object table failed. Delete memsection from mem_alloc,
         // need not to delete it from memsection_list.
-        vms$delete_memsection_from_allocator(node);
+        sys$delete_memsection_from_allocator(node);
         return(NULL);
     }
 

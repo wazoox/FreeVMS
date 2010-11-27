@@ -21,25 +21,6 @@
 
 #include "freevms/freevms.h"
 
-struct quota *
-new_quota(void)
-{
-    struct quota        *q;
-
-    if ((q = (struct quota *) vms$alloc(sizeof(struct quota))) == NULL)
-    {
-        return(NULL);
-    }
-
-    vms$initmem((vms$pointer) q, sizeof(struct quota));
-    return(q);
-}
-
-void
-set_quota(struct quota * q, int max)
-{
-    PANIC(q == NULL);
-
-    q->max_pages = max;
-    return;
-}
+void vms$pagefault_init();
+void vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
+		vms$pointer tag);

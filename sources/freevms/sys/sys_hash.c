@@ -32,15 +32,15 @@ hash_init(unsigned int size)
     PANIC((size & (size -1)) != 0);
 
     if ((tablestruct = (struct hashtable *)
-            vms$alloc(sizeof(struct hashtable))) == NULL)
+            sys$alloc(sizeof(struct hashtable))) == NULL)
     {
         return(NULL);
     }
 
     if ((tablestruct->table = (struct hashentry **)
-            vms$alloc(size * sizeof(struct hashentry *))) == NULL)
+            sys$alloc(size * sizeof(struct hashentry *))) == NULL)
     {
-        vms$free(tablestruct);
+        sys$free(tablestruct);
         return(NULL);
     }
 
@@ -103,7 +103,7 @@ hash_remove(struct hashtable *tablestruct, vms$pointer key)
     if (entry && (entry->key == key))
     {
         tmpentry = entry->next;
-        vms$free(entry);
+        sys$free(entry);
         tablestruct->table[hash] = tmpentry;
     }
     else
@@ -114,7 +114,7 @@ hash_remove(struct hashtable *tablestruct, vms$pointer key)
             {
                 tmpentry = entry->next;
                 entry->next = entry->next->next;
-                vms$free(tmpentry);
+                sys$free(tmpentry);
                 break;
             }
 
@@ -152,7 +152,7 @@ hash_insert(struct hashtable *tablestruct, vms$pointer key, void *value)
 
     hash = hash_hash(key) & (tablestruct->size - 1);
 
-    if ((entry = (hashentry *) vms$alloc(sizeof(struct hashentry))) == NULL)
+    if ((entry = (hashentry *) sys$alloc(sizeof(struct hashentry))) == NULL)
     {
         return(-1);
     }

@@ -26,7 +26,7 @@ dl_list_create_front(struct double_list *dl, int payload)
 {
     struct ll           *n;
 
-    n = (struct ll *) vms$alloc(sizeof(struct ll) + payload);
+    n = (struct ll *) sys$alloc(sizeof(struct ll) + payload);
 
     if (n != NULL)
     {
@@ -46,7 +46,7 @@ dl_list_create_back(struct double_list *dl, int payload)
 {
     struct ll       *n;
 
-    n = (struct ll *) vms$alloc(sizeof(struct ll) + payload);
+    n = (struct ll *) sys$alloc(sizeof(struct ll) + payload);
 
     if (n != NULL)
     {
@@ -81,8 +81,8 @@ dl_list_clear(struct double_list *list)
     while(iter)
     {
         next = iter->next;
-        vms$free(iter->data);
-        vms$free(iter);
+        sys$free(iter->data);
+        sys$free(iter);
     }
 
     list->head = 0;
@@ -96,7 +96,7 @@ ll_new(void)
 {
     struct ll   *ll;
 
-    if ((ll = (struct ll *) vms$alloc(sizeof(struct ll))) != NULL)
+    if ((ll = (struct ll *) sys$alloc(sizeof(struct ll))) != NULL)
     {
         ll->next = ll;
         ll->prev = ll;
@@ -114,7 +114,7 @@ ll_delete(struct ll *ll)
     next = ll->next;
     ll->next->prev = ll->prev;
     ll->prev->next = ll->next;
-    vms$free(ll);
+    sys$free(ll);
 
     return(next);
 }
@@ -124,7 +124,7 @@ ll_insert_before(struct ll *ll, void *data)
 {
     struct ll       *n;
 
-    if ((n = (struct ll *) vms$alloc(sizeof(struct ll))) != NULL)
+    if ((n = (struct ll *) sys$alloc(sizeof(struct ll))) != NULL)
     {
         n->next = ll;
         ll->prev->next = n;

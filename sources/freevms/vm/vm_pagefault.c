@@ -19,17 +19,42 @@
 ================================================================================
 */
 
-#include "freevms/freevms.h"
+#include "freevms/pager.h"
 
-struct mapped_pages
+static TAILQ_HEAD(mapped_pages, mapped_page)	mapped_pages_head;
+
+void
+vms$pagefault_init()
 {
-    L4_Fpage_t      phys;
-    L4_Fpage_t      virt;
+	TAILQ_INIT(&mapped_pages_head);
+	return;
+}
 
-    struct pd       *owner;
+struct mapped_page *
+vms$add_mapped_page(struct pd *owner, L4_Fpage_t pfpage, L4_Fpage_t vfpage)
+{
+	struct mapped_page			*mp;
 
-    vms$pointer     flags; // VMS$MAPPED | VMS$SWAPPED
-};
+	/*
+	if ((mp = (struct mapped_page *) vms$alloc(sizeof(struct mapped_page)))
+			== ((struct mapped_page *) NULL))
+	{
+		return((struct mapped_page *) NULL);
+	}
+	*/
+
+	mp->owner = owner;
+	mp->phys = pfpage;
+	mp->virt = vfpage;
+	mp->flags = VMS$MAPPED;
+
+	return(mp);
+}
+
+void
+vms$remove_mapped_page(struct pd *owner)
+{  
+}
 
 void
 vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
@@ -53,8 +78,9 @@ vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
     // Read privileges
     priv = (tag & 0xf0000) >> 16;
 
-notice("vms$pagefault(addr:%lx) from %lx [priv=%lx]\n", addr, caller, priv);
+//notice("vms$pagefault(addr:%lx) from %lx [priv=%lx]\n", addr, caller, priv);
     // Find memory section it belongs too
+	/*
     if ((memsection = vms$objtable_lookup((void *) addr)) == NULL)
     {
         notice(MEM_F_MEMSEC "no memory section\n");
@@ -104,10 +130,12 @@ notice("Priv=%d %d\n", priv, L4_FullyAccessible);
         notice(MEM_F_SECFLD "security check failed\n");
         goto fail;
     }
+	*/
 
     return;
 
 fail:
+	/*
     L4_Clear(&msg);
     L4_Append(&msg, L4_MapItem(L4_Nilpage, L4_Address(L4_Nilpage)));
     L4_Load(&msg);
@@ -115,5 +143,6 @@ fail:
     L4_Stop(caller);
     thread = jobctl$thread_lookup(caller);
     jobctl$thread_delete(thread);
+	*/
     return;
 }

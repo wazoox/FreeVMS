@@ -40,7 +40,7 @@ find_first_set(bfl_word x)
 }
 
 bfl_t
-jobctl$bfl_new(vms$pointer size)
+sys$bfl_new(vms$pointer size)
 {
     bfl_t                   bfl;
 
@@ -50,7 +50,7 @@ jobctl$bfl_new(vms$pointer size)
     array_size = (size / BITS_PER_BFL_WORD) + 1;
 
     // Allocate enough space for the header and the bit array needed
-    if ((bfl = (bfl_t) vms$alloc(sizeof(struct bfl) + (array_size) *
+    if ((bfl = (bfl_t) sys$alloc(sizeof(struct bfl) + (array_size) *
             sizeof(bfl_word))) == NULL)
     {
         return(NULL);
@@ -60,20 +60,20 @@ jobctl$bfl_new(vms$pointer size)
     bfl->len = array_size;
 
     // Set all as allocated
-    vms$initmem((vms$pointer) bfl->bitarray, array_size * sizeof(bfl_word));
+    sys$initmem((vms$pointer) bfl->bitarray, array_size * sizeof(bfl_word));
 
     // Now free the ones we have
     // FIXME: This is a terribly ineffecient way to do this
     for(i = 0; i < size; i++)
     {
-        jobctl$bfl_free(bfl, i);
+        sys$bfl_free(bfl, i);
     }
 
     return(bfl);
 }
 
 void
-jobctl$bfl_free(bfl_t bfl, vms$pointer val)
+sys$bfl_free(bfl_t bfl, vms$pointer val)
 {
     vms$pointer         idx;
 
@@ -86,7 +86,7 @@ jobctl$bfl_free(bfl_t bfl, vms$pointer val)
 }
 
 vms$pointer
-jobctl$bfl_alloc(bfl_t bfl)
+sys$bfl_alloc(bfl_t bfl)
 {
     unsigned int                found;
     unsigned int                i;

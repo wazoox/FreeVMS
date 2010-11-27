@@ -19,17 +19,50 @@
 ================================================================================
 */
 
-#define SYSBOOT_F_PARAM     "%%SYSBOOT-F-PARAM, "
+struct mutex
+{
+    L4_Word_t       holder;
+    L4_Word_t       needed;
+    L4_Word_t       count;
+};
 
-#define ELF_F_FMT           "%%ELF-F-FMT, "
+typedef struct mutex    *mutex_t;
 
-#define IPC_F_FAILED        "%%IPC-F-FAILED, "
+extern "C"
+{
+    vms$pointer try_lock_amd64(vms$pointer mutex, vms$pointer myself);
+}
 
-#define MEM_F_BACKMEM       "%%MEM-F-BACKMEM, "
-#define MEM_F_MEMSEC        "%%MEM-F-MEMSEC, "
-#define MEM_F_OUTMEM        "%%MEM-F-OUTMEM, "
-#define MEM_F_SECFLD        "%%MEM-F-SECFLD, "
+static inline void
+mutex_lock(mutex_t m)
+{
+    L4_Word_t       me;
 
-#define INIT_F_NOTFOUND     "%%INIT-F-NOTFOUND, "
+    me = L4_Myself().raw;
 
-#define PAGER_F_NOTFOUND     "%%PAGER-F-NOTFOUND, "
+    while(!arch_specific(try_lock)((vms$pointer) m, (vms$pointer) me))
+    {
+        L4_ThreadSwitch(L4_nilthread);
+    }
+
+    return;
+}
+
+static inline void
+mutex_unlock(mutex_t mutex)
+{
+    mutex->holder = 0;
+
+    if (mutex->needed)
+    {
+        mutex->needed = 0;
+        L4_ThreadSwitch(L4_nilthread);
+    }
+
+    return;
+}
+
+void sys$mutex_init(mutex_t mutex);
+void sys$mutex_count_lock(mutex_t mutex);
+void sys$mutex_count_unlock(mutex_t mutex);
+

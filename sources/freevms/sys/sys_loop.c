@@ -40,7 +40,7 @@ sys$loop()
 
         if ((tag.raw & L4_REQUEST_MASK) == L4_PAGEFAULT)
         {
-            vms$pagefault(partner, L4_Get(&msg, 0), L4_Get(&msg, 1),
+            sys$pagefault(partner, L4_Get(&msg, 0), L4_Get(&msg, 1),
                     tag.raw);
         }
         else

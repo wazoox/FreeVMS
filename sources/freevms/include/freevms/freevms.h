@@ -41,7 +41,7 @@
 #include "l4/space.h"
 #include "l4/thread.h"
 
-#include "freevms/arch.h"
+#include "freevms/sys_arch.h"
 
 #ifdef AMD64
 #   define ARCH     amd64
@@ -60,15 +60,15 @@ typedef L4_Word64_t     vms$pointer;
 #include "freevms/b_plus_tree.h"
 
 // FreeVMS subsystems
-#include "freevms/dev.h"
-#include "freevms/vm.h"
-#include "freevms/jobctl.h"
-#include "freevms/lock.h"
-#include "freevms/quota.h"
+#include "freevms/sys_dev.h"
+#include "freevms/sys_mem.h"
+#include "freevms/sys_thread.h"
+#include "freevms/sys_mutex.h"
+#include "freevms/sys_quota.h"
+#include "freevms/sys_sec.h"
+#include "freevms/sys_elf.h"
+#include "freevms/sys_inlined.h"
 #include "freevms/librtl.h"
-#include "freevms/sec.h"
-#include "freevms/elf.h"
-#include "freevms/inlined.h"
 
 // Defines
 #define NULL                            ((vms$pointer) 0)
@@ -114,6 +114,8 @@ extern int dbg$virtual_memory;
 
 // Prototypes
 void sys$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
+        vms$pointer pagesize, char *root_device);
+void sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
         vms$pointer pagesize, char *root_device);
 void sys$loop();
 void sys$parsing(char *line, char *command, char *argument, int length);

@@ -22,7 +22,7 @@
 #include "freevms/freevms.h"
 
 static void
-jobctl$thread_free(L4_ThreadId_t thread)
+sys$thread_free(L4_ThreadId_t thread)
 {
     extern hashtable    *l4tid_to_thread;
     extern rfl_t        thread_list;
@@ -30,20 +30,20 @@ jobctl$thread_free(L4_ThreadId_t thread)
     // Remove thread->pd mapping
     hash_remove(l4tid_to_thread, thread.raw);
     // Add thread back to free pool
-    jobctl$rfl_free(thread_list, L4_ThreadNo(thread));
+    sys$rfl_free(thread_list, L4_ThreadNo(thread));
 
     return;
 }
 
 static int
-jobctl$thread_alloc(struct thread *thread)
+sys$thread_alloc(struct thread *thread)
 {
     extern hashtable    *l4tid_to_thread;
     extern rfl_t        thread_list;
 
     int                 thread_no;
 
-    thread_no = jobctl$rfl_alloc(thread_list);
+    thread_no = sys$rfl_alloc(thread_list);
 
     if (thread_no == -1)
     {
@@ -59,7 +59,7 @@ jobctl$thread_alloc(struct thread *thread)
 }
 
 static int
-jobctl$thread_setup(struct thread *self, int priority)
+sys$thread_setup(struct thread *self, int priority)
 {
     extern L4_Fpage_t   kip_area;
 
@@ -75,8 +75,8 @@ jobctl$thread_setup(struct thread *self, int priority)
     pd = self->owner;
 
     // Note: These don't allocate any resources
-    jobctl$session_p_list_init(&self->client_sessions);
-    jobctl$session_p_list_init(&self->server_sessions);
+    sys$session_p_list_init(&self->client_sessions);
+    sys$session_p_list_init(&self->server_sessions);
 
     if (priority == -1)
     {
@@ -87,7 +87,7 @@ jobctl$thread_setup(struct thread *self, int priority)
     {
         self->eas = NULL;
         // Allocate a thread id
-        r = jobctl$thread_alloc(self);
+        r = sys$thread_alloc(self);
 
         if (r != 0)
         {
@@ -149,14 +149,14 @@ thread_error_state:
     // Here we clean up anything we have allocated
     if (pd->state != pd_suspended)
     {
-        jobctl$thread_free(self->id);
+        sys$thread_free(self->id);
     }
 
     return(1);
 }
 
 struct thread *
-jobctl$pd_create_thread(struct pd* self, int priority)
+sys$pd_create_thread(struct pd* self, int priority)
 {
     extern vms$pointer      utcb_size;
 
@@ -171,14 +171,14 @@ jobctl$pd_create_thread(struct pd* self, int priority)
     {
         case pd_empty:
         case pd_active:
-            thread = jobctl$thread_list_create_back(&self->threads);
+            thread = sys$thread_list_create_back(&self->threads);
 
             if (thread == NULL)
             {
                 return(NULL);
             }
 
-            local_tid = jobctl$bfl_alloc(self->local_threadno);
+            local_tid = sys$bfl_alloc(self->local_threadno);
 
             if (local_tid == -1)
             {
@@ -199,7 +199,7 @@ jobctl$pd_create_thread(struct pd* self, int priority)
             return 0;
     }
 
-    if (jobctl$thread_setup(thread, priority) != 0)
+    if (sys$thread_setup(thread, priority) != 0)
     {
         // Need to clean up
         goto thread_error_state_2;
@@ -209,27 +209,27 @@ jobctl$pd_create_thread(struct pd* self, int priority)
     return(thread);
 
 thread_error_state_1:
-    jobctl$thread_list_delete(thread);
+    sys$thread_list_delete(thread);
     return(NULL);
 
 thread_error_state_2:
     if (self->state != pd_suspended)
     {
-        jobctl$bfl_free(self->local_threadno, local_tid);
-        jobctl$thread_list_delete(thread);
+        sys$bfl_free(self->local_threadno, local_tid);
+        sys$thread_list_delete(thread);
     }
 
     return(NULL);
 }
 
 vms$pointer
-jobctl$pd_add_clist(struct pd* self, cap_t *clist)
+sys$pd_add_clist(struct pd* self, cap_t *clist)
 {
     struct clist_info       *clist_info;
     struct memsection       *memsection;
 
-    memsection = vms$objtable_lookup(clist);
-    clist_info = jobctl$clist_list_create_back(&self->clists);
+    memsection = sys$objtable_lookup(clist);
+    clist_info = sys$clist_list_create_back(&self->clists);
 
     if (clist_info == NULL)
     {
@@ -245,7 +245,7 @@ jobctl$pd_add_clist(struct pd* self, cap_t *clist)
 }
 
 int
-jobctl$thread_start(struct thread *self, vms$pointer ip, vms$pointer sp)
+sys$thread_start(struct thread *self, vms$pointer ip, vms$pointer sp)
 {
     L4_Msg_t        msg;
     L4_MsgTag_t     tag;
@@ -268,7 +268,7 @@ jobctl$thread_start(struct thread *self, vms$pointer ip, vms$pointer sp)
 }
 
 struct thread *
-jobctl$thread_lookup(L4_ThreadId_t thread)
+sys$thread_lookup(L4_ThreadId_t thread)
 {
     extern hashtable    *l4tid_to_thread;
 
@@ -276,7 +276,7 @@ jobctl$thread_lookup(L4_ThreadId_t thread)
 }
 
 static void
-jobctl$pd_release_clist(struct pd* self, cap_t *clist)
+sys$pd_release_clist(struct pd* self, cap_t *clist)
 {
     struct clist_node   *clists;
 
@@ -286,7 +286,7 @@ jobctl$pd_release_clist(struct pd* self, cap_t *clist)
     {
         if (clist == clists->data.clist)
         {
-            jobctl$clist_list_delete(&clists->data);
+            sys$clist_list_delete(&clists->data);
             break;
         }
     }
@@ -295,25 +295,25 @@ jobctl$pd_release_clist(struct pd* self, cap_t *clist)
 }
 
 void
-jobctl$session_delete(struct session *session)
+sys$session_delete(struct session *session)
 {
     PANIC(session == NULL);
     PANIC(session->server == NULL);
     PANIC(session->server->owner == NULL);
 
-    jobctl$pd_release_clist(session->server->owner,
+    sys$pd_release_clist(session->server->owner,
             (cap_t*) session->clist->base);
 
-    jobctl$session_p_list_delete(session->owner_node);
-    jobctl$session_p_list_delete(session->server_node);
-    jobctl$session_p_list_delete(session->client_node);
-    vms$free(session);
+    sys$session_p_list_delete(session->owner_node);
+    sys$session_p_list_delete(session->server_node);
+    sys$session_p_list_delete(session->client_node);
+    sys$free(session);
 
     return;
 }
 
 void
-jobctl$thread_delete(struct thread *thread)
+sys$thread_delete(struct thread *thread)
 {
     extern vms$pointer      utcb_size_log2;
 
@@ -323,12 +323,12 @@ jobctl$thread_delete(struct thread *thread)
     pd = thread->owner;
     L4_ThreadControl(thread->id, L4_nilthread, L4_nilthread, L4_nilthread,
             NULL);
-    jobctl$thread_free(thread->id);
+    sys$thread_free(thread->id);
 
     if (!thread->eas)
     {
         // Free local thread number
-        jobctl$bfl_free(pd->local_threadno,
+        sys$bfl_free(pd->local_threadno,
                 ((vms$pointer) thread->utcb - (vms$pointer) pd->utcb_base)
                 >> utcb_size_log2);
     }
@@ -344,17 +344,17 @@ jobctl$thread_delete(struct thread *thread)
                 sd->next != thread->client_sessions.first;
                 sd = thread->client_sessions.first)
         {
-            jobctl$session_delete(sd->data);
+            sys$session_delete(sd->data);
         }
 
         for (sd = thread->server_sessions.first;
                 sd->next != thread->server_sessions.first;
                 sd = thread->server_sessions.first)
         {
-            jobctl$session_delete(sd->data);
+            sys$session_delete(sd->data);
         }
     }
 
-    jobctl$thread_list_delete(thread);
+    sys$thread_list_delete(thread);
     return;
 }

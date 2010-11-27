@@ -64,26 +64,26 @@ vms$min_pagesize(void)
 }
 
 vms$pointer
-vms$page_round_down(vms$pointer address, vms$pointer page_size)
+sys$page_round_down(vms$pointer address, vms$pointer page_size)
 {
     return(address & (~(((vms$pointer) page_size) - 1)));
 }
 
 vms$pointer
-vms$page_round_up(vms$pointer address, vms$pointer page_size)
+sys$page_round_up(vms$pointer address, vms$pointer page_size)
 {
     return((address + (((vms$pointer) page_size) - 1)) &
             (~(((vms$pointer) page_size) - 1)));
 }
 
 static inline int
-vms$fp_order(L4_Fpage_t fpage)
+sys$fp_order(L4_Fpage_t fpage)
 {
     return(L4_SizeLog2(fpage) - vms$min_pagebits());
 }
 
 L4_Fpage_t
-vms$biggest_fpage(vms$pointer addr, vms$pointer base, vms$pointer end)
+sys$biggest_fpage(vms$pointer addr, vms$pointer base, vms$pointer end)
 {
     unsigned int            bits;
 
@@ -110,7 +110,7 @@ vms$biggest_fpage(vms$pointer addr, vms$pointer base, vms$pointer end)
 }
 
 void
-vms$fpage_clear_internal(struct fpage_alloc *alloc)
+sys$fpage_clear_internal(struct fpage_alloc *alloc)
 {
     struct fpage_list       *fpage;
 
@@ -118,15 +118,15 @@ vms$fpage_clear_internal(struct fpage_alloc *alloc)
     {
         while(alloc->internal.base < alloc->internal.end)
         {
-            if ((fpage = (struct fpage_list *) vms$slab_cache_alloc(&fp_cache))
+            if ((fpage = (struct fpage_list *) sys$slab_cache_alloc(&fp_cache))
                     == (struct fpage_list *) NULL)
             {
                 return;
             }
 
-            fpage->fpage = vms$biggest_fpage(alloc->internal.base,
+            fpage->fpage = sys$biggest_fpage(alloc->internal.base,
                     alloc->internal.base, alloc->internal.end);
-            TAILQ_INSERT_TAIL(&alloc->flist[vms$fp_order(fpage->fpage)],
+            TAILQ_INSERT_TAIL(&alloc->flist[sys$fp_order(fpage->fpage)],
                     fpage, flist);
             alloc->internal.base += L4_Size(fpage->fpage);
         }
@@ -138,12 +138,12 @@ vms$fpage_clear_internal(struct fpage_alloc *alloc)
 }
 
 void
-vms$fpage_free_internal(struct fpage_alloc *alloc, vms$pointer base,
+sys$fpage_free_internal(struct fpage_alloc *alloc, vms$pointer base,
         vms$pointer end)
 {
     if (alloc->internal.active)
     {
-        vms$fpage_clear_internal(alloc);
+        sys$fpage_clear_internal(alloc);
     }
 
     alloc->internal.base = base;
@@ -154,13 +154,13 @@ vms$fpage_free_internal(struct fpage_alloc *alloc, vms$pointer base,
 }
 
 static inline vms$pointer
-vms$fp_end(L4_Fpage_t fpage)
+sys$fp_end(L4_Fpage_t fpage)
 {
     return(L4_Address(fpage) + (L4_Size(fpage) - 1));
 }
 
 vms$pointer
-vms$fpage_alloc_internal(struct fpage_alloc *alloc, vms$pointer size)
+sys$fpage_alloc_internal(struct fpage_alloc *alloc, vms$pointer size)
 {
     unsigned int            i;
 
@@ -176,10 +176,10 @@ vms$fpage_alloc_internal(struct fpage_alloc *alloc, vms$pointer size)
 
         node = TAILQ_FIRST(&alloc->flist[i]);
         alloc->internal.base = L4_Address(node->fpage);
-        alloc->internal.end = vms$fp_end(node->fpage);
+        alloc->internal.end = sys$fp_end(node->fpage);
         alloc->internal.active = 1;
         TAILQ_REMOVE(&alloc->flist[i], node, flist);
-        vms$slab_cache_free(&fp_cache, node);
+        sys$slab_cache_free(&fp_cache, node);
     }
 
     if (((alloc->internal.end - alloc->internal.base) + 1) < (vms$pointer) size)
@@ -199,17 +199,17 @@ vms$fpage_alloc_internal(struct fpage_alloc *alloc, vms$pointer size)
 }
 
 void
-vms$remove_virtmem(struct vms$meminfo *mem_info,
+sys$remove_virtmem(struct vms$meminfo *mem_info,
         vms$pointer base, vms$pointer end, vms$pointer page_size)
 {
-    mem_info->num_vm_regions = vms$remove_chunk(mem_info->vm_regions,
+    mem_info->num_vm_regions = sys$remove_chunk(mem_info->vm_regions,
             mem_info->num_vm_regions, mem_info->max_vm_regions,
-            vms$page_round_down(base, page_size),
-            vms$page_round_up(end, page_size) - 1);
+            sys$page_round_down(base, page_size),
+            sys$page_round_up(end, page_size) - 1);
 }
 
 int
-vms$remove_chunk(struct memdesc *mem_desc, int pos, int max,
+sys$remove_chunk(struct memdesc *mem_desc, int pos, int max,
         vms$pointer low, vms$pointer high)
 {
     int             j;
@@ -264,16 +264,16 @@ vms$remove_chunk(struct memdesc *mem_desc, int pos, int max,
 }
 
 void
-vms$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
+sys$fpage_free_chunk(struct fpage_alloc *alloc, vms$pointer base,
         vms$pointer end)
 {
     if (alloc->internal.active)
     {
-        vms$fpage_clear_internal(alloc);
+        sys$fpage_clear_internal(alloc);
     }
 
-    vms$fpage_free_internal(alloc, base, end);
-    vms$fpage_clear_internal(alloc);
+    sys$fpage_free_internal(alloc, base, end);
+    sys$fpage_clear_internal(alloc);
 
     return;
 }
@@ -296,7 +296,7 @@ sz_order(vms$pointer size)
 // Allocate an fpage of exactly the requested size if possible,
 // otherwise allocate the biggest available fpage.
 static L4_Fpage_t
-vms$fpage_alloc(struct fpage_alloc *alloc, vms$pointer size)
+sys$fpage_alloc(struct fpage_alloc *alloc, vms$pointer size)
 {
     int                 i;
     int                 order;
@@ -331,12 +331,12 @@ vms$fpage_alloc(struct fpage_alloc *alloc, vms$pointer size)
     node = TAILQ_FIRST(&alloc->flist[i]);
     fpage = node->fpage;
     TAILQ_REMOVE(&alloc->flist[i], node, flist);
-    vms$slab_cache_free(&fp_cache, node);
+    sys$slab_cache_free(&fp_cache, node);
 
     // Free up any excess
-    while(vms$fp_order(fpage) > order)
+    while(sys$fp_order(fpage) > order)
     {
-        node = (struct fpage_list *) vms$slab_cache_alloc(&fp_cache);
+        node = (struct fpage_list *) sys$slab_cache_alloc(&fp_cache);
 
         if (node == NULL)
         {
@@ -346,18 +346,18 @@ vms$fpage_alloc(struct fpage_alloc *alloc, vms$pointer size)
 
         fpage = L4_FpageLog2(L4_Address(fpage), L4_SizeLog2(fpage) - 1);
         node->fpage = buddy(fpage);
-        TAILQ_INSERT_TAIL(&alloc->flist[vms$fp_order(fpage)], node, flist);
+        TAILQ_INSERT_TAIL(&alloc->flist[sys$fp_order(fpage)], node, flist);
     }
 
     return(fpage);
 }
 
 vms$pointer
-vms$fpage_alloc_chunk(struct fpage_alloc *alloc, vms$pointer size)
+sys$fpage_alloc_chunk(struct fpage_alloc *alloc, vms$pointer size)
 {
     L4_Fpage_t          fpage;
 
-    fpage = vms$fpage_alloc(alloc, size);
+    fpage = sys$fpage_alloc(alloc, size);
 
     if (L4_IsNilFpage(fpage))
     {
@@ -366,38 +366,38 @@ vms$fpage_alloc_chunk(struct fpage_alloc *alloc, vms$pointer size)
 
     if (L4_Size(fpage) < size)
     {
-        vms$fpage_free_chunk(alloc, L4_Address(fpage), vms$fp_end(fpage));
+        sys$fpage_free_chunk(alloc, L4_Address(fpage), sys$fp_end(fpage));
         return(INVALID_ADDR);
     }
 
     if (L4_Size(fpage) > size)
     {
-        vms$fpage_free_chunk(alloc, L4_Address(fpage) + size,
-                vms$fp_end(fpage));
+        sys$fpage_free_chunk(alloc, L4_Address(fpage) + size,
+                sys$fp_end(fpage));
     }
 
     return(L4_Address(fpage));
 }
 
 static void
-vms$fpage_free_extra(struct fpage_alloc *alloc, L4_Fpage_t fpage,
+sys$fpage_free_extra(struct fpage_alloc *alloc, L4_Fpage_t fpage,
         vms$pointer base, vms$pointer end)
 {
     if (L4_Address(fpage) < base)
     {
-        vms$fpage_free_chunk(alloc, L4_Address(fpage), base - 1);
+        sys$fpage_free_chunk(alloc, L4_Address(fpage), base - 1);
     }
 
     if (L4_Address(fpage) + (L4_Size(fpage) - 1) > end)
     {
-        vms$fpage_free_chunk(alloc, end + 1, vms$fp_end(fpage));
+        sys$fpage_free_chunk(alloc, end + 1, sys$fp_end(fpage));
     }
 
     return;
 }
 
 void
-vms$fpage_remove_chunk(struct fpage_alloc *alloc, vms$pointer base,
+sys$fpage_remove_chunk(struct fpage_alloc *alloc, vms$pointer base,
         vms$pointer end)
 {
     L4_Fpage_t                  fpage;
@@ -426,8 +426,8 @@ vms$fpage_remove_chunk(struct fpage_alloc *alloc, vms$pointer base,
                 // any excess memory in the fpage.
                 fpage = node->fpage;
                 TAILQ_REMOVE(&alloc->flist[i], node, flist);
-                vms$slab_cache_free(&fp_cache, node);
-                vms$fpage_free_extra(alloc, fpage, base, end);
+                sys$slab_cache_free(&fp_cache, node);
+                sys$fpage_free_extra(alloc, fpage, base, end);
             }
         }
     }
@@ -438,7 +438,7 @@ vms$fpage_remove_chunk(struct fpage_alloc *alloc, vms$pointer base,
 // Following function is used to back memsections. It shall try to allocate
 // the largest fpages it can to back [base, end].
 struct flist_head
-vms$fpage_alloc_list(struct fpage_alloc *alloc, vms$pointer base,
+sys$fpage_alloc_list(struct fpage_alloc *alloc, vms$pointer base,
         vms$pointer end, vms$pointer pagesize)
 {
     struct flist_head           list = TAILQ_HEAD_INITIALIZER(list);
@@ -456,7 +456,7 @@ vms$fpage_alloc_list(struct fpage_alloc *alloc, vms$pointer base,
             return(list);
         }
 
-        fpage = vms$fpage_alloc(alloc, L4_Size(vms$biggest_fpage(base,
+        fpage = sys$fpage_alloc(alloc, L4_Size(sys$biggest_fpage(base,
                 base, end)));
 
         if (L4_IsNilFpage(fpage))
@@ -464,7 +464,7 @@ vms$fpage_alloc_list(struct fpage_alloc *alloc, vms$pointer base,
             goto out_of_memory;
         }
 
-        if ((node = (struct fpage_list *) vms$slab_cache_alloc(&fp_cache))
+        if ((node = (struct fpage_list *) sys$slab_cache_alloc(&fp_cache))
                 == NULL)
         {
             goto out_of_memory;
@@ -485,16 +485,16 @@ out_of_memory:
     {
         node = TAILQ_FIRST(&list);
         TAILQ_REMOVE(&list, node, flist);
-        vms$fpage_free_chunk(alloc, L4_Address(node->fpage),
-                vms$fp_end(node->fpage));
-        vms$slab_cache_free(&fp_cache, node);
+        sys$fpage_free_chunk(alloc, L4_Address(node->fpage),
+                sys$fp_end(node->fpage));
+        sys$slab_cache_free(&fp_cache, node);
     }
 
     return(list);
 }
 
 void
-vms$fpage_free_list(struct fpage_alloc *alloc, struct flist_head list)
+sys$fpage_free_list(struct fpage_alloc *alloc, struct flist_head list)
 {
     struct fpage_list           *node;
     struct fpage_list           *tmp;
@@ -502,29 +502,29 @@ vms$fpage_free_list(struct fpage_alloc *alloc, struct flist_head list)
     for(node = TAILQ_FIRST(&list); node != NULL ; node = tmp)
     {
         tmp = TAILQ_NEXT(node, flist);
-        vms$fpage_free_chunk(alloc, L4_Address(node->fpage),
-                vms$fp_end(node->fpage));
+        sys$fpage_free_chunk(alloc, L4_Address(node->fpage),
+                sys$fp_end(node->fpage));
         TAILQ_REMOVE(&list, node, flist);
-        vms$slab_cache_free(&fp_cache, node);
+        sys$slab_cache_free(&fp_cache, node);
     }
 
     return;
 }
 
 int
-vms$back_mem(vms$pointer base, vms$pointer end, vms$pointer pagesize)
+sys$back_mem(vms$pointer base, vms$pointer end, vms$pointer pagesize)
 {
     extern struct pd            freevms_pd;
 
     struct memsection           *ms;
     struct memsection           *backed;
 
-    ms = vms$objtable_lookup((void*)base);
+    ms = sys$objtable_lookup((void*)base);
     PANIC(!(ms && (ms->flags & VMS$MEM_USER)));
 
     while(base < end)
     {
-        backed = vms$pd_create_memsection(&freevms_pd, vms$min_pagesize(),
+        backed = sys$pd_create_memsection(&freevms_pd, vms$min_pagesize(),
                 0, VMS$MEM_NORMAL, pagesize);
 
         if (backed == NULL)
@@ -533,7 +533,7 @@ vms$back_mem(vms$pointer base, vms$pointer end, vms$pointer pagesize)
             return(-1);
         }
 
-        vms$memsection_page_map(ms, L4_Fpage(backed->base, vms$min_pagesize()),
+        sys$memsection_page_map(ms, L4_Fpage(backed->base, vms$min_pagesize()),
                 L4_Fpage(base, vms$min_pagesize()));
         base += vms$min_pagesize();
     }

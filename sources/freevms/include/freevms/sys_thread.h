@@ -158,9 +158,9 @@ struct bfl
 
 typedef struct bfl          *bfl_t;
 
-bfl_t jobctl$bfl_new(vms$pointer size);
-void jobctl$bfl_free(bfl_t rfl, vms$pointer val);
-vms$pointer jobctl$bfl_alloc(bfl_t rfl);
+bfl_t sys$bfl_new(vms$pointer size);
+void sys$bfl_free(bfl_t rfl, vms$pointer val);
+vms$pointer sys$bfl_alloc(bfl_t rfl);
 
 // Describes external address space
 
@@ -270,10 +270,10 @@ typedef struct ll           *rfl_t;
 #define E_RFL_OVERLAP -2
 #define E_RFL_NOMEM -3
 
-vms$pointer jobctl$rfl_alloc(rfl_t rfl);
-rfl_t jobctl$rfl_new(void);
-int jobctl$rfl_free(rfl_t rfl, vms$pointer val);
-int jobctl$rfl_insert_range(rfl_t rfl, vms$pointer from, vms$pointer to);
+vms$pointer sys$rfl_alloc(rfl_t rfl);
+rfl_t sys$rfl_new(void);
+int sys$rfl_free(rfl_t rfl, vms$pointer val);
+int sys$rfl_insert_range(rfl_t rfl, vms$pointer from, vms$pointer to);
 
 struct hashtable
 {
@@ -294,21 +294,21 @@ int hash_insert(struct hashtable *tablestruct, vms$pointer key, void *value);
 void *hash_lookup(struct hashtable *tablestruct, vms$pointer key);
 void hash_remove(struct hashtable *tablestruct, vms$pointer key);
 
-struct memsection *vms$pd_create_memsection(struct pd *self, vms$pointer size,
+struct memsection *sys$pd_create_memsection(struct pd *self, vms$pointer size,
         vms$pointer base, unsigned int flags, vms$pointer pagesize);
 
-void jobctl$utcb_init(L4_KernelInterfacePage_t *kip);
-vms$pointer jobctl$pd_add_clist(struct pd* self, cap_t *clist);
-struct pd *jobctl$pd_create(struct pd *self, int max_threads,
+void sys$utcb_init(L4_KernelInterfacePage_t *kip);
+vms$pointer sys$pd_add_clist(struct pd* self, cap_t *clist);
+struct pd *sys$pd_create(struct pd *self, int max_threads,
         vms$pointer pagesize);
-void jobctl$pd_init(struct vms$meminfo *meminfo);
-struct thread *jobctl$pd_create_thread(struct pd* self, int priority);
-void jobctl$thread_delete(struct thread *thread);
-void jobctl$thread_init(L4_KernelInterfacePage_t *kip);
-struct thread *jobctl$thread_lookup(L4_ThreadId_t thread);
-int jobctl$thread_start(struct thread *self, vms$pointer ip,
+void sys$pd_init(struct vms$meminfo *meminfo);
+struct thread *sys$pd_create_thread(struct pd* self, int priority);
+void sys$thread_delete(struct thread *thread);
+void sys$thread_init(L4_KernelInterfacePage_t *kip);
+struct thread *sys$thread_lookup(L4_ThreadId_t thread);
+int sys$thread_start(struct thread *self, vms$pointer ip,
         vms$pointer sp);
 
-void jobctl$session_delete(struct session *session);
+void sys$session_delete(struct session *session);
 
-vms$pointer jobctl$threadno(vms$pointer l4_threadno);
+vms$pointer sys$threadno(vms$pointer l4_threadno);
