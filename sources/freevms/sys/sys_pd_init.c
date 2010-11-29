@@ -31,7 +31,7 @@ L4_Fpage_t              kip_area;
 static L4_Word_t        max_threadno;
 static L4_Word_t        min_threadno;
 
-#define JOBCTL$THREAD_PD_HASHSIZE   1024
+#define JOBCTL$THREAD_PD_HASHSIZE   4096
 struct hashtable        *l4tid_to_thread;
 
 void

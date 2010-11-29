@@ -46,7 +46,9 @@ OBJ_SYS=\
     $(DESTDIR)/sys/sys_thread.o
 
 OBJ_LIBRTL=\
-	$(DESTDIR)/librtl/rtl_print.o
+	$(DESTDIR)/librtl/rtl_print.o \
+	$(DESTDIR)/librtl/rtl_sprint.o \
+	$(DESTDIR)/librtl/rtl_str.o
 
 OBJ_INIT=\
 	$(DESTDIR)/init/init.o
@@ -98,6 +100,7 @@ $(DESTDIR)/pager.sys: $(OBJ_PAGER) $(DESTDIR)/librtl/librtl.a
 	@echo  [LD] $@
 	@ld -emain -N -L$(DESTDIR)/../kernel/build/lib/l4\
 	   		$+ -nostdlib -T linker/elf_x86_64_pager -ll4 -static -o $@
+
 directories:
 	mkdir -p $(DESTDIR)/drv
 	mkdir -p $(DESTDIR)/init

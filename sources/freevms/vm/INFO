@@ -1,0 +1,4 @@
+12 MB structures / GB pour la gestion des pages
+
+-> vms$alloc() et vms$free()œ[doivent utiliser morecore du noyau]
+-> rtl$alloc() et rtl$free() [doivent utiliser morecore du pager]

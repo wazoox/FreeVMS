@@ -84,6 +84,8 @@ image:
 	cp -f build/freevms/vmskernel.sys ../mnt/boot
 	cp -f build/freevms/pager.sys ../mnt/boot
 	cp -f build/freevms/init.exe ../mnt/boot
+	sync
+	qemu-img convert -O vdi ../freevms.img ../freevms.vdi
 
 userland:
 	@echo "Nothing to do, but you can write it ;-)"

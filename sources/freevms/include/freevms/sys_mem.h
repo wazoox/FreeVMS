@@ -175,21 +175,6 @@ struct memsection_node
     struct memsection           data;
 };
 
-struct mapped_page
-{       
-    L4_Fpage_t                  phys;
-    L4_Fpage_t                  virt;
-
-    struct pd                   *owner;
-
-    vms$pointer                 flags; // VMS$MAPPED | VMS$SWAPPED
-					    
-    TAILQ_ENTRY(mapped_pages)   list;
-};
-
-#define VMS$MAPPED				1
-#define VMS$SWAPPED				2
-
 #define VMS$FPAGE_PERM_READ     1
 #define VMS$FPAGE_PERM_WRITE    2
 #define VMS$FPAGE_PERM_EXECUTE  4

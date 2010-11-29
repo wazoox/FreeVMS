@@ -33,9 +33,9 @@ struct memsection_list internal_memsections =
 void
 sys$initmem(vms$pointer zone, vms$pointer len)
 {
-    volatile unsigned char      *ptr;
+    unsigned char		*ptr;
 
-    ptr = (volatile unsigned char *) zone;
+    ptr = (unsigned char *) zone;
     while(len > 0)
     {
         (*ptr) = (unsigned char) 0x0;

@@ -258,7 +258,7 @@ int __l4_vsnprintf(char *str, L4_Size_t size, const char *fmt, va_list ap)
 	case 'o':
 	    uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
 	    base = 8;
-	    digits = "012345678";
+	    digits = "01234567";
 	    goto Print_unsigned;
 
 	case 'p':

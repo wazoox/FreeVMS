@@ -122,6 +122,7 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
 
     // Setup the stack (16 bytes alignment)
     user_stack = (vms$pointer *) sys$page_round_down(stack->end + 1, 16);
+	notice("user stack %lx\n", user_stack);
 
     if (sys$back_mem(heap->base, heap->base + (12 * sizeof(vms$pointer)),
             pagesize) != 0)

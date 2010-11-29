@@ -24,4 +24,10 @@
 int
 main(int argc, char **argv)
 {
+    vms$string_initializer(message, 80);
+	rtl$strcpy(&message, "PAGER.SYS process started");
+
+    rtl$print(&message, NULL);
+
+	for(;;);
 }

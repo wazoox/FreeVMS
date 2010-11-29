@@ -21,33 +21,30 @@
 
 #include "freevms/freevms.h"
 
-int
-rtl$print(const char *fmt, int size, ...)
+void
+rtl$print(struct vms$string *fmt, void **arg)
 {
-    char                str[1024];
+	vms$string_initializer(str, 1024);
 
     L4_Msg_t            msg;
     L4_StringItem_t     si;
 
-    va_list     ap;
-
     if (fmt == NULL)
     {
-        return(0);
+        return;
     }
 
-    va_start(ap, size);
-    //vsnprintf(str, size, fmt, ap);
-    va_end(ap);
-
-    si = L4_StringItem(1024, (void *) str);
+    rtl$sprint(&str, fmt, arg);
+    si = L4_StringItem(str.length_trim, (void *) str.c);
 
     L4_Clear(&msg);
     L4_Append(&msg, si);
     L4_Set_Label(&msg, 1);
     L4_Load(&msg);
 
+	L4_KDB_Enter("pager");
     L4_Call(L4_Pager());
+	L4_KDB_Enter("pager");
 
-    return(0);
+    return;
 }

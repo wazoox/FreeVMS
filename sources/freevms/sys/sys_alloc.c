@@ -519,23 +519,24 @@ sys$back_mem(vms$pointer base, vms$pointer end, vms$pointer pagesize)
     struct memsection           *ms;
     struct memsection           *backed;
 
-    ms = sys$objtable_lookup((void*)base);
+    ms = sys$objtable_lookup((void*) base);
     PANIC(!(ms && (ms->flags & VMS$MEM_USER)));
 
     while(base < end)
     {
-        backed = sys$pd_create_memsection(&freevms_pd, vms$min_pagesize(),
+        backed = sys$pd_create_memsection(&freevms_pd, pagesize,
                 0, VMS$MEM_NORMAL, pagesize);
 
         if (backed == NULL)
         {
             // FIXME: clean up the partially backed region
+			FIXME;
             return(-1);
         }
 
-        sys$memsection_page_map(ms, L4_Fpage(backed->base, vms$min_pagesize()),
-                L4_Fpage(base, vms$min_pagesize()));
-        base += vms$min_pagesize();
+        sys$memsection_page_map(ms, L4_Fpage(backed->base, pagesize),
+                L4_Fpage(base, pagesize));
+        base += pagesize;
     }
 
     return(0);

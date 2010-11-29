@@ -32,4 +32,6 @@
 
 #define INIT_F_NOTFOUND     "%%INIT-F-NOTFOUND, "
 
-#define PAGER_F_NOTFOUND     "%%PAGER-F-NOTFOUND, "
+#define PAGER_F_NOTFOUND    "%%PAGER-F-NOTFOUND, "
+
+#define SYS_F_HEAP			"%%SYS-F-HEAP, "

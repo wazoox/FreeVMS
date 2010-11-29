@@ -21,6 +21,21 @@
 
 #include "freevms/freevms.h"
 
+struct mapped_page
+{       
+    L4_Fpage_t                  phys;
+    L4_Fpage_t                  virt;
+
+    struct pd                   *owner;
+
+    vms$pointer                 flags; // VMS$MAPPED | VMS$SWAPPED
+					    
+    TAILQ_ENTRY(mapped_pages)   list;
+};
+
+#define VMS$MAPPED				1
+#define VMS$SWAPPED				2
+
 void vms$pagefault_init();
 void vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
 		vms$pointer tag);

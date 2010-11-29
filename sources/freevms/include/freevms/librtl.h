@@ -21,18 +21,27 @@
 
 // string descriptor
 
-#define vms$string(s, l) \
-struct vms$string \
-{ \
-    vms$pointer             length; \
-    vms$pointer             length_trim; \
-    unsigned char           c[l]; \
-} s; s.length = l; s.length_trim = 0
+struct vms$string
+{
+    vms$pointer             length;
+    vms$pointer             length_trim;
+    unsigned char 	        *c;
+};
 
-int str$cmp(struct vms$string, struct vms$string);
-int str$cpy(struct vms$string, struct vms$string);
-int str$cpy(struct vms$string, const unsigned char *s);
+#define vms$string_initializer(s, l) \
+	struct vms$string s;						\
+	unsigned char static_##s[l];				\
+	s.length = l;								\
+	s.length_trim = 0;							\
+	s.c = &(static_##s[0])
+
+int rtl$strcmp(struct vms$string *s1, struct vms$string *s2);
+void rtl$strcpy(struct vms$string *s1, struct vms$string *s2);
+void rtl$strcpy(struct vms$string *s1, const char *s2);
+
+// FIXME
 int str$len(struct vms$string, struct vms$string);
 int str$lentrim(struct vms$string, struct vms$string);
 
-int rtl$print(const char *fmt, int size, ...);
+void rtl$print(struct vms$string *fmt, void **arg);
+void rtl$sprint(struct vms$string *str, struct vms$string *fmt, void **arg);

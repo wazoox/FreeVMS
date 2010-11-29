@@ -19,13 +19,45 @@
 ================================================================================
 */
 
-int
+#include "freevms/freevms.h"
+
+void
 rtl$strcmp()
 {
 }
 
-void
-rtl$strcpy()
+static vms$pointer
+rtl$strcpy(unsigned char *dest, const char *src, vms$pointer size)
 {
+	vms$pointer				length;
+
+	length = 0;
+
+	while(*src)
+	{
+		*dest++ = *src++;
+
+		if (length == size)
+		{
+			return(length);
+		}
+
+		length++;
+	}
+
+	return(length);
+}
+
+void
+rtl$strcpy(struct vms$string *str_dest, struct vms$string *str_src)
+{
+    return;
+}
+
+void
+rtl$strcpy(struct vms$string *str_dest, const char *src)
+{
+	str_dest->length_trim = rtl$strcpy(str_dest->c, src,
+			str_dest->length);
     return;
 }

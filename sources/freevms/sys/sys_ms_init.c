@@ -594,7 +594,7 @@ sys$bootstrap(struct vms$meminfo *mem_info, vms$pointer pagesize)
     heap = sys$pd_create_memsection((struct pd *) NULL, VMS$HEAP_SIZE, 0,
             VMS$MEM_NORMAL | VMS$MEM_USER, pagesize);
 
-    PANIC(heap == NULL);
+    PANIC(heap == NULL, notice(SYS_F_HEAP "cannot allocate kernel heap\n"));
 
     sys$alloc_init(heap->base, heap->end);
     return;
