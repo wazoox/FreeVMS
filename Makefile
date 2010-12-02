@@ -22,12 +22,13 @@ all:
 	@echo "make userland           : build userland"
 	@echo "make image              : install system in ../mnt (loop device)"
 	@echo "make convert            : convert tabs"
+	@echo "make start-vb           : start VirtualBox"
 	@echo
 	@echo "To build FreeVMS, run kernelconfig, kernel, bootstrap, freevms "
 	@echo "and userland."
 
 clean:
-	@rm -rf $(BUILDDIR)œ
+	rm -rf $(BUILDDIR)
 
 kernelconfig:
 	@rm -rf $(BUILDDIR)/pal
@@ -44,9 +45,9 @@ $(SRCDIR)/kernel/config.h.in:
 $(BUILDDIR)/kernel/Makefile: Makefile
 	@mkdir -p $(BUILDDIR)/kernel
 	@(cd $(BUILDDIR)/kernel && $(SRCDIR)/kernel/configure \
-			--with-kickstart-linkbase=0x00020000 \
-			--with-s0-linkbase=0x00040000 \
-			--with-roottask-linkbase=0x01000000 \
+			--with-kickstart-linkbase=0x00100000 \
+			--with-s0-linkbase=0x00080000 \
+			--with-roottask-linkbase=0x00200000 \
 			--prefix=$(BUILDDIR)/kernel/build)
 
 $(BUILDDIR)/bootloader/Makefile: Makefile
@@ -63,32 +64,49 @@ bootstrap: $(SRCDIR)/kernel/config.h.in $(BUILDDIR)/kernel/Makefile \
 	@make -C $(BUILDDIR)/kernel
 	@make -C $(BUILDDIR)/bootloader
 
-bootstrap-install: freevms
+bootstrap-install:
 	@make -C $(BUILDDIR)/kernel install
 
 freevms-clean:
 	@make -C $(SRCDIR)/freevms clean
 
-freevms:
+freevms: bootstrap-install
 	@make -C $(SRCDIR)/freevms
 
-image:
+build/freevms/vmskernel.sys build/freevms/pager.sys build/freevms/init.exe: \
+		freevms
+
+image: build/freevms/vmskernel.sys \
+		build/freevms/pager.sys \
+		build/freevms/init.exe
 	mkdir -p ../mnt/boot/grub
 	cp -f build/bootloader/stage1/stage1 ../mnt/boot/grub
 	cp -f build/bootloader/stage2/stage2 ../mnt/boot/grub
 	cp -f build/bootloader/stage2/stage2_eltorito ../mnt/boot/grub
 	cp -f build/bootloader/stage2/*stage1_5 ../mnt/boot/grub
-	cp -f build/pal/x86-kernel ../mnt/boot
-	cp -f build/kernel/build/libexec/l4/sigma0 ../mnt/boot
+	cp -f build/pal/x86-kernel ../mnt/boot/
+	cp -f build/kernel/util/kickstart/kickstart ../mnt/boot/
+	cp -f build/kernel/build/libexec/l4/sigma0 ../mnt/boot/
 	cp -f build/kernel/build/lib/l4/* ../mnt
 	cp -f build/freevms/vmskernel.sys ../mnt/boot
 	cp -f build/freevms/pager.sys ../mnt/boot
 	cp -f build/freevms/init.exe ../mnt/boot
-	sync
-	qemu-img convert -O vdi ../freevms.img ../freevms.vdi
 
 userland:
 	@echo "Nothing to do, but you can write it ;-)"
 
 convert:
 	find sources/freevms -name "*.[chS]" -exec ./converttab {} \;
+
+../frevms.vdi: ../freevms.img
+	sync
+	qemu-img convert -O vdi ../freevms.img ../freevms.vdi
+
+start-vb: ../freevms.vdi
+	@VBoxManage storageattach FreeVMS --storagectl 'Contrôleur IDE' \
+			--port 0 --device 0 --medium none
+	@VBoxManage closemedium disk /home/bertrand/openvms/freevms.vdi
+	@VBoxManage storageattach FreeVMS --storagectl 'Contrôleur IDE' \
+			--port 0 --device 0 --medium /home/bertrand/openvms/freevms.vdi \
+			--type hdd
+	@VBoxManage startvm FreeVMS

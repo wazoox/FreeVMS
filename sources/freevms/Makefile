@@ -1,7 +1,8 @@
 DESTDIR=../../build/freevms
 
 CFLAGS=-Wall -fno-stack-protector -nostdinc -O2 -g -Wall -Wshadow \
-		-Wconversion  -Wno-conversion -fno-exceptions -fno-omit-frame-pointer
+		-Wconversion  -Wno-conversion -fno-exceptions -fno-omit-frame-pointer \
+		-mcmodel=large -m64
 
 GCC_TARGET=$(shell gcc -dumpmachine)
 GCC_VERSION=$(shell gcc -dumpversion)

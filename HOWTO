@@ -1,0 +1,120 @@
+================================================================================
+  Build process
+================================================================================
+
+	make kernelconfig
+	-> and configure kernel for example with kernelconfig.example options
+	make kernel
+
+	At this point, microkernel is built
+
+	make bootstrap
+	make bootstrap-install
+
+	Now, you have built bootstrap code (multiboot info code and required
+	sigma0).
+
+	make freevms
+
+	All FreeVMS kernel parts are build. If you have a image disk mounted in
+	../mnt, you can install all files with:
+
+	make image
+
+================================================================================
+  Build image
+================================================================================
+
+	FreeVMS requires a partitionned disk image and a modified grub that
+	handle ODS2, EXT2 and multiboot information. To build a disk image,
+	run the following instructions:
+
+	Initialize an empty disk image with dd (for example a 80 MB hard disk)
+
+Root cauchy:[/home/bertrand/openvms] > qemu-img create -f raw image.img 80M
+Formatting 'image.img', fmt=raw size=83886080
+Root cauchy:[/home/bertrand/openvms] > sfdisk -D image.img << EOF
+> ,,L,*
+> ;
+> ;
+> ;
+> EOF
+Warning: image.img is not a block device
+Disk image.img: cannot get geometry
+
+Disk image.img: 10 cylinders, 255 heads, 63 sectors/track
+Old situation:
+Units = cylinders of 8225280 bytes, blocks of 1024 bytes, counting from 0
+
+   Device Boot Start     End   #cyls    #blocks   Id  System
+image.img1          0       -       0          0    0  Empty
+image.img2          0       -       0          0    0  Empty
+image.img3          0       -       0          0    0  Empty
+image.img4          0       -       0          0    0  Empty
+New situation:
+Units = cylinders of 8225280 bytes, blocks of 1024 bytes, counting from 0
+
+   Device Boot Start     End   #cyls    #blocks   Id  System
+image.img1   *      0+      9      10-     80293+  83  Linux
+image.img2          0       -       0          0    0  Empty
+image.img3          0       -       0          0    0  Empty
+image.img4          0       -       0          0    0  Empty
+Successfully wrote the new partition table
+
+Re-reading the partition table ...
+BLKRRPART: Ioctl() inappropré pour un périphérique
+
+If you created or changed a DOS partition, /dev/foo7, say, then use dd(1)
+to zero the first 512 bytes:  dd if=/dev/zero of=/dev/foo7 bs=512 count=1
+(See fdisk(8).)
+Root cauchy:[/home/bertrand/openvms] > 
+
+	Now, we're going to mount this disk image.
+
+Root cauchy:[/home/bertrand/openvms] > fdisk -l image.img
+You must set cylinders.
+You can do this from the extra functions menu.
+
+Disk image.img: 0 MB, 0 bytes
+255 heads, 63 sectors/track, 0 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x62e92de4
+
+    Device Boot      Start         End      Blocks   Id  System
+image.img1   *           1          10       80293+  83  Linux
+Root cauchy:[/home/bertrand/openvms] > 
+
+	First partition begin at 1*63*512 (start cylinder * sector per track *
+sector size).
+
+Root cauchy:[/home/bertrand/openvms] > losetup -o $((63*512)) /dev/loop0 \
+		image.img
+Root cauchy:[/home/bertrand/openvms] > mkfs.ext2 /dev/loop0
+Root cauchy:[/home/bertrand/openvms] > mount /dev/loop0 mnt
+
+	Now, you only have to install grub on boot record:
+
+grub --batch << EOF
+device (hd0) image.img
+root (hd0,0)
+setup --prefix=/local/grub (hd0)
+quit
+EOF
+
+	That's all, folks !
+
+================================================================================
+  Qemu
+================================================================================
+
+	Start qemu with:
+	qemu-system-x86_64 -hdc freevms.img -smp 1 -serial stdio -m 128M -k fr
+
+================================================================================
+  VirtualBox
+================================================================================
+
+	Makefile contains some rules to build a virtualbox image from qemu's one.
+	Check start-vb.

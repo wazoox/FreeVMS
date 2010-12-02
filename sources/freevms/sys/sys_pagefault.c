@@ -45,7 +45,7 @@ sys$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
     priv = (tag & 0xf0000) >> 16;
 
     // Find memory section it belongs too
-notice("sys$pagefault(addr=%lx caller=%lx)\n", addr, caller);
+notice("sys$pagefault(addr=%lx caller=%lx ip=%lx)\n", addr, caller, ip);
     if ((memsection = sys$objtable_lookup((void *) addr)) == NULL)
     {
         notice(MEM_F_MEMSEC "no memory section\n");

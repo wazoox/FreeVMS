@@ -21,11 +21,6 @@
 
 #include "freevms/freevms.h"
 
-// elf charge un exécutable à l'adresse virtuelle $100000000000 (512 Mo)
-// L'adresse de base d'un exécutable est de $1000000000. Il est
-// chargé par cette fonction. La mémoire basse est réservée au noyau.
-// Utiliser un grantitem pour mapper l'exécutable
-//
 // If thread != NULL, image is granted to new address space.
 
 vms$pointer
@@ -45,6 +40,7 @@ sys$elf_loader(struct thread *thread, vms$pointer start, vms$pointer end,
     vms$pointer         src_end;
     vms$pointer         src_start;
 
+	// ELF header
     eh = (ehdr_t *) start;
 
     PANIC((eh->type != 2) || (eh->phoff == 0),
@@ -52,6 +48,7 @@ sys$elf_loader(struct thread *thread, vms$pointer start, vms$pointer end,
 
     for(i = 0; i < eh->phnum; i++)
     {
+		// Program header
         ph = (phdr_t*) (start + eh->phoff + (eh->phentsize * i));
 
         if (ph->msize < ph->fsize)
@@ -71,13 +68,42 @@ sys$elf_loader(struct thread *thread, vms$pointer start, vms$pointer end,
 			base = sys$page_round_down(dst_start, vms$min_pagesize());
 			size = (sys$page_round_up(dst_end, vms$min_pagesize()) - base);
 
+for(char * j = (char *) src_start;
+		j < (char *) (src_start + size);)
+{
+	notice("%016lx -> ", (vms$pointer) j);
+	char *l = j;
+	char *k = j+16; for(; j < k; j++) notice("%02lx ", (unsigned char) *j);
+	notice("\n");
+	j = l;
+	k = j+16; for(; j < k; j++) notice("%c", (unsigned char) *j);
+	notice("\n");
+}
             memsection = sys$pd_create_memsection(thread->owner, size, base,
                     VMS$MEM_FIXED, vms$min_pagesize());
             clist[(*pos)++] = sec$create_capability((vms$pointer)
                     memsection, CAP$MEMSECTION);
             sys$memcopy(dst_start, src_start, ph->fsize);
-            sys$initmem(dst_start + ph->fsize, ph->msize - ph->fsize);
+for(char * j = (char *) dst_start;
+		j < (char *) (dst_start + size);)
+{
+	notice("%016lx -> ", (vms$pointer) j);
+	char *l = j;
+	char *k = j+16; for(; j < k; j++) notice("%02lx ", (unsigned char) *j);
+	notice("\n");
+	j = l;
+	k = j+16; for(; j < k; j++) notice("%c", (unsigned char) *j);
+	notice("\n");
+}
         }
+		else
+		{
+			src_start = start + ph->offset;
+			src_end = src_start + ph->msize;
+			dst_start = ph->paddr;
+			dst_end = dst_start + ph->msize;
+notice("%lx %lx %lx %lx\n", src_start, src_end, dst_start, dst_end);
+		}
     }
 
     return(eh->entry);

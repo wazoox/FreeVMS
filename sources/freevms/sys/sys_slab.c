@@ -36,6 +36,7 @@ sys$initmem(vms$pointer zone, vms$pointer len)
     unsigned char		*ptr;
 
     ptr = (unsigned char *) zone;
+
     while(len > 0)
     {
         (*ptr) = (unsigned char) 0x0;
@@ -274,7 +275,6 @@ sys$slab_cache_alloc(struct slab_cache *sc)
 
     slab = TAILQ_FIRST(&pool->slabs);
     TAILQ_REMOVE(&pool->slabs, TAILQ_FIRST(&pool->slabs), slabs);
-    sys$initmem((vms$pointer) slab, sc->slab_size);
 
     return(slab);
 }

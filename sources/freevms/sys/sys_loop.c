@@ -31,6 +31,9 @@ sys$loop()
     L4_Msg_t                msg;
 
     running = 1;
+
+	L4_Accept(L4_MapGrantItems(L4_CompleteAddressSpace)
+			+ L4_StringItemsAcceptor);
     tag = L4_Wait(&partner);
 
     while(running)
@@ -38,6 +41,7 @@ sys$loop()
         L4_Clear(&msg);
         L4_Store(tag, &msg);
 
+		notice("IPC!\n");
         if ((tag.raw & L4_REQUEST_MASK) == L4_PAGEFAULT)
         {
             sys$pagefault(partner, L4_Get(&msg, 0), L4_Get(&msg, 1),
