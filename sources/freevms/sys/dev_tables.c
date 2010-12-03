@@ -47,7 +47,7 @@ dev$init(void)
 
     unsigned int            i;
 
-    notice(DEV_I_TREE "initializing devices tree\n");
+    notice(DEV_I_INIT "initializing devices tree\n");
 
     for(i = 0; i < SIZE_OF_DEVICE_ALPHABET; indirection[i++] = 0);
 

@@ -44,16 +44,16 @@ get_hex(void)
       switch(c)
       {
       case '0' ... '9':
-	  c -= '0';
-	  break;
-	  
+      c -= '0';
+      break;
+      
       case 'a' ... 'f':
-	  c -= 'a' - 'A';
+      c -= 'a' - 'A';
       case 'A' ... 'F':
-	  c = c - 'A' + 10;
-	  break;
+      c = c - 'A' + 10;
+      break;
       default:
-	  continue;
+      continue;
       };
       val <<= 4;
       val += c;
@@ -62,7 +62,7 @@ get_hex(void)
       putc(t);
 
       if (++i == 8)
-	  break;
+      break;
   };
   return val;
 }

@@ -32,15 +32,15 @@ sys$elf_loader(struct thread *thread, vms$pointer start, vms$pointer end,
 
     struct memsection   *memsection;
 
-	vms$pointer			base;
+    vms$pointer         base;
     vms$pointer         dst_end;
     vms$pointer         dst_start;
     vms$pointer         i;
-	vms$pointer			size;
+    vms$pointer         size;
     vms$pointer         src_end;
     vms$pointer         src_start;
 
-	// ELF header
+    // ELF header
     eh = (ehdr_t *) start;
 
     PANIC((eh->type != 2) || (eh->phoff == 0),
@@ -48,7 +48,7 @@ sys$elf_loader(struct thread *thread, vms$pointer start, vms$pointer end,
 
     for(i = 0; i < eh->phnum; i++)
     {
-		// Program header
+        // Program header
         ph = (phdr_t*) (start + eh->phoff + (eh->phentsize * i));
 
         if (ph->msize < ph->fsize)
@@ -65,16 +65,16 @@ sys$elf_loader(struct thread *thread, vms$pointer start, vms$pointer end,
 
             // Allocating aligned memory
 
-			base = sys$page_round_down(dst_start, vms$min_pagesize());
-			size = (sys$page_round_up(dst_end, vms$min_pagesize()) - base);
+            base = sys$page_round_down(dst_start, vms$min_pagesize());
+            size = (sys$page_round_up(dst_end, vms$min_pagesize()) - base);
 
             memsection = sys$pd_create_memsection(thread->owner, size, base,
                     VMS$MEM_FIXED, vms$min_pagesize());
             clist[(*pos)++] = sec$create_capability((vms$pointer)
                     memsection, CAP$MEMSECTION);
-			// Copy executable section
+            // Copy executable section
             sys$memcopy(dst_start, src_start, ph->fsize);
-			sys$initmem(dst_start + ph->fsize + 1, ph->msize - ph->fsize);
+            sys$initmem(dst_start + ph->fsize + 1, ph->msize - ph->fsize);
         }
     }
 

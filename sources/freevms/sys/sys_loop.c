@@ -27,14 +27,14 @@ sys$loop()
     int                     running;
 
     L4_ThreadId_t           partner;
-	L4_MsgBuffer_t			buffer;
+    L4_MsgBuffer_t          buffer;
     L4_MsgTag_t             tag;
     L4_Msg_t                msg;
 
     running = 1;
 
-	L4_Accept(L4_MapGrantItems(L4_CompleteAddressSpace)
-			+ L4_StringItemsAcceptor);
+    L4_Accept(L4_MapGrantItems(L4_CompleteAddressSpace)
+            + L4_StringItemsAcceptor);
     tag = L4_Wait(&partner);
 
     while(running)
@@ -49,24 +49,22 @@ sys$loop()
         }
         else
         {
-			notice("Label from $%016lX: %d (%016lX)\n", partner,
-					L4_Label(tag), tag.raw);
+            switch(L4_Label(tag))
+            {
+                case CALL$PRINT:
+                    L4_StringItem_t     si;
 
-			switch(L4_Label(tag))
-			{
-				case CALL$PRINT:
-					L4_StringItem_t		si;
+                    L4_Clear(&buffer);
+                    L4_Get(&msg, 1, &si);
+                    L4_Clear(&buffer);
+                    L4_Append(&buffer, si);
+                    break;
 
-					L4_Clear(&buffer);
-					L4_Get(&msg, 1, &si);
-					L4_Clear(&buffer);
-					L4_Append(&buffer, si);
-					break;
-
-				default:
-					PANIC(1, notice(IPC_F_UNKNOWN "unknown IPC: $%016lX\n",
-							tag.raw));
-			}
+                default:
+                    PANIC(1, notice(IPC_F_UNKNOWN "unknown IPC from $%lX "
+                            "with label $%lX\n", L4_ThreadNo(partner),
+                            L4_Label(tag)));
+            }
         }
 
         tag = L4_ReplyWait(partner, &partner);

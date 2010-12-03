@@ -29,23 +29,23 @@ rtl$strcmp()
 static vms$pointer
 rtl$strcpy(unsigned char *dest, const char *src, vms$pointer size)
 {
-	vms$pointer				length;
+    vms$pointer             length;
 
-	length = 0;
+    length = 0;
 
-	while(*src)
-	{
-		*dest++ = *src++;
+    while(*src)
+    {
+        *dest++ = *src++;
 
-		if (length == size)
-		{
-			return(length);
-		}
+        if (length == size)
+        {
+            return(length);
+        }
 
-		length++;
-	}
+        length++;
+    }
 
-	return(length);
+    return(length);
 }
 
 void
@@ -57,7 +57,7 @@ rtl$strcpy(struct vms$string *str_dest, struct vms$string *str_src)
 void
 rtl$strcpy(struct vms$string *str_dest, const char *src)
 {
-	str_dest->length_trim = rtl$strcpy(str_dest->c, src,
-			str_dest->length);
+    str_dest->length_trim = rtl$strcpy(str_dest->c, src,
+            str_dest->length);
     return;
 }

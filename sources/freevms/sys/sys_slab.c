@@ -33,7 +33,7 @@ struct memsection_list internal_memsections =
 void
 sys$initmem(vms$pointer zone, vms$pointer len)
 {
-    unsigned char		*ptr;
+    unsigned char       *ptr;
 
     ptr = (unsigned char *) zone;
 

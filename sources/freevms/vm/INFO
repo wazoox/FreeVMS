@@ -2,3 +2,4 @@
 
 -> vms$alloc() et vms$free()œ[doivent utiliser morecore du noyau]
 -> rtl$alloc() et rtl$free() [doivent utiliser morecore du pager]
+gcc -MM -MD

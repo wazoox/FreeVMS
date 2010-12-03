@@ -24,7 +24,7 @@
 void
 rtl$print(struct vms$string *fmt, void **arg)
 {
-	vms$string_initializer(str, 1024);
+    vms$string_initializer(str, 1024);
 
     L4_Msg_t            msg;
     L4_StringItem_t     si;

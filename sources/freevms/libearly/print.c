@@ -85,7 +85,7 @@ int __l4_putchar (int c)
 static void print_string (const char * s)
 {
     while ( *s )
-	putc(*s++);
+    putc(*s++);
 }
 
 
@@ -113,44 +113,44 @@ int __l4_vsnprintf(char *str, L4_Size_t size, const char *fmt, va_list ap)
     char *string, *p = str;
     L4_ThreadId_t tid;
 
-#define PUTCH(ch) do {			\
-	if ( size-- <= 0 )		\
-	    goto Done;			\
-	*p++ = (ch);			\
+#define PUTCH(ch) do {          \
+    if ( size-- <= 0 )      \
+        goto Done;          \
+    *p++ = (ch);            \
     } while (0)
 
-#define PUTSTR(st) do {			\
-	const char *s = (st);		\
-	while ( *s != '\0' ) {		\
-	    if ( size-- <= 0 )	\
-		goto Done;		\
-	    *p++ = *s++;		\
-	}				\
+#define PUTSTR(st) do {         \
+    const char *s = (st);       \
+    while ( *s != '\0' ) {      \
+        if ( size-- <= 0 )  \
+        goto Done;      \
+        *p++ = *s++;        \
+    }               \
     } while (0)
 
-#define PUTDEC(num) do {					\
-	uval = num;						\
-	numdigits = 0;						\
-	do {							\
-	    convert[ numdigits++ ] = digits[ uval % 10 ];	\
-	    uval /= 10;						\
-	} while ( uval > 0 );					\
-	while ( numdigits > 0 )					\
-	    PUTCH( convert[--numdigits] );			\
+#define PUTDEC(num) do {                    \
+    uval = num;                     \
+    numdigits = 0;                      \
+    do {                            \
+        convert[ numdigits++ ] = digits[ uval % 10 ];   \
+        uval /= 10;                     \
+    } while ( uval > 0 );                   \
+    while ( numdigits > 0 )                 \
+        PUTCH( convert[--numdigits] );          \
     } while (0)
 
-#define LEFTPAD(num) do {				\
-	int cnt = (num);				\
-	if ( ! f_left && cnt > 0 )			\
-	    while ( cnt-- > 0 )				\
-		PUTCH( f_zero ? '0' : ' ' );		\
+#define LEFTPAD(num) do {               \
+    int cnt = (num);                \
+    if ( ! f_left && cnt > 0 )          \
+        while ( cnt-- > 0 )             \
+        PUTCH( f_zero ? '0' : ' ' );        \
     } while (0)
 
-#define RIGHTPAD(num) do {				\
-	int cnt = (num);				\
-	if ( f_left && cnt > 0 )			\
-	    while ( cnt-- > 0 )				\
-		PUTCH( ' ' );				\
+#define RIGHTPAD(num) do {              \
+    int cnt = (num);                \
+    if ( f_left && cnt > 0 )            \
+        while ( cnt-- > 0 )             \
+        PUTCH( ' ' );               \
     } while (0)
 
     /*
@@ -162,396 +162,396 @@ int __l4_vsnprintf(char *str, L4_Size_t size, const char *fmt, va_list ap)
      * Sanity check on fmt string.
      */
     if ( fmt == NULL ) {
-	PUTSTR( "(null fmt string)" );
-	goto Done;
+    PUTSTR( "(null fmt string)" );
+    goto Done;
     }
 
     while ( size > 0 ) {
-	/*
-	 * Copy characters until we encounter '%'.
-	 */
-	while ( (c = *fmt++) != '%' ) {
-	    if ( size-- <= 0 || c == '\0' )
-		goto Done;
-	    *p++ = c;
-	}
+    /*
+     * Copy characters until we encounter '%'.
+     */
+    while ( (c = *fmt++) != '%' ) {
+        if ( size-- <= 0 || c == '\0' )
+        goto Done;
+        *p++ = c;
+    }
 
-	f_left = f_sign = f_space = f_zero = f_alternate = 0;
-	someflag = 1;
+    f_left = f_sign = f_space = f_zero = f_alternate = 0;
+    someflag = 1;
 
-	/*
-	 * Parse flags.
-	 */
-	while ( someflag ) {
-	    switch ( *fmt ) {
-	    case '-': f_left = 1;	fmt++; break;
-	    case '+': f_sign = 1;	fmt++; break;
-	    case ' ': f_space = 1;	fmt++; break;
-	    case '0': f_zero = 1;	fmt++; break;
-	    case '#': f_alternate = 1;	fmt++; break;
-	    default:  someflag = 0;            break;
-	    }
-	}
+    /*
+     * Parse flags.
+     */
+    while ( someflag ) {
+        switch ( *fmt ) {
+        case '-': f_left = 1;   fmt++; break;
+        case '+': f_sign = 1;   fmt++; break;
+        case ' ': f_space = 1;  fmt++; break;
+        case '0': f_zero = 1;   fmt++; break;
+        case '#': f_alternate = 1;  fmt++; break;
+        default:  someflag = 0;            break;
+        }
+    }
 
-	/*
-	 * Parse field width.
-	 */
-	if ( (c = *fmt) == '*' ) {
-	    width = va_arg( ap, int );
-	    fmt++;
-	} else if ( c >= '0' && c <= '9' ) {
-	    width = 0;
-	    while ( (c = *fmt++) >= '0' && c <= '9' ) {
-		width *= 10;
-		width += c - '0';
-	    }
-	    fmt--;
-	} else {
-	    width = -1;
-	}
+    /*
+     * Parse field width.
+     */
+    if ( (c = *fmt) == '*' ) {
+        width = va_arg( ap, int );
+        fmt++;
+    } else if ( c >= '0' && c <= '9' ) {
+        width = 0;
+        while ( (c = *fmt++) >= '0' && c <= '9' ) {
+        width *= 10;
+        width += c - '0';
+        }
+        fmt--;
+    } else {
+        width = -1;
+    }
 
-	/*
-	 * Parse precision.
-	 */
-	if ( *fmt == '.' ) {
-	    if ( (c = *++fmt) == '*' ) {
-		precision = va_arg( ap, int );
-		fmt++;
-	    } else if ( c >= '0' && c <= '9' ) {
-		precision = 0;
-		while ( (c = *fmt++) >= '0' && c <= '9' ) {
-		    precision *= 10;
-		    precision += c - '0';
-		}
-		fmt--;
-	    } else {
-		precision = -1;
-	    }
-	} else {
-	    precision = -1;
-	}
+    /*
+     * Parse precision.
+     */
+    if ( *fmt == '.' ) {
+        if ( (c = *++fmt) == '*' ) {
+        precision = va_arg( ap, int );
+        fmt++;
+        } else if ( c >= '0' && c <= '9' ) {
+        precision = 0;
+        while ( (c = *fmt++) >= '0' && c <= '9' ) {
+            precision *= 10;
+            precision += c - '0';
+        }
+        fmt--;
+        } else {
+        precision = -1;
+        }
+    } else {
+        precision = -1;
+    }
 
-	f_long = f_short = f_ldouble = 0;
+    f_long = f_short = f_ldouble = 0;
 
-	/*
-	 * Parse length modifier.
-	 */
-	switch ( *fmt ) {
-	case 'h': f_short = 1;		fmt++; break;
-	case 'l': f_long = 1;		fmt++; break;
-	case 'L': f_ldouble = 1;	fmt++; break;
-	}
+    /*
+     * Parse length modifier.
+     */
+    switch ( *fmt ) {
+    case 'h': f_short = 1;      fmt++; break;
+    case 'l': f_long = 1;       fmt++; break;
+    case 'L': f_ldouble = 1;    fmt++; break;
+    }
 
-	sign = 1;
+    sign = 1;
 
-	/*
-	 * Parse format conversion.
-	 */
-	switch ( c = *fmt++ ) {
+    /*
+     * Parse format conversion.
+     */
+    switch ( c = *fmt++ ) {
 
-	case 'b':
-	    uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
-	    base = 2;
-	    digits = "01";
-	    goto Print_unsigned;
+    case 'b':
+        uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
+        base = 2;
+        digits = "01";
+        goto Print_unsigned;
 
-	case 'o':
-	    uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
-	    base = 8;
-	    digits = "01234567";
-	    goto Print_unsigned;
+    case 'o':
+        uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
+        base = 8;
+        digits = "01234567";
+        goto Print_unsigned;
 
-	case 'p':
-	    precision = width = sizeof (long) * 2;
-	    f_alternate = 1;
-	    if (sizeof (void *) == sizeof (long))
-		f_long = 1;
-	case 'x':
-	    uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
-	    base = 16;
-	    digits = "0123456789abcdef";
-	    goto Print_unsigned;
+    case 'p':
+        precision = width = sizeof (long) * 2;
+        f_alternate = 1;
+        if (sizeof (void *) == sizeof (long))
+        f_long = 1;
+    case 'x':
+        uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
+        base = 16;
+        digits = "0123456789abcdef";
+        goto Print_unsigned;
 
-	case 'X':
-	    uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
-	    base = 16;
-	    digits = "0123456789ABCDEF";
-	    goto Print_unsigned;
+    case 'X':
+        uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
+        base = 16;
+        digits = "0123456789ABCDEF";
+        goto Print_unsigned;
 
-	case 'd':
-	case 'i':
-	    uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
-	    base = 10;
-	    digits = "0123456789";
-	    goto Print_signed;
+    case 'd':
+    case 'i':
+        uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
+        base = 10;
+        digits = "0123456789";
+        goto Print_signed;
 
-	case 'u':
-	    uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
-	    base = 10;
-	    digits = "0123456789";
+    case 'u':
+        uval = f_long ? va_arg( ap, long ) : va_arg( ap, int );
+        base = 10;
+        digits = "0123456789";
 
-	Print_unsigned:
-	    sign = 0;
+    Print_unsigned:
+        sign = 0;
 
-	Print_signed:
-	    signch = 0;
-	    uval2 = uval;
+    Print_signed:
+        signch = 0;
+        uval2 = uval;
 
-	    /*
-	     * Check for sign character.
-	     */
-	    if ( sign ) {
-		if ( f_sign && (long) uval >= 0 ) {
-		    signch = '+';
-		} else if ( f_space && (long) uval >= 0 ) {
-		    signch = ' ';
-		} else if ( (long) uval < 0 ) {
-		    signch = '-';
-		    uval = -( (long) uval );
-		}
-	    }
+        /*
+         * Check for sign character.
+         */
+        if ( sign ) {
+        if ( f_sign && (long) uval >= 0 ) {
+            signch = '+';
+        } else if ( f_space && (long) uval >= 0 ) {
+            signch = ' ';
+        } else if ( (long) uval < 0 ) {
+            signch = '-';
+            uval = -( (long) uval );
+        }
+        }
 
-	    /*
-	     * Create reversed number string.
-	     */
-	    if (sizeof (long) >= 8 && base == 16)
-	    {
-		numdigits = 0;
-		do {
-		    convert[numdigits++] =  digits[uval & 0xf];
-		    uval /= 16;
-		} while ( uval > 0 );
-	    }
-	    else
-	    {
-		numdigits = 0;
-		do {
-		    convert[numdigits++] =  digits[(unsigned int) uval % base];
-		    uval /= base;
-		} while ( uval > 0 );
-	    }
+        /*
+         * Create reversed number string.
+         */
+        if (sizeof (long) >= 8 && base == 16)
+        {
+        numdigits = 0;
+        do {
+            convert[numdigits++] =  digits[uval & 0xf];
+            uval /= 16;
+        } while ( uval > 0 );
+        }
+        else
+        {
+        numdigits = 0;
+        do {
+            convert[numdigits++] =  digits[(unsigned int) uval % base];
+            uval /= base;
+        } while ( uval > 0 );
+        }
 
-	    /*
-	     * Calculate the actual size of the printed number.
-	     */
-	    numpr = numdigits > precision ? numdigits : precision;
-	    if ( signch )
-		numpr++;
-	    if ( f_alternate /*&& uval2 != 0*/ ) {
-		if ( base == 8 )
-		    numpr++;
-		else if ( base == 16 || base == 2 )
-		    numpr += 2;
-	    }
+        /*
+         * Calculate the actual size of the printed number.
+         */
+        numpr = numdigits > precision ? numdigits : precision;
+        if ( signch )
+        numpr++;
+        if ( f_alternate /*&& uval2 != 0*/ ) {
+        if ( base == 8 )
+            numpr++;
+        else if ( base == 16 || base == 2 )
+            numpr += 2;
+        }
 
-	    /*
-	     * Insert left padding.
-	     */
-	    if ( ! f_left && width > numpr ) {
-		if ( f_zero ) {
-		    numpr = width;
-		} else {
-		    for ( i = width - numpr; i > 0; i-- )
-			PUTCH(' ');
-		}
-	    }
+        /*
+         * Insert left padding.
+         */
+        if ( ! f_left && width > numpr ) {
+        if ( f_zero ) {
+            numpr = width;
+        } else {
+            for ( i = width - numpr; i > 0; i-- )
+            PUTCH(' ');
+        }
+        }
 
-	    /*
-	     * Insert sign character.
-	     */
-	    if ( signch ) {
-		PUTCH( signch );
-		numpr--;
-	    }
+        /*
+         * Insert sign character.
+         */
+        if ( signch ) {
+        PUTCH( signch );
+        numpr--;
+        }
 
-	    /*
-	     * Insert number prefix.
-	     */
-	    if ( f_alternate /*&& uval2 != 0*/ ) {
-		if ( base == 2 ) {
-		    numpr--;
-		    PUTCH('%');
-		} else if ( base == 8 ) {
-		    numpr--;
-		    PUTCH('0');
-		} else if ( base == 16 ) {
-		    numpr -= 2;
-		    PUTSTR("0x");
-		}
-	    }
+        /*
+         * Insert number prefix.
+         */
+        if ( f_alternate /*&& uval2 != 0*/ ) {
+        if ( base == 2 ) {
+            numpr--;
+            PUTCH('%');
+        } else if ( base == 8 ) {
+            numpr--;
+            PUTCH('0');
+        } else if ( base == 16 ) {
+            numpr -= 2;
+            PUTSTR("0x");
+        }
+        }
 
-	    /*
-	     * Insert zero padding.
-	     */
-	    for ( i = numpr - numdigits; i > 0; i-- )
-		PUTCH('0');
+        /*
+         * Insert zero padding.
+         */
+        for ( i = numpr - numdigits; i > 0; i-- )
+        PUTCH('0');
 
-	    /*
-	     * Insert number.
-	     */
-	    while ( numdigits > 0 )
-		PUTCH( convert[--numdigits] );
-	    RIGHTPAD( width - numpr - (signch ? 1 : 0) );
-	    break;
+        /*
+         * Insert number.
+         */
+        while ( numdigits > 0 )
+        PUTCH( convert[--numdigits] );
+        RIGHTPAD( width - numpr - (signch ? 1 : 0) );
+        break;
 
-	case 'f': 
-	{
-	    double fval = va_arg( ap, double );
-	    if ( precision == -1 )
-		precision = 6;
+    case 'f': 
+    {
+        double fval = va_arg( ap, double );
+        if ( precision == -1 )
+        precision = 6;
 
-	    /*
-	     * Check for sign character.
-	     */
-	    if ( f_sign && fval >= 0.0 ) {
-		signch = '+';
-	    } else if ( f_space && fval >= 0.0 ) {
-		signch = ' ';
-	    } else if ( fval < 0.0 ) {
-		signch = '-';
-		fval = -fval;
-	    } else {
-		signch = 0;
-	    }
+        /*
+         * Check for sign character.
+         */
+        if ( f_sign && fval >= 0.0 ) {
+        signch = '+';
+        } else if ( f_space && fval >= 0.0 ) {
+        signch = ' ';
+        } else if ( fval < 0.0 ) {
+        signch = '-';
+        fval = -fval;
+        } else {
+        signch = 0;
+        }
 
-	    /*
-	     * Get the integer part of the number.  If the floating
-	     * point value is greater than the maximum value of an
-	     * unsigned long, the result is undefined.
-	     */
-	    uval = (unsigned long) fval;
-	    numdigits = 0;
-	    do {
-		convert[ numdigits++ ] =  '0' + uval % 10;
-		uval /= 10;
-	    } while ( uval > 0 );
+        /*
+         * Get the integer part of the number.  If the floating
+         * point value is greater than the maximum value of an
+         * unsigned long, the result is undefined.
+         */
+        uval = (unsigned long) fval;
+        numdigits = 0;
+        do {
+        convert[ numdigits++ ] =  '0' + uval % 10;
+        uval /= 10;
+        } while ( uval > 0 );
 
-	    /*
-	     * Calculate the actual size of the printed number.
-	     */
-	    numpr = numdigits + (signch ? 1 : 0);
-	    if ( precision > 0 )
-		numpr += 1 + precision;
+        /*
+         * Calculate the actual size of the printed number.
+         */
+        numpr = numdigits + (signch ? 1 : 0);
+        if ( precision > 0 )
+        numpr += 1 + precision;
 
-	    LEFTPAD( width - numpr );
+        LEFTPAD( width - numpr );
 
-	    /*
-	     * Insert sign character.
-	     */
-	    if ( signch )
-		PUTCH( signch );
+        /*
+         * Insert sign character.
+         */
+        if ( signch )
+        PUTCH( signch );
 
-	    /*
-	     * Insert integer number.
-	     */
-	    while ( numdigits > 0 )
-		PUTCH( convert[--numdigits] );
+        /*
+         * Insert integer number.
+         */
+        while ( numdigits > 0 )
+        PUTCH( convert[--numdigits] );
 
-	    /*
-	     * Insert precision.
-	     */
-	    if ( precision > 0 ) {
-		/*
-		 * Truncate number to fractional part only.
-		 */
-		while ( fval >= 1.0 )
-		    fval -= (double) (unsigned long) fval;
+        /*
+         * Insert precision.
+         */
+        if ( precision > 0 ) {
+        /*
+         * Truncate number to fractional part only.
+         */
+        while ( fval >= 1.0 )
+            fval -= (double) (unsigned long) fval;
 
-		PUTCH('.');
+        PUTCH('.');
 
-		/*
-		 * Insert precision digits.
-		 */
-		while ( precision-- > 0 ) {
-		    fval *= 10.0;
-		    uval = (unsigned long) fval;
-		    PUTCH( '0' + uval );
-		    fval -= (double) (unsigned long) fval;
-		}
-	    }
+        /*
+         * Insert precision digits.
+         */
+        while ( precision-- > 0 ) {
+            fval *= 10.0;
+            uval = (unsigned long) fval;
+            PUTCH( '0' + uval );
+            fval -= (double) (unsigned long) fval;
+        }
+        }
 
-	    RIGHTPAD( width - numpr );
-	    break;
-	}
-	case 't':
-	    tid = va_arg( ap, L4_ThreadId_t );
-	    if ( L4_IsNilThread(tid) ) {
-		PUTSTR("NIL_ID");
-		break;
-	    }
-	    digits = "0123456789";
-	    if (L4_IsGlobalId(tid))
-	    {
-		PUTSTR("GlobThread=");
-		PUTDEC(tid.global.X.thread_no);
-		PUTSTR(",ver=");
-		PUTDEC(tid.global.X.version);
-	    } 
-	    else if (L4_IsLocalId(tid))
-	    {
-		PUTSTR("LocThread=");
-		PUTDEC(tid.local.X.local_id);
-	    }
-	    else {
-		PUTSTR("? ");
-		PUTDEC(tid.raw);
-	    }
-	    break;
+        RIGHTPAD( width - numpr );
+        break;
+    }
+    case 't':
+        tid = va_arg( ap, L4_ThreadId_t );
+        if ( L4_IsNilThread(tid) ) {
+        PUTSTR("NIL_ID");
+        break;
+        }
+        digits = "0123456789";
+        if (L4_IsGlobalId(tid))
+        {
+        PUTSTR("GlobThread=");
+        PUTDEC(tid.global.X.thread_no);
+        PUTSTR(",ver=");
+        PUTDEC(tid.global.X.version);
+        } 
+        else if (L4_IsLocalId(tid))
+        {
+        PUTSTR("LocThread=");
+        PUTDEC(tid.local.X.local_id);
+        }
+        else {
+        PUTSTR("? ");
+        PUTDEC(tid.raw);
+        }
+        break;
 
 
-	case 's':
-	    string = va_arg( ap, char * );
+    case 's':
+        string = va_arg( ap, char * );
 
-	    /*
-	     * Sanity check.
-	     */
-	    if ( string == NULL ) {
-		PUTSTR( "(null)" );
-		break;
-	    }
+        /*
+         * Sanity check.
+         */
+        if ( string == NULL ) {
+        PUTSTR( "(null)" );
+        break;
+        }
 
-	    if ( width > 0 ) {
-		/*
-		 * Calculate printed size.
-		 */
-		numpr = strlen( string );
-		if ( precision >= 0 && precision < numpr )
-		    numpr = precision;
+        if ( width > 0 ) {
+        /*
+         * Calculate printed size.
+         */
+        numpr = strlen( string );
+        if ( precision >= 0 && precision < numpr )
+            numpr = precision;
 
-		LEFTPAD( width - numpr );
-	    }
+        LEFTPAD( width - numpr );
+        }
 
-	    /*
-	     * Insert string.
-	     */
-	    if ( precision >= 0 ) {
- 		while ( precision-- > 0 && (c = *string++) != '\0' )
-		    PUTCH( c );
-	    } else {
- 		while ( (c = *string++) != '\0' )
-		    PUTCH( c );
-	    }
+        /*
+         * Insert string.
+         */
+        if ( precision >= 0 ) {
+        while ( precision-- > 0 && (c = *string++) != '\0' )
+            PUTCH( c );
+        } else {
+        while ( (c = *string++) != '\0' )
+            PUTCH( c );
+        }
 
-	    RIGHTPAD( width - numpr );
-	    break;
+        RIGHTPAD( width - numpr );
+        break;
 
-	case 'c':
-	    PUTCH( va_arg( ap, int ) );
-	    break;
+    case 'c':
+        PUTCH( va_arg( ap, int ) );
+        break;
 
-	case '%':
-	    PUTCH('%');
-	    break;
+    case '%':
+        PUTCH('%');
+        break;
 
-	case 'n':
-	    *(va_arg( ap, int * )) = p - str;
-	    break;
+    case 'n':
+        *(va_arg( ap, int * )) = p - str;
+        break;
 
-	default:
-	    PUTCH('%');
-	    PUTCH(c);
-	    break;
-	}
+    default:
+        PUTCH('%');
+        PUTCH(c);
+        break;
+    }
     }
  Done:
 
@@ -582,7 +582,7 @@ int __l4_snprintf(char *str, L4_Size_t size, const char *fmt, ...)
      * Safety check
      */
     if ( fmt == NULL )
-	return 0;
+    return 0;
 
     /*
      * Print into buffer.
@@ -610,7 +610,7 @@ int __l4_printf(const char *fmt, ...)
      * Safety check
      */
     if ( fmt == NULL )
-	return 0;
+    return 0;
 
     /*
      * Print into buffer.
@@ -623,7 +623,7 @@ int __l4_printf(const char *fmt, ...)
      * Output to terminal.
      */
     if ( r > 0 )
-	print_string(outbuf);
+    print_string(outbuf);
 
     return r;
 }

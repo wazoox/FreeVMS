@@ -45,22 +45,26 @@ sys$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
     priv = (tag & 0xf0000) >> 16;
 
     // Find memory section it belongs too
-notice("sys$pagefault(addr=%lx caller=%lx ip=%lx)\n", addr, caller, ip);
+
+    if (dbg$sys_pagefault)
+    {
+        notice(SYS_F_PAGEFLT "pagefault request from $%lX at $%016lX\n",
+                L4_ThreadNo(caller), addr);
+    }
+
     if ((memsection = sys$objtable_lookup((void *) addr)) == NULL)
     {
-        notice(MEM_F_MEMSEC "no memory section\n");
+        notice(MEM_F_MEMSEC "no memory section for address $%016lX\n", addr);
         goto fail;
     }
 
     ref = (vms$pointer) memsection;
 
-notice("sys$pagefault(start=%lx end=%lx)\n", memsection->base, memsection->end);
-notice("sys$pagefault(ref=%lx)\n", ref);
     if (sec$check(caller, ref) == 0)
     {
-		fpage = L4_Fpage(sys$page_round_down(addr, vms$min_pagesize()),
-				vms$min_pagesize());
-		L4_Set_Rights(&fpage, priv);
+        fpage = L4_Fpage(sys$page_round_down(addr, vms$min_pagesize()),
+                vms$min_pagesize());
+        L4_Set_Rights(&fpage, priv);
         L4_Clear(&msg);
         L4_Append(&msg, L4_MapItem(fpage, L4_Address(fpage)));
         L4_Load(&msg);

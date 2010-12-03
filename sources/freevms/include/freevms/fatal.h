@@ -24,7 +24,7 @@
 #define ELF_F_FMT           "%%ELF-F-FMT, "
 
 #define IPC_F_FAILED        "%%IPC-F-FAILED, "
-#define IPC_F_UNKNOWN		"%%IPC-F-UNKNOWN, "
+#define IPC_F_UNKNOWN       "%%IPC-F-UNKNOWN, "
 
 #define MEM_F_BACKMEM       "%%MEM-F-BACKMEM, "
 #define MEM_F_MEMSEC        "%%MEM-F-MEMSEC, "
@@ -35,4 +35,7 @@
 
 #define PAGER_F_NOTFOUND    "%%PAGER-F-NOTFOUND, "
 
-#define SYS_F_HEAP			"%%SYS-F-HEAP, "
+#define SYS_F_HEAP          "%%SYS-F-HEAP, "
+#define SYS_F_PAGEFLT       "%%SYS-F-PAGEFLT, "
+
+#define VMS_F_PAGEFLT       "%%VMS-F-PAGEFLT, "

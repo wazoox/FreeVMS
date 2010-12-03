@@ -27,9 +27,9 @@ main(int argc, char **argv)
     vms$string_initializer(message, 80);
 
     for(;;);
-	rtl$strcpy(&message, "INIT.EXE process started");
-	/*
+    rtl$strcpy(&message, "INIT.EXE process started");
+    /*
     rtl$print(message);
-	*/
+    */
     return(0);
 }

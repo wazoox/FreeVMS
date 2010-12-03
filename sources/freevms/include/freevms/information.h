@@ -21,9 +21,9 @@
 
 #define DBG_I_VMS           "%%DBG-I-VMS, "
 
-#define DEV_I_TREE          "%%DEV-I-TREE, "
+#define DEV_I_INIT          "%%DEV-I-INIT, "
 
-#define JOBCTL_I_MAXTRD		"%%JOBCTL-I-MAX_THRDS, "
+#define JOBCTL_I_MAXTRD     "%%JOBCTL-I-MAX_THRDS, "
 #define JOBCTL_I_MAXPROCID  "%%JOBCTL-I-MAX_PROC_ID, "
 
 #define MEM_I_ACCMAP        "%%MEM-I-ACCMAP, "

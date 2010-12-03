@@ -29,13 +29,13 @@ struct mapped_page
     struct pd                   *owner;
 
     vms$pointer                 flags; // VMS$MAPPED | VMS$SWAPPED
-					    
+                        
     TAILQ_ENTRY(mapped_pages)   list;
 };
 
-#define VMS$MAPPED				1
-#define VMS$SWAPPED				2
+#define VMS$MAPPED              1
+#define VMS$SWAPPED             2
 
 void vms$pagefault_init();
 void vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
-		vms$pointer tag);
+        vms$pointer tag);

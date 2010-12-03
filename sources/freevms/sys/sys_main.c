@@ -24,6 +24,9 @@
 // Global variables
 int                     vms$pd_initialized = 0;
 int                     dbg$virtual_memory;
+int                     dbg$sys_pagefault;
+int                     dbg$vms_pagefault;
+
 struct pd               freevms_pd;
 
 int
@@ -135,6 +138,10 @@ main(void)
     notice(SYSBOOT_I_SYSBOOT "selecting console device: %s\n", console_device);
 
     dbg$virtual_memory = (strstr(command_line, " dbg$virtual_memory") != NULL)
+            ? 1 : 0;
+    dbg$sys_pagefault = (strstr(command_line, " dbg$sys_pagefault") != NULL)
+            ? 1 : 0;
+    dbg$vms_pagefault = (strstr(command_line, " dbg$vms_pagefault") != NULL)
             ? 1 : 0;
 
     // Starting virtual memory subsystem

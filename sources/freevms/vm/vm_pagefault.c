@@ -21,34 +21,34 @@
 
 #include "freevms/pager.h"
 
-static TAILQ_HEAD(mapped_pages, mapped_page)	mapped_pages_head;
+static TAILQ_HEAD(mapped_pages, mapped_page)    mapped_pages_head;
 
 void
 vms$pagefault_init()
 {
-	TAILQ_INIT(&mapped_pages_head);
-	return;
+    TAILQ_INIT(&mapped_pages_head);
+    return;
 }
 
 struct mapped_page *
 vms$add_mapped_page(struct pd *owner, L4_Fpage_t pfpage, L4_Fpage_t vfpage)
 {
-	struct mapped_page			*mp;
+    struct mapped_page          *mp;
 
-	/*
-	if ((mp = (struct mapped_page *) vms$alloc(sizeof(struct mapped_page)))
-			== ((struct mapped_page *) NULL))
-	{
-		return((struct mapped_page *) NULL);
-	}
-	*/
+    /*
+    if ((mp = (struct mapped_page *) vms$alloc(sizeof(struct mapped_page)))
+            == ((struct mapped_page *) NULL))
+    {
+        return((struct mapped_page *) NULL);
+    }
+    */
 
-	mp->owner = owner;
-	mp->phys = pfpage;
-	mp->virt = vfpage;
-	mp->flags = VMS$MAPPED;
+    mp->owner = owner;
+    mp->phys = pfpage;
+    mp->virt = vfpage;
+    mp->flags = VMS$MAPPED;
 
-	return(mp);
+    return(mp);
 }
 
 void
@@ -80,7 +80,7 @@ vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
 
 //notice("vms$pagefault(addr:%lx) from %lx [priv=%lx]\n", addr, caller, priv);
     // Find memory section it belongs too
-	/*
+    /*
     if ((memsection = vms$objtable_lookup((void *) addr)) == NULL)
     {
         notice(MEM_F_MEMSEC "no memory section\n");
@@ -130,12 +130,12 @@ notice("Priv=%d %d\n", priv, L4_FullyAccessible);
         notice(MEM_F_SECFLD "security check failed\n");
         goto fail;
     }
-	*/
+    */
 
     return;
 
 fail:
-	/*
+    /*
     L4_Clear(&msg);
     L4_Append(&msg, L4_MapItem(L4_Nilpage, L4_Address(L4_Nilpage)));
     L4_Load(&msg);
@@ -143,6 +143,6 @@ fail:
     L4_Stop(caller);
     thread = jobctl$thread_lookup(caller);
     jobctl$thread_delete(thread);
-	*/
+    */
     return;
 }

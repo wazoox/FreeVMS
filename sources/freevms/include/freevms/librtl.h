@@ -25,15 +25,15 @@ struct vms$string
 {
     vms$pointer             length;
     vms$pointer             length_trim;
-    unsigned char 	        *c;
+    unsigned char           *c;
 };
 
 #define vms$string_initializer(s, l) \
-	struct vms$string s;						\
-	unsigned char static_##s[l];				\
-	s.length = l;								\
-	s.length_trim = 0;							\
-	s.c = &(static_##s[0])
+    struct vms$string s;                        \
+    unsigned char static_##s[l];                \
+    s.length = l;                               \
+    s.length_trim = 0;                          \
+    s.c = &(static_##s[0])
 
 int rtl$strcmp(struct vms$string *s1, struct vms$string *s2);
 void rtl$strcpy(struct vms$string *s1, struct vms$string *s2);

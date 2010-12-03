@@ -48,7 +48,7 @@ sys$init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
 
     cap_t                           *clist;
 
-	return;
+    return;
 
     notice(SYSBOOT_I_SYSBOOT "spawning INIT.EXE with supervisor privileges\n");
 

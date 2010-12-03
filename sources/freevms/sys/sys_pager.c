@@ -74,7 +74,7 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
     stack = sys$pd_create_memsection(pd, 2 * pagesize, 0, VMS$MEM_NORMAL,
             pagesize);
 
-	FIXME;
+    FIXME;
     heap = sys$pd_create_memsection(pd, 1 * 1024 * 1024, 0,
             VMS$MEM_NORMAL | VMS$MEM_USER, pagesize);
     PANIC(heap == NULL);

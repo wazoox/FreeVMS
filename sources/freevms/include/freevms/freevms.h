@@ -94,6 +94,8 @@ void dbg$backtrace(void);
 void dbg$sigma0(int level);
 
 extern int dbg$virtual_memory;
+extern int dbg$sys_pagefault;
+extern int dbg$vms_pagefault;
 
 #define ERROR_PRINT_L4 notice("L4 microkernel error: %s [%lx]\n", \
         L4_ErrorCode_String(L4_ErrorCode()), L4_ErrorCode())
@@ -123,4 +125,4 @@ void sys$parsing(char *line, char *command, char *argument, int length);
 
 // Initialization
 extern "C" void __L4_Init();
-#define L4_InitIpc		__L4_Init
+#define L4_InitIpc      __L4_Init
