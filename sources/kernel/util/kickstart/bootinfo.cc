@@ -114,7 +114,6 @@ L4_BootRec_t * record_bootinfo_modules (L4_BootInfo_t * bi,
 		exec->cmdline_offset = sz;
 		strcpy ((char *) exec + sz, mbi->mods[i].cmdline);
 		sz += strlen (mbi->mods[i].cmdline) + 1;
-printf("1: %s\n", mbi->mods[i].cmdline);
 		sz = align_up (sz, sizeof (L4_Word_t));
 		exec->offset_next = sz;
 	    }
@@ -134,7 +133,6 @@ printf("1: %s\n", mbi->mods[i].cmdline);
 		mod->cmdline_offset = sz;
 		strcpy ((char *) exec + sz, mbi->mods[i].cmdline);
 		sz += strlen (mbi->mods[i].cmdline) + 1;
-printf("2: %s\n", mbi->mods[i].cmdline);
 		sz = align_up (sz, sizeof (L4_Word_t));
 		mod->offset_next = sz;
 	    }

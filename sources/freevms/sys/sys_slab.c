@@ -367,6 +367,15 @@ sys$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
 
     struct memsection_node      *node;
 
+    if (vms$pd_initialized)
+    {
+        list = &self->memsections;
+    }
+    else
+    {
+        list = &internal_memsections;
+    }
+
     if ((node = sys$memsection_new()) == NULL)
     {
         return(NULL);
@@ -401,15 +410,6 @@ sys$pd_create_memsection(struct pd *self, vms$pointer size, vms$pointer base,
         // need not to delete it from memsection_list.
         sys$delete_memsection_from_allocator(node);
         return(NULL);
-    }
-
-    if (vms$pd_initialized)
-    {
-        list = &self->memsections;
-    }
-    else
-    {
-        list = &internal_memsections;
     }
 
     node->next = (struct memsection_node *) list;

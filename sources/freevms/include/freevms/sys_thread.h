@@ -310,5 +310,3 @@ int sys$thread_start(struct thread *self, vms$pointer ip,
         vms$pointer sp);
 
 void sys$session_delete(struct session *session);
-
-vms$pointer sys$threadno(vms$pointer l4_threadno);

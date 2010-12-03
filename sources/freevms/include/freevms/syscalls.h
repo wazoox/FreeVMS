@@ -19,17 +19,4 @@
 ================================================================================
 */
 
-#include "freevms/pager.h"
-
-int
-main(int argc, char **argv)
-{
-	L4_InitIpc();
-
-    vms$string_initializer(message, 80);
-	rtl$strcpy(&message, "PAGER.SYS process started");
-
-    rtl$print(&message, NULL);
-
-	for(;;);
-}
+#define CALL$PRINT					1

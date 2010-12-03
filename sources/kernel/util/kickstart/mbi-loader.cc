@@ -158,9 +158,9 @@ bool load_modules (void)
                 }                                                           \
             } while(0)
 
-            LOADIT(0, " kernel  ", NULL);
-            LOADIT(1, " sigma0  ", &sigma0_type);
-            LOADIT(2, " roottask", &root_task_type);
+            LOADIT(0, " L4/X2 kernel  ", NULL);
+            LOADIT(1, " sigma0        ", &sigma0_type);
+            LOADIT(2, " vmskernel.sys ", &root_task_type);
         }
         else
         {

@@ -113,12 +113,6 @@ sys$pd_init(struct vms$meminfo *meminfo)
     return;
 }
 
-vms$pointer
-sys$threadno(vms$pointer l4_threadno)
-{
-    return(l4_threadno - min_threadno);
-}
-
 void
 sys$thread_init(L4_KernelInterfacePage_t *kip)
 {
@@ -128,8 +122,8 @@ sys$thread_init(L4_KernelInterfacePage_t *kip)
     min_threadno = L4_ThreadNo(L4_Myself()) + 2;
     max_threadno = ((vms$pointer) 1) << L4_ThreadIdBits(kip);
 
-    notice(JOBCTL_I_MAXPROCID "setting maximal process identifier $%lX\n",
-            sys$threadno(max_threadno));
+    notice(JOBCTL_I_MAXTRD "setting maximal concurrent threads to %ld\n",
+            (max_threadno - min_threadno) + 1);
     thread_list = sys$rfl_new();
     r = sys$rfl_insert_range(thread_list, min_threadno, max_threadno);
     PANIC(r != 0);

@@ -39,12 +39,10 @@ rtl$print(struct vms$string *fmt, void **arg)
 
     L4_Clear(&msg);
     L4_Append(&msg, si);
-    L4_Set_Label(&msg, 1);
+    L4_Set_Label(&msg, CALL$PRINT);
     L4_Load(&msg);
 
-	L4_KDB_Enter("pager");
     L4_Call(L4_Pager());
-	L4_KDB_Enter("pager");
 
     return;
 }

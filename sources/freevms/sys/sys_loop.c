@@ -27,6 +27,7 @@ sys$loop()
     int                     running;
 
     L4_ThreadId_t           partner;
+	L4_MsgBuffer_t			buffer;
     L4_MsgTag_t             tag;
     L4_Msg_t                msg;
 
@@ -41,7 +42,6 @@ sys$loop()
         L4_Clear(&msg);
         L4_Store(tag, &msg);
 
-		notice("IPC!\n");
         if ((tag.raw & L4_REQUEST_MASK) == L4_PAGEFAULT)
         {
             sys$pagefault(partner, L4_Get(&msg, 0), L4_Get(&msg, 1),
@@ -49,11 +49,27 @@ sys$loop()
         }
         else
         {
-            notice("IPC not catched [%lx]\n", tag.raw);
-            PANIC(1);
+			notice("Label from $%016lX: %d (%016lX)\n", partner,
+					L4_Label(tag), tag.raw);
+
+			switch(L4_Label(tag))
+			{
+				case CALL$PRINT:
+					L4_StringItem_t		si;
+
+					L4_Clear(&buffer);
+					L4_Get(&msg, 1, &si);
+					L4_Clear(&buffer);
+					L4_Append(&buffer, si);
+					break;
+
+				default:
+					PANIC(1, notice(IPC_F_UNKNOWN "unknown IPC: $%016lX\n",
+							tag.raw));
+			}
         }
 
-        L4_ReplyWait(partner, &partner);
+        tag = L4_ReplyWait(partner, &partner);
     }
 
     return;

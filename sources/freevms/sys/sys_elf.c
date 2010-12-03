@@ -68,42 +68,14 @@ sys$elf_loader(struct thread *thread, vms$pointer start, vms$pointer end,
 			base = sys$page_round_down(dst_start, vms$min_pagesize());
 			size = (sys$page_round_up(dst_end, vms$min_pagesize()) - base);
 
-for(char * j = (char *) src_start;
-		j < (char *) (src_start + size);)
-{
-	notice("%016lx -> ", (vms$pointer) j);
-	char *l = j;
-	char *k = j+16; for(; j < k; j++) notice("%02lx ", (unsigned char) *j);
-	notice("\n");
-	j = l;
-	k = j+16; for(; j < k; j++) notice("%c", (unsigned char) *j);
-	notice("\n");
-}
             memsection = sys$pd_create_memsection(thread->owner, size, base,
                     VMS$MEM_FIXED, vms$min_pagesize());
             clist[(*pos)++] = sec$create_capability((vms$pointer)
                     memsection, CAP$MEMSECTION);
+			// Copy executable section
             sys$memcopy(dst_start, src_start, ph->fsize);
-for(char * j = (char *) dst_start;
-		j < (char *) (dst_start + size);)
-{
-	notice("%016lx -> ", (vms$pointer) j);
-	char *l = j;
-	char *k = j+16; for(; j < k; j++) notice("%02lx ", (unsigned char) *j);
-	notice("\n");
-	j = l;
-	k = j+16; for(; j < k; j++) notice("%c", (unsigned char) *j);
-	notice("\n");
-}
+			sys$initmem(dst_start + ph->fsize + 1, ph->msize - ph->fsize);
         }
-		else
-		{
-			src_start = start + ph->offset;
-			src_end = src_start + ph->msize;
-			dst_start = ph->paddr;
-			dst_end = dst_start + ph->msize;
-notice("%lx %lx %lx %lx\n", src_start, src_end, dst_start, dst_end);
-		}
     }
 
     return(eh->entry);

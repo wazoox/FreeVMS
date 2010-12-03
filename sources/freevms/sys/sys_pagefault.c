@@ -52,14 +52,15 @@ notice("sys$pagefault(addr=%lx caller=%lx ip=%lx)\n", addr, caller, ip);
         goto fail;
     }
 
-    ref = (vms$pointer) memsection + priv;
+    ref = (vms$pointer) memsection;
 
+notice("sys$pagefault(start=%lx end=%lx)\n", memsection->base, memsection->end);
 notice("sys$pagefault(ref=%lx)\n", ref);
     if (sec$check(caller, ref) == 0)
     {
 		fpage = L4_Fpage(sys$page_round_down(addr, vms$min_pagesize()),
 				vms$min_pagesize());
-        L4_Set_Rights(&fpage, L4_FullyAccessible);
+		L4_Set_Rights(&fpage, priv);
         L4_Clear(&msg);
         L4_Append(&msg, L4_MapItem(fpage, L4_Address(fpage)));
         L4_Load(&msg);
