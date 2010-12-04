@@ -128,14 +128,14 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
         goto Done;
     }
 
+	fmt_ptr = 0;
+	str_ptr = 0;
+
     while (size > 0)
     {
         /*
          * Copy characters until we encounter '%'.
          */
-
-        fmt_ptr = 0;
-        str_ptr = 0;
 
         while ((c = fmt_desc->c[fmt_ptr++]) != '%')
         {
@@ -643,6 +643,7 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
 
             case '%':
                 PUTCH('%');
+                PUTCH('#');
                 break;
 
             default:

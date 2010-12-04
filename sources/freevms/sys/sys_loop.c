@@ -30,6 +30,9 @@ sys$loop()
     L4_MsgBuffer_t          buffer;
     L4_MsgTag_t             tag;
     L4_Msg_t                msg;
+	L4_StringItem_t			string_item;
+
+	unsigned char			*string;
 
     running = 1;
 
@@ -52,12 +55,20 @@ sys$loop()
             switch(L4_Label(tag))
             {
                 case CALL$PRINT:
-                    L4_StringItem_t     si;
+					// This memory is mapped by calling thread
+					L4_StoreMRs(1, 2, string_item.raw);
 
-                    L4_Clear(&buffer);
-                    L4_Get(&msg, 1, &si);
-                    L4_Clear(&buffer);
-                    L4_Append(&buffer, si);
+					if ((string = (unsigned char *)
+							sys$alloc((string_item.X.string_length + 1) *
+							sizeof(unsigned char))) != NULL)
+					{
+						sys$memcopy((vms$pointer) string,
+								(vms$pointer) string_item.X.str.string_ptr,
+								string_item.X.string_length);
+						string[string_item.X.string_length] = 0;
+						notice("%s\n", string);
+						sys$free(string);
+					}
                     break;
 
                 default:

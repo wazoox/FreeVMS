@@ -70,7 +70,7 @@ bootstrap-install:
 freevms-clean:
 	@make -C $(SRCDIR)/freevms clean
 
-freevms: bootstrap-install
+freevms:
 	@make -C $(SRCDIR)/freevms
 
 build/freevms/vmskernel.sys build/freevms/pager.sys build/freevms/init.exe: \

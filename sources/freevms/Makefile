@@ -136,7 +136,7 @@ $(DESTDIR)/init/%.o: init/%.c
 	@echo  [CC] $<
 	@gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -o $@ -c $<
 
-# ./init
+# ./vm
 
 $(DESTDIR)/vm/%.o: vm/%.c
 	@echo  [CC] $<
