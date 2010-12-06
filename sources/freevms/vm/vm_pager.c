@@ -24,9 +24,6 @@
 int
 main(int argc, char **argv)
 {
-	void *arg[16];
-	int i;
-
     L4_InitIpc();
 
     vms$string_initializer(message, 80);
