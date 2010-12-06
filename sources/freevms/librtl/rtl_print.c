@@ -35,14 +35,18 @@ rtl$print(struct vms$string *fmt, void **arg)
     }
 
     rtl$sprint(&str, fmt, arg);
-    si = L4_StringItem(str.length_trim, (void *) str.c);
 
-    L4_Clear(&msg);
-    L4_Append(&msg, si);
-    L4_Set_Label(&msg, CALL$PRINT);
-    L4_Load(&msg);
+	if (str.length_trim <= MAX_STRINGITEM_LENGTH)
+	{
+		si = L4_StringItem(str.length_trim, (void *) str.c);
 
-    L4_Call(L4_Pager());
+		L4_Clear(&msg);
+		L4_Append(&msg, si);
+		L4_Set_Label(&msg, CALL$PRINT);
+		L4_Load(&msg);
+
+		L4_Call(L4_Pager());
+	}
 
     return;
 }

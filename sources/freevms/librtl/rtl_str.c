@@ -35,13 +35,12 @@ rtl$strcpy(unsigned char *dest, const char *src, vms$pointer size)
 
     while(*src)
     {
-        *dest++ = *src++;
-
         if (length == size)
         {
             return(length);
         }
 
+        *dest++ = *src++;
         length++;
     }
 

@@ -24,21 +24,24 @@
 void
 sys$loop()
 {
-    int                     running;
+    int                     		running;
 
-    L4_ThreadId_t           partner;
-    L4_MsgBuffer_t          buffer;
-    L4_MsgTag_t             tag;
-    L4_Msg_t                msg;
-	L4_StringItem_t			string_item;
+	L4_MsgBuffer_t					buffer;
+    L4_MsgTag_t             		tag;
+    L4_Msg_t                		msg;
+	L4_StringItem_t					string_item;
+    L4_ThreadId_t           		partner;
+	L4_Word_t						error;
 
-	unsigned char			*string;
+	static unsigned char			string[MAX_STRINGITEM_LENGTH + 1];
 
-    running = 1;
-
+	L4_Clear(&buffer);
+	L4_Append(&buffer, L4_StringItem(MAX_STRINGITEM_LENGTH, &(string[0])));
     L4_Accept(L4_MapGrantItems(L4_CompleteAddressSpace)
-            + L4_StringItemsAcceptor);
+            + L4_StringItemsAcceptor, &buffer);
+
     tag = L4_Wait(&partner);
+    running = 1;
 
     while(running)
     {
@@ -47,38 +50,39 @@ sys$loop()
 
         if ((tag.raw & L4_REQUEST_MASK) == L4_PAGEFAULT)
         {
-            sys$pagefault(partner, L4_Get(&msg, 0), L4_Get(&msg, 1),
-                    tag.raw);
+            sys$pagefault(partner, L4_Get(&msg, 0), L4_Get(&msg, 1), tag.raw);
         }
         else
         {
             switch(L4_Label(tag))
             {
                 case CALL$PRINT:
-					// This memory is mapped by calling thread
 					L4_StoreMRs(1, 2, string_item.raw);
-
-					if ((string = (unsigned char *)
-							sys$alloc((string_item.X.string_length + 1) *
-							sizeof(unsigned char))) != NULL)
-					{
-						sys$memcopy((vms$pointer) string,
-								(vms$pointer) string_item.X.str.string_ptr,
-								string_item.X.string_length);
-						string[string_item.X.string_length] = 0;
-						notice("%s\n", string);
-						sys$free(string);
-					}
+					string[string_item.X.string_length] = 0;
+					notice("%s\n", string);
+					error = 0;
                     break;
 
                 default:
-                    PANIC(1, notice(IPC_F_UNKNOWN "unknown IPC from $%lX "
+                    PANIC(L4_ThreadNo(partner) != 0,
+							notice(IPC_F_UNKNOWN "unknown IPC from $%lX "
                             "with label $%lX\n", L4_ThreadNo(partner),
                             L4_Label(tag)));
             }
+
+			// Returned message
+			L4_Clear(&msg);
+			L4_Append(&msg, error);
+			L4_Load(&msg);
         }
 
         tag = L4_ReplyWait(partner, &partner);
+
+		if (L4_IpcFailed(tag))
+		{
+			notice(IPC_F_FAILED "IPC failed (error %ld: %s)\n", L4_ErrorCode(),
+					L4_ErrorCode_String(L4_ErrorCode()));
+		}
     }
 
     return;

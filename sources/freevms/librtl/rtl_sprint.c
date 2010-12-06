@@ -643,7 +643,6 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
 
             case '%':
                 PUTCH('%');
-                PUTCH('#');
                 break;
 
             default:

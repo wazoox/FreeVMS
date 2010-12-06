@@ -150,4 +150,3 @@ $(DESTDIR)/drv/test: $(DESTDIR)/drv/test.o
 
 $(DESTDIR)/drv/test.o: drv/test.c
 	gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c $< -o $@
-
