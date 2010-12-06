@@ -76,7 +76,7 @@ typedef L4_Word64_t     vms$pointer;
 #define FREEVMS_VERSION                 "0.4.0"
 #define THREAD_STACK_BASE               (0xF00000UL)
 #define NUMBER_OF_KERNEL_THREADS        256
-#define MAX_STRINGITEM_LENGTH			4096
+#define MAX_STRINGITEM_LENGTH           4096
 
 // Address
 #define UTCB(x)                 ((void*) (L4_Address(utcb_area) + \

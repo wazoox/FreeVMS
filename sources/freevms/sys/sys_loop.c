@@ -24,19 +24,19 @@
 void
 sys$loop()
 {
-    int                     		running;
+    int                             running;
 
-	L4_MsgBuffer_t					buffer;
-    L4_MsgTag_t             		tag;
-    L4_Msg_t                		msg;
-	L4_StringItem_t					string_item;
-    L4_ThreadId_t           		partner;
-	L4_Word_t						error;
+    L4_MsgBuffer_t                  buffer;
+    L4_MsgTag_t                     tag;
+    L4_Msg_t                        msg;
+    L4_StringItem_t                 string_item;
+    L4_ThreadId_t                   partner;
+    L4_Word_t                       error;
 
-	static unsigned char			string[MAX_STRINGITEM_LENGTH + 1];
+    static unsigned char            string[MAX_STRINGITEM_LENGTH + 1];
 
-	L4_Clear(&buffer);
-	L4_Append(&buffer, L4_StringItem(MAX_STRINGITEM_LENGTH, &(string[0])));
+    L4_Clear(&buffer);
+    L4_Append(&buffer, L4_StringItem(MAX_STRINGITEM_LENGTH, &(string[0])));
     L4_Accept(L4_MapGrantItems(L4_CompleteAddressSpace)
             + L4_StringItemsAcceptor, &buffer);
 
@@ -57,32 +57,32 @@ sys$loop()
             switch(L4_Label(tag))
             {
                 case CALL$PRINT:
-					L4_StoreMRs(1, 2, string_item.raw);
-					string[string_item.X.string_length] = 0;
-					notice("%s\n", string);
-					error = 0;
+                    L4_StoreMRs(1, 2, string_item.raw);
+                    string[string_item.X.string_length] = 0;
+                    notice("%s\n", string);
+                    error = 0;
                     break;
 
                 default:
                     PANIC(L4_ThreadNo(partner) != 0,
-							notice(IPC_F_UNKNOWN "unknown IPC from $%lX "
+                            notice(IPC_F_UNKNOWN "unknown IPC from $%lX "
                             "with label $%lX\n", L4_ThreadNo(partner),
                             L4_Label(tag)));
             }
 
-			// Returned message
-			L4_Clear(&msg);
-			L4_Append(&msg, error);
-			L4_Load(&msg);
+            // Returned message
+            L4_Clear(&msg);
+            L4_Append(&msg, error);
+            L4_Load(&msg);
         }
 
         tag = L4_ReplyWait(partner, &partner);
 
-		if (L4_IpcFailed(tag))
-		{
-			notice(IPC_F_FAILED "IPC failed (error %ld: %s)\n", L4_ErrorCode(),
-					L4_ErrorCode_String(L4_ErrorCode()));
-		}
+        if (L4_IpcFailed(tag))
+        {
+            notice(IPC_F_FAILED "IPC failed (error %ld: %s)\n", L4_ErrorCode(),
+                    L4_ErrorCode_String(L4_ErrorCode()));
+        }
     }
 
     return;

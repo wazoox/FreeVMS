@@ -22,11 +22,11 @@
 #include <freevms/freevms.h>
 
 #define PUTCH(ch) do {          \
-	if (size-- <= 0)            \
-	    goto Done;              \
-	*p++ = (ch);                \
-	str_ptr++;                  \
-	} while (0) 
+    if (size-- <= 0)            \
+        goto Done;              \
+    *p++ = (ch);                \
+    str_ptr++;                  \
+    } while (0) 
 
 #define PUTSTR(st) do {         \
     const char *s = (st);       \
@@ -34,7 +34,7 @@
         if (size-- <= 0)        \
             goto Done;          \
             *p++ = *s++;        \
-			str_ptr++;          \
+            str_ptr++;          \
         }                       \
     } while (0)
 
@@ -101,7 +101,7 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
     int                         numdigits;
     int                         numpr;
     int                         precision;
-	int							sign;
+    int                         sign;
     int                         signch;
     int                         someflag;
     int                         width;
@@ -135,8 +135,8 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
         goto Done;
     }
 
-	fmt_ptr = 0;
-	str_ptr = 0;
+    fmt_ptr = 0;
+    str_ptr = 0;
 
     while (size > 0)
     {
@@ -155,10 +155,10 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
             p++;
         }
 
-		if ((fmt_ptr - 1) == fmt_desc->length_trim)
-		{
-			goto Done;
-		}
+        if ((fmt_ptr - 1) == fmt_desc->length_trim)
+        {
+            goto Done;
+        }
 
         f_alternate = 0;
         f_left = 0;
@@ -184,10 +184,10 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
             }
         }
 
-		if ((fmt_ptr - 1) == fmt_desc->length_trim)
-		{
-			goto Done;
-		}
+        if ((fmt_ptr - 1) == fmt_desc->length_trim)
+        {
+            goto Done;
+        }
 
         /*
          * Parse field width.
@@ -372,7 +372,7 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
                     {
                         convert[numdigits++] = digits[(unsigned int)
                                 (uval % base)];
-						uval /= base;
+                        uval /= base;
                     } while(uval > 0);
                 }
 

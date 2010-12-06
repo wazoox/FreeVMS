@@ -20,5 +20,5 @@
 */
 
 #define RUN_S_STARTED       "%%RUN-S-STARTED, "
-#define RUN_S_PRIV		    "%%RUN-S-PRIV, "
+#define RUN_S_PRIV          "%%RUN-S-PRIV, "
 #define RUN_S_PROC_ID       "%%RUN-S-PROC_ID, "
