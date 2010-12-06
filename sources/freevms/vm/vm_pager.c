@@ -30,15 +30,8 @@ main(int argc, char **argv)
     L4_InitIpc();
 
     vms$string_initializer(message, 80);
-    //rtl$strcpy(&message, RUN_S_STARTED "PAGER.SYS process started");
-    rtl$strcpy(&message, "PAGER.SYS process started");
+    rtl$strcpy(&message, RUN_S_STARTED "PAGER.SYS process started");
     rtl$print(&message, NULL);
-
-	rtl$strcpy(&message, "TEST... %d");
-	i = 8;
-	arg[0] = &i;
-
-    rtl$print(&message, arg);
 
     for(;;);
 }

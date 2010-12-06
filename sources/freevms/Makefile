@@ -44,9 +44,15 @@ OBJ_SYS=\
     $(DESTDIR)/sys/sys_rfl.o \
 	$(DESTDIR)/sys/sys_sigma0.o \
 	$(DESTDIR)/sys/sys_slab.o \
-    $(DESTDIR)/sys/sys_thread.o
+    $(DESTDIR)/sys/sys_thread.o \
+	$(DESTDIR)/librtl/rtl_print.o \
+	$(DESTDIR)/librtl/rtl_sprint.o \
+	$(DESTDIR)/librtl/rtl_str.o
 
 OBJ_LIBRTL=\
+    $(DESTDIR)/libearly/amd64.o \
+	$(DESTDIR)/libearly/get_hex.o \
+	$(DESTDIR)/libearly/print.o \
 	$(DESTDIR)/librtl/rtl_print.o \
 	$(DESTDIR)/librtl/rtl_sprint.o \
 	$(DESTDIR)/librtl/rtl_str.o

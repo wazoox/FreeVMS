@@ -21,7 +21,12 @@
 
 #include <freevms/freevms.h>
 
-#define PUTCH(ch) do { if (size-- <= 0) goto Done; *p++ = (ch); } while (0) 
+#define PUTCH(ch) do {          \
+	if (size-- <= 0)            \
+	    goto Done;              \
+	*p++ = (ch);                \
+	str_ptr++;                  \
+	} while (0) 
 
 #define PUTSTR(st) do {         \
     const char *s = (st);       \
@@ -29,6 +34,7 @@
         if (size-- <= 0)        \
             goto Done;          \
             *p++ = *s++;        \
+			str_ptr++;          \
         }                       \
     } while (0)
 
@@ -36,7 +42,7 @@
     uval = num;                                         \
     numdigits = 0;                                      \
     do {                                                \
-        convert[ numdigits++ ] = digits[ uval % 10 ];   \
+        convert[numdigits++] = digits[uval % 10];       \
         uval /= 10;                                     \
     } while ( uval > 0 );                               \
     while (numdigits > 0)                               \
@@ -95,6 +101,7 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
     int                         numdigits;
     int                         numpr;
     int                         precision;
+	int							sign;
     int                         signch;
     int                         someflag;
     int                         width;
@@ -148,6 +155,11 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
             p++;
         }
 
+		if ((fmt_ptr - 1) == fmt_desc->length_trim)
+		{
+			goto Done;
+		}
+
         f_alternate = 0;
         f_left = 0;
         f_sign = 0;
@@ -171,6 +183,11 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
                 default: someflag = 0; break;
             }
         }
+
+		if ((fmt_ptr - 1) == fmt_desc->length_trim)
+		{
+			goto Done;
+		}
 
         /*
          * Parse field width.
@@ -245,7 +262,7 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
             case 'L': f_ldouble = 1; fmt_ptr++; break;
         }
 
-        f_sign = 1;
+        sign = 1;
 
         /*
          * Parse format conversion.
@@ -306,7 +323,7 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
                 digits = "0123456789";
 
             Print_unsigned:
-                f_sign = 0;
+                sign = 0;
 
             Print_signed:
                 signch = 0;
@@ -316,7 +333,7 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
                  * Check for sign character.
                  */
 
-                if (f_sign)
+                if (sign)
                 {
                     if (f_sign && ((long) uval >= 0))
                     {
@@ -355,6 +372,7 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
                     {
                         convert[numdigits++] = digits[(unsigned int)
                                 (uval % base)];
+						uval /= base;
                     } while(uval > 0);
                 }
 
@@ -418,18 +436,18 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
                 {
                     if (base == 2)
                     {
-                        numpr--;
-                        PUTCH('%');
+                        numpr -= 2;
+                        PUTSTR("% ");
                     }
                     else if (base == 8)
                     {
                         numpr--;
-                        PUTCH('0');
+                        PUTCH('o');
                     }
                     else if (base == 16)
                     {
                         numpr -= 2;
-                        PUTSTR("0x");
+                        PUTSTR("$ ");
                     }
                 }
 
@@ -589,7 +607,7 @@ rtl$sprint(struct vms$string *str_desc, struct vms$string *fmt_desc,
                 }
                 else
                 {
-                    PUTSTR("MalformedThreadId= ");
+                    PUTSTR("MalformedThreadId=");
                     PUTDEC(tid.raw);
                 }
                 break;
