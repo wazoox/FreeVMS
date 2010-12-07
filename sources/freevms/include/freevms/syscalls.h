@@ -20,3 +20,15 @@
 */
 
 #define CALL$PRINT                  1
+
+#define CALL$NAME_SERVER
+
+#define CALL$ALLOC_PAGE
+#define CALL$FREE_PAGE
+
+#define CALL$NEW_PROCESS
+#define CALL$NEW_THREAD
+#define CALL$KILL_PROCESS
+#define CALL$KILL_THREAD
+
+#define CALL$MORE_CORE

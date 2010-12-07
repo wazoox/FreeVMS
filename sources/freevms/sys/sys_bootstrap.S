@@ -19,24 +19,28 @@
 ================================================================================
 */
 
-#include "freevms/freevms.h"
+#ifdef AMD64
+    .text
+    .global _start
+    .global _stext
 
-struct mapped_page
-{       
-    L4_Fpage_t                  phys;
-    L4_Fpage_t                  virt;
+_stext:
+_start:
+    leaq    stack, %rsp
+    callq   __L4_Init
+    pushq   $0
+    pushq   $0
+    callq   main
+    popq    %r15
+    popq    %r15
+    int $3
+_loop:
+    jmp _loop
 
-    struct pd                   *owner;
+    .bss
 
-    vms$pointer                 flags; // VMS$MAPPED | VMS$SWAPPED
-                        
-    TAILQ_ENTRY(mapped_pages)   list;
-};
+    .align  16
+    .space  4096 * 64 /* 256k */
 
-#define VMS$MAPPED              1
-#define VMS$SWAPPED             2
-
-int __attribute__((cdecl)) main(int argc, char **argv);
-void vms$pagefault_init();
-void vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
-        vms$pointer tag);
+stack:
+#endif

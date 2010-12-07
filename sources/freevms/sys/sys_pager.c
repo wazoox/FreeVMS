@@ -129,8 +129,9 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
         PANIC(1, notice(MEM_F_BACKMEM "unable to back heap during startup\n"));
     }
 
-    /*
     init_vars = (vms$pointer *) (heap->base);
+	*(init_vars + 0) = 42;
+    /*
     *(init_vars + 0) = NULL;                        // Callback pointer
     *(init_vars + 1) = 0;                           // SYS$INPUT
     *(init_vars + 2) = 0;                           // SYS$OUTPUT
@@ -142,10 +143,10 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
     *(init_vars + 8) = pagesize / sizeof(cap_t);    // cap_size
     *(init_vars + 9) = clist_section->base;         // cap_addr
     *(init_vars + 10) = 0;                          // naming_server
-
-    *(--user_stack) = 0;                            // argc
-    *(--user_stack) = (vms$pointer) init_vars;      // arguments
     */
+
+    *(--user_stack) = 1;                            // argc
+    *(--user_stack) = (vms$pointer) init_vars;      // arguments
 
     sys$thread_start(thread, init->entry, (vms$pointer) user_stack);
 

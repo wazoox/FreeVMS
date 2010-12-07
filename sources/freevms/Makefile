@@ -23,7 +23,7 @@ OBJ_SYS=\
 	$(DESTDIR)/sys/sec_rand.o \
 	$(DESTDIR)/sys/sys_alloc.o \
     $(DESTDIR)/sys/sys_bfl.o \
-	$(DESTDIR)/sys/sys_boot.o \
+	$(DESTDIR)/sys/sys_bootstrap.o \
 	$(DESTDIR)/sys/sys_btree.o \
 	$(DESTDIR)/sys/sys_core.o \
     $(DESTDIR)/sys/sys_elf.o \
@@ -50,9 +50,7 @@ OBJ_SYS=\
 	$(DESTDIR)/librtl/rtl_str.o
 
 OBJ_LIBRTL=\
-    $(DESTDIR)/libearly/amd64.o \
-	$(DESTDIR)/libearly/get_hex.o \
-	$(DESTDIR)/libearly/print.o \
+	$(DESTDIR)/librtl/rtl_bootstrap.o \
 	$(DESTDIR)/librtl/rtl_print.o \
 	$(DESTDIR)/librtl/rtl_sprint.o \
 	$(DESTDIR)/librtl/rtl_str.o
@@ -100,12 +98,12 @@ $(DESTDIR)/librtl/librtl.a: $(OBJ_LIBRTL)
 
 $(DESTDIR)/init.exe: $(OBJ_INIT) $(DESTDIR)/librtl/librtl.a
 	@echo  [LD] $@
-	@ld -emain -N -L$(DESTDIR)/../kernel/build/lib/l4\
+	@ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4\
 	   		$+ -nostdlib -T linker/elf_x86_64 -ll4 -static -o $@
 
 $(DESTDIR)/pager.sys: $(OBJ_PAGER) $(DESTDIR)/librtl/librtl.a
 	@echo  [LD] $@
-	@ld -emain -N -L$(DESTDIR)/../kernel/build/lib/l4\
+	@ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4\
 	   		$+ -nostdlib -T linker/elf_x86_64_pager -ll4 -static -o $@
 
 directories:
@@ -131,6 +129,10 @@ $(DESTDIR)/sys/%.o: sys/%.c
 	@gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -o $@ -c $<
 
 # ./librtl
+
+$(DESTDIR)/librtl/%.o: librtl/%.S
+	@echo  [AS] $<
+	@as -o $@ $<
 
 $(DESTDIR)/librtl/%.o: librtl/%.c
 	@echo  [CC] $<

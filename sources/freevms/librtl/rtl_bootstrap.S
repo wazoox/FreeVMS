@@ -26,27 +26,10 @@
 
 _stext:
 _start:
-0:  leaq    stack, %rsp
-    pushq   %rbx
-    pushq   %rax
-    callq   __L4_Init
-    pushq   $0
-    pushq   $0
-    pushq   $_return_from_main
-    jmp     main
-    popq    %r15
-    popq    %r15
-
-_return_from_main:
-    int $3
-    jmp 1f
-    .ascii "System stopped."
-1:  jmp _return_from_main
-
-    .bss
-
-    .align  16
-    .space  4096 * 64 /* 256k */
-
-stack:
+	callq	__L4_Init
+	movq	(%rsp), %rsi
+	movq	8(%rsp), %rdi
+    callq   main
+	leaveq
+	retq
 #endif
