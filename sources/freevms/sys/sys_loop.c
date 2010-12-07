@@ -33,7 +33,6 @@ sys$loop()
     L4_StringItem_t                 string_item;
     L4_ThreadId_t                   partner;
     L4_ThreadId_t                   tid;
-    L4_Word_t                       error;
 
     static unsigned char            string[MAX_STRINGITEM_LENGTH + 1];
 
@@ -57,7 +56,6 @@ sys$loop()
         }
         else
         {
-            error = 0;
             reply = 1;
 
             switch(L4_Label(tag))
@@ -66,6 +64,13 @@ sys$loop()
                     L4_StoreMRs(1, 2, string_item.raw);
                     string[string_item.X.string_length] = 0;
                     notice("%s\n", string);
+                    L4_Clear(&msg);
+                    L4_Append(&msg, (L4_Word_t) 0);
+                    break;
+
+                case SYSCALL$EXIT_VALUE:
+                    L4_Clear(&msg);
+                    L4_Append(&msg, (L4_Word_t) 0);
                     break;
 
                 case SYSCALL$KILL_THREAD:
@@ -84,10 +89,7 @@ sys$loop()
             if (reply)
             {
                 // Returned message
-                L4_Clear(&msg);
-                L4_Append(&msg, error);
                 L4_Load(&msg);
-
                 tag = L4_ReplyWait(partner, &partner);
             }
             else
