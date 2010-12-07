@@ -30,7 +30,7 @@ _start:
     callq   __L4_Init
     pushq   $0
     pushq   $0
-    callq   main
+    callq   freevms_main
     popq    %r15
     popq    %r15
     int $3

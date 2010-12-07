@@ -39,6 +39,14 @@ int rtl$strcmp(struct vms$string *s1, struct vms$string *s2);
 void rtl$strcpy(struct vms$string *s1, struct vms$string *s2);
 void rtl$strcpy(struct vms$string *s1, const char *s2);
 
+extern "C"
+{
+	void __attribute__((noreturn)) __bootstrap(int argc, char **argv);
+	void __attribute__((noreturn)) exit(int v);
+}
+
+int main(int argc , char **argv);
+
 // FIXME
 int str$len(struct vms$string, struct vms$string);
 int str$lentrim(struct vms$string, struct vms$string);

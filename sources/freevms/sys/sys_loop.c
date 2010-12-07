@@ -24,6 +24,7 @@
 void
 sys$loop()
 {
+	int								reply;
     int                             running;
 
     L4_MsgBuffer_t                  buffer;
@@ -51,32 +52,47 @@ sys$loop()
         if ((tag.raw & L4_REQUEST_MASK) == L4_PAGEFAULT)
         {
             sys$pagefault(partner, L4_Get(&msg, 0), L4_Get(&msg, 1), tag.raw);
+			tag = L4_ReplyWait(partner, &partner);
         }
         else
         {
+			error = 0;
+			reply = 1;
+
             switch(L4_Label(tag))
             {
-                case CALL$PRINT:
+                case SYSCALL$PRINT:
                     L4_StoreMRs(1, 2, string_item.raw);
                     string[string_item.X.string_length] = 0;
                     notice("%s\n", string);
-                    error = 0;
                     break;
 
+				case SYSCALL$KILL_THREAD:
+					L4_AbortIpc_and_stop(partner);
+					sys$thread_delete(sys$thread_lookup(partner));
+					reply = 0;
+					break;
+
                 default:
-                    PANIC(L4_ThreadNo(partner) != 0,
-                            notice(IPC_F_UNKNOWN "unknown IPC from $%lX "
+                    PANIC(1, notice(IPC_F_UNKNOWN "unknown IPC from $%lX "
                             "with label $%lX\n", L4_ThreadNo(partner),
                             L4_Label(tag)));
             }
 
-            // Returned message
-            L4_Clear(&msg);
-            L4_Append(&msg, error);
-            L4_Load(&msg);
-        }
+			if (reply)
+			{
+				// Returned message
+				L4_Clear(&msg);
+				L4_Append(&msg, error);
+				L4_Load(&msg);
 
-        tag = L4_ReplyWait(partner, &partner);
+				tag = L4_ReplyWait(partner, &partner);
+			}
+			else
+			{
+				tag = L4_Wait(&partner);
+			}
+        }
 
         if (L4_IpcFailed(tag))
         {

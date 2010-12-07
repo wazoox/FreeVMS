@@ -225,9 +225,6 @@ struct pd
     struct pd               *owner;         // Our owner
     enum pd_state           state;
 
-    struct memsection       *callback_buffer;
-    struct cb_alloc_handle  *cba;
-
     // PD information
     struct pd_list          pds;
     struct memsection_list  memsections;

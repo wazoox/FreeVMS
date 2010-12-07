@@ -58,8 +58,6 @@ sys$pd_setup(struct pd *self, struct pd *parent, int max_threads)
     self->owner = parent;
     self->state = pd_empty;
     self->local_threadno = sys$bfl_new(max_threads);
-    self->callback_buffer = NULL;
-    self->cba = NULL;
 
     sys$thread_list_init(&self->threads);
     sys$pd_list_init(&self->pds);

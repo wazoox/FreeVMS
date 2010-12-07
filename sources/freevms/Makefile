@@ -44,13 +44,11 @@ OBJ_SYS=\
     $(DESTDIR)/sys/sys_rfl.o \
 	$(DESTDIR)/sys/sys_sigma0.o \
 	$(DESTDIR)/sys/sys_slab.o \
-    $(DESTDIR)/sys/sys_thread.o \
-	$(DESTDIR)/librtl/rtl_print.o \
-	$(DESTDIR)/librtl/rtl_sprint.o \
-	$(DESTDIR)/librtl/rtl_str.o
+    $(DESTDIR)/sys/sys_thread.o
 
 OBJ_LIBRTL=\
 	$(DESTDIR)/librtl/rtl_bootstrap.o \
+	$(DESTDIR)/librtl/rtl_init.o \
 	$(DESTDIR)/librtl/rtl_print.o \
 	$(DESTDIR)/librtl/rtl_sprint.o \
 	$(DESTDIR)/librtl/rtl_str.o

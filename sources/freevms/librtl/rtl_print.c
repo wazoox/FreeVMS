@@ -24,6 +24,8 @@
 void
 rtl$print(struct vms$string *fmt, void **arg)
 {
+	extern L4_ThreadId_t		roottask_tid;
+
     vms$string_initializer(str, 1024);
 
     L4_Msg_t            msg;
@@ -42,10 +44,10 @@ rtl$print(struct vms$string *fmt, void **arg)
 
         L4_Clear(&msg);
         L4_Append(&msg, si);
-        L4_Set_Label(&msg, CALL$PRINT);
+        L4_Set_Label(&msg, SYSCALL$PRINT);
         L4_Load(&msg);
 
-        L4_Call(L4_Pager());
+        L4_Call(roottask_tid);
     }
 
     return;

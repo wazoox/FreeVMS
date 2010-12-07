@@ -36,7 +36,6 @@ struct mapped_page
 #define VMS$MAPPED              1
 #define VMS$SWAPPED             2
 
-int __attribute__((cdecl)) main(int argc, char **argv);
 void vms$pagefault_init();
 void vms$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
         vms$pointer tag);

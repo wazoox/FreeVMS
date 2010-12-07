@@ -19,16 +19,11 @@
 ================================================================================
 */
 
-#define CALL$PRINT                  1
+#define SYS$CALL(n)					(n)
 
-#define CALL$NAME_SERVER
+#define SYSCALL$PRINT               SYS$CALL(0x1)
 
-#define CALL$ALLOC_PAGE
-#define CALL$FREE_PAGE
-
-#define CALL$NEW_PROCESS
-#define CALL$NEW_THREAD
-#define CALL$KILL_PROCESS
-#define CALL$KILL_THREAD
-
-#define CALL$MORE_CORE
+#define SYSCALL$NEW_PROCESS			SYS$CALL(0x010)
+#define SYSCALL$NEW_THREAD			SYS$CALL(0x011)
+#define SYSCALL$KILL_PROCESS    	SYS$CALL(0x100)
+#define SYSCALL$KILL_THREAD			SYS$CALL(0x101)

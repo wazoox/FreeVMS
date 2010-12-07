@@ -29,8 +29,8 @@ int                     dbg$vms_pagefault;
 
 struct pd               freevms_pd;
 
-int
-main(void)
+void
+freevms_main(void)
 {
     char                        *command_line;
 
@@ -159,5 +159,5 @@ main(void)
     sys$loop();
 
     notice(">>> System halted\n");
-    return(0);
+    return;
 }

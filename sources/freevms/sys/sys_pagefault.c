@@ -54,8 +54,8 @@ sys$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
 
     if ((memsection = sys$objtable_lookup((void *) addr)) == NULL)
     {
-        notice(MEM_F_MEMSEC "no memory section for address $%016lX\n", addr);
-        goto fail;
+        PANIC(1, notice(MEM_F_MEMSEC
+				"no memory section for address $%016lX\n", addr));
     }
 
     ref = (vms$pointer) memsection;
@@ -71,19 +71,8 @@ sys$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
     }
     else
     {
-        notice(MEM_F_SECFLD "security check failed\n");
-        goto fail;
+        PANIC(1, notice(MEM_F_SECFLD "security check failed\n"));
     }
 
-    return;
-
-fail:
-    L4_Clear(&msg);
-    L4_Append(&msg, L4_MapItem(L4_Nilpage, L4_Address(L4_Nilpage)));
-    L4_Load(&msg);
-
-    L4_Stop(caller);
-    thread = sys$thread_lookup(caller);
-    sys$thread_delete(thread);
     return;
 }

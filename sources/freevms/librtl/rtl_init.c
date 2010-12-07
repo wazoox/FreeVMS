@@ -19,17 +19,40 @@
 ================================================================================
 */
 
-#ifdef AMD64
-    .text
-    .global _start
-    .global _stext
+#include "freevms/freevms.h"
 
-_stext:
-_start:
-    callq   __L4_Init
-    movq    (%rsp), %rsi
-    movq    8(%rsp), %rdi
-    callq   __bootstrap
-    leaveq
-    retq
-#endif
+/*
+ * argv[0] = roottask_tid
+ * argv[1] = parent_tid;
+ */
+
+L4_ThreadId_t		roottask_tid;
+
+void
+__bootstrap(int argc, char **argv)
+{
+	int			v;
+
+	roottask_tid.raw = (vms$pointer) argv[0];
+
+	v = main(argc, argv);
+
+	exit(v);
+}
+
+void
+exit(int v)
+{
+	L4_Msg_t			msg;
+
+	// Send IPC to parent (value returned by task)
+
+	// Send IPC to roottask stop thread.
+
+	L4_Clear(&msg);
+	L4_Set_Label(&msg, SYSCALL$KILL_THREAD);
+	L4_Load(&msg);
+	L4_Call(roottask_tid);
+
+	while(1);
+}
