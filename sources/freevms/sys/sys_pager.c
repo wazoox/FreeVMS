@@ -130,7 +130,7 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
     }
 
     init_vars = (vms$pointer *) (heap->base);
-	*(init_vars + 0) = 42;
+    *(init_vars + 0) = 42;
     /*
     *(init_vars + 0) = NULL;                        // Callback pointer
     *(init_vars + 1) = 0;                           // SYS$INPUT

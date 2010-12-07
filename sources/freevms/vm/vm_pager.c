@@ -24,21 +24,21 @@
 int
 main(int argc, char **argv)
 {
-	void			*arg[16];
-
     vms$string_initializer(message, 80);
     rtl$strcpy(&message, RUN_S_STARTED "PAGER.SYS process started");
     rtl$print(&message, NULL);
 
-	/* Instructions required to print arguments
-	arg[0] = &argc;
-	rtl$strcpy(&message, "%d");
-	rtl$print(&message, arg);
+    /* Instructions required to print arguments
+    void            *arg[16];
 
-	arg[0] = &(argv[0]);
-	rtl$strcpy(&message, "%d");
-	rtl$print(&message, arg);
-	*/
+    arg[0] = &argc;
+    rtl$strcpy(&message, "%d");
+    rtl$print(&message, arg);
+
+    arg[0] = &(argv[0]);
+    rtl$strcpy(&message, "%d");
+    rtl$print(&message, arg);
+    */
 
     for(;;);
 }

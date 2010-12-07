@@ -26,10 +26,10 @@
 
 _stext:
 _start:
-	callq	__L4_Init
-	movq	(%rsp), %rsi
-	movq	8(%rsp), %rdi
+    callq   __L4_Init
+    movq    (%rsp), %rsi
+    movq    8(%rsp), %rdi
     callq   main
-	leaveq
-	retq
+    leaveq
+    retq
 #endif

@@ -123,7 +123,3 @@ void sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
         vms$pointer pagesize, char *root_device);
 void sys$loop();
 void sys$parsing(char *line, char *command, char *argument, int length);
-
-// Initialization
-extern "C" void __L4_Init();
-#define L4_InitIpc      __L4_Init
