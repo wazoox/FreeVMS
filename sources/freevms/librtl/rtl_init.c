@@ -26,33 +26,34 @@
  * argv[1] = parent_tid;
  */
 
-L4_ThreadId_t		roottask_tid;
+L4_ThreadId_t       roottask_tid;
 
 void
 __bootstrap(int argc, char **argv)
 {
-	int			v;
+    int         v;
 
-	roottask_tid.raw = (vms$pointer) argv[0];
+    roottask_tid.raw = (vms$pointer) argv[0];
 
-	v = main(argc, argv);
+    v = main(argc, argv);
 
-	exit(v);
+    exit(v);
 }
 
 void
 exit(int v)
 {
-	L4_Msg_t			msg;
+    L4_Msg_t            msg;
 
-	// Send IPC to parent (value returned by task)
+    // Send IPC to parent (value returned by task)
 
-	// Send IPC to roottask stop thread.
+    // Send IPC to roottask stop thread.
 
-	L4_Clear(&msg);
-	L4_Set_Label(&msg, SYSCALL$KILL_THREAD);
-	L4_Load(&msg);
-	L4_Call(roottask_tid);
+    L4_Clear(&msg);
+    L4_Append(&msg, L4_Myself().raw);
+    L4_Set_Label(&msg, SYSCALL$KILL_THREAD);
+    L4_Load(&msg);
+    L4_Call(roottask_tid);
 
-	while(1);
+    while(1);
 }

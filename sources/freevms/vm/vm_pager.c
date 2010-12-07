@@ -28,5 +28,5 @@ main(int argc, char **argv)
     rtl$strcpy(&message, RUN_S_STARTED "PAGER.SYS process started");
     rtl$print(&message, NULL);
 
-	return(0);
+    return(0);
 }

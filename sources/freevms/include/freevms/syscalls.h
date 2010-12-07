@@ -19,11 +19,13 @@
 ================================================================================
 */
 
-#define SYS$CALL(n)					(n)
+#define SYS$CALL(n)                 (n)
 
-#define SYSCALL$PRINT               SYS$CALL(0x1)
+#define SYSCALL$NAME_SERVER         SYS$CALL(0x1)
 
-#define SYSCALL$NEW_PROCESS			SYS$CALL(0x010)
-#define SYSCALL$NEW_THREAD			SYS$CALL(0x011)
-#define SYSCALL$KILL_PROCESS    	SYS$CALL(0x100)
-#define SYSCALL$KILL_THREAD			SYS$CALL(0x101)
+#define SYSCALL$NEW_PROCESS         SYS$CALL(0x010)
+#define SYSCALL$NEW_THREAD          SYS$CALL(0x011)
+#define SYSCALL$KILL_PROCESS        SYS$CALL(0x100)
+#define SYSCALL$KILL_THREAD         SYS$CALL(0x101)     // Untyped word (tid)
+
+#define SYSCALL$PRINT               SYS$CALL(0x1000)    // StringItem

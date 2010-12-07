@@ -36,8 +36,6 @@ sys$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
 
     struct memsection       *memsection;
 
-    struct thread           *thread;
-
     vms$pointer             priv;
     vms$pointer             ref;
 
@@ -55,7 +53,7 @@ sys$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
     if ((memsection = sys$objtable_lookup((void *) addr)) == NULL)
     {
         PANIC(1, notice(MEM_F_MEMSEC
-				"no memory section for address $%016lX\n", addr));
+                "no memory section for address $%016lX\n", addr));
     }
 
     ref = (vms$pointer) memsection;

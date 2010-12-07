@@ -24,7 +24,7 @@
 void
 rtl$print(struct vms$string *fmt, void **arg)
 {
-	extern L4_ThreadId_t		roottask_tid;
+    extern L4_ThreadId_t        roottask_tid;
 
     vms$string_initializer(str, 1024);
 

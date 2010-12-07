@@ -41,8 +41,8 @@ void rtl$strcpy(struct vms$string *s1, const char *s2);
 
 extern "C"
 {
-	void __attribute__((noreturn)) __bootstrap(int argc, char **argv);
-	void __attribute__((noreturn)) exit(int v);
+    void __attribute__((noreturn)) __bootstrap(int argc, char **argv);
+    void __attribute__((noreturn)) exit(int v);
 }
 
 int main(int argc , char **argv);

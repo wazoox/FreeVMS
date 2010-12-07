@@ -24,7 +24,7 @@
 void
 sys$loop()
 {
-	int								reply;
+    int                             reply;
     int                             running;
 
     L4_MsgBuffer_t                  buffer;
@@ -32,6 +32,7 @@ sys$loop()
     L4_Msg_t                        msg;
     L4_StringItem_t                 string_item;
     L4_ThreadId_t                   partner;
+    L4_ThreadId_t                   tid;
     L4_Word_t                       error;
 
     static unsigned char            string[MAX_STRINGITEM_LENGTH + 1];
@@ -52,12 +53,12 @@ sys$loop()
         if ((tag.raw & L4_REQUEST_MASK) == L4_PAGEFAULT)
         {
             sys$pagefault(partner, L4_Get(&msg, 0), L4_Get(&msg, 1), tag.raw);
-			tag = L4_ReplyWait(partner, &partner);
+            tag = L4_ReplyWait(partner, &partner);
         }
         else
         {
-			error = 0;
-			reply = 1;
+            error = 0;
+            reply = 1;
 
             switch(L4_Label(tag))
             {
@@ -67,11 +68,12 @@ sys$loop()
                     notice("%s\n", string);
                     break;
 
-				case SYSCALL$KILL_THREAD:
-					L4_AbortIpc_and_stop(partner);
-					sys$thread_delete(sys$thread_lookup(partner));
-					reply = 0;
-					break;
+                case SYSCALL$KILL_THREAD:
+                    L4_StoreMR(1, &(tid.raw));
+                    L4_AbortIpc_and_stop(tid);
+                    sys$thread_delete(sys$thread_lookup(tid));
+                    reply = 0;
+                    break;
 
                 default:
                     PANIC(1, notice(IPC_F_UNKNOWN "unknown IPC from $%lX "
@@ -79,19 +81,19 @@ sys$loop()
                             L4_Label(tag)));
             }
 
-			if (reply)
-			{
-				// Returned message
-				L4_Clear(&msg);
-				L4_Append(&msg, error);
-				L4_Load(&msg);
+            if (reply)
+            {
+                // Returned message
+                L4_Clear(&msg);
+                L4_Append(&msg, error);
+                L4_Load(&msg);
 
-				tag = L4_ReplyWait(partner, &partner);
-			}
-			else
-			{
-				tag = L4_Wait(&partner);
-			}
+                tag = L4_ReplyWait(partner, &partner);
+            }
+            else
+            {
+                tag = L4_Wait(&partner);
+            }
         }
 
         if (L4_IpcFailed(tag))

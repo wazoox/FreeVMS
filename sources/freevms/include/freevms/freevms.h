@@ -126,5 +126,5 @@ void sys$parsing(char *line, char *command, char *argument, int length);
 
 extern "C"
 {
-	void freevms_main(void);
+    void freevms_main(void);
 }
