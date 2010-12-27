@@ -22,6 +22,7 @@
 #ifdef AMD64
     .text
     .global _start
+    .global _start_proces
     .global _stext
 
 _stext:
@@ -30,6 +31,14 @@ _start:
     movq    (%rsp), %rsi
     movq    8(%rsp), %rdi
     callq   __bootstrap
+    leaveq
+    retq
+
+_start_process:
+    callq   __L4_Init
+    movq    (%rsp), %rsi
+    movq    8(%rsp), %rdi
+    callq   __bootstrap_process
     leaveq
     retq
 #endif

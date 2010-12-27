@@ -123,30 +123,18 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
     // Setup the stack (16 bytes alignment)
     user_stack = (vms$pointer *) sys$page_round_down(stack->end + 1, 16);
 
-    if (sys$back_mem(heap->base, heap->base + (12 * sizeof(vms$pointer)),
+    if (sys$back_mem(heap->base, heap->base + (3 * sizeof(vms$pointer)),
             pagesize) != 0)
     {
         PANIC(1, notice(MEM_F_BACKMEM "unable to back heap during startup\n"));
     }
 
     init_vars = (vms$pointer *) (heap->base);
-    *(init_vars + 0) = L4_Myself().raw;
-    *(init_vars + 1) = L4_Myself().raw;
-    /*
-    *(init_vars + 0) = NULL;                        // Callback pointer
-    *(init_vars + 1) = 0;                           // SYS$INPUT
-    *(init_vars + 2) = 0;                           // SYS$OUTPUT
-    *(init_vars + 3) = 0;                           // SYS$ERROR
-    *(init_vars + 4) = heap->base;
-    *(init_vars + 5) = heap->end;
-    *(init_vars + 6) = 0;                           // cap_slot
-    *(init_vars + 7) = i - 1;                       // cap_used
-    *(init_vars + 8) = pagesize / sizeof(cap_t);    // cap_size
-    *(init_vars + 9) = clist_section->base;         // cap_addr
-    *(init_vars + 10) = 0;                          // naming_server
-    */
-
-    *(--user_stack) = 1;                            // argc
+    *(init_vars + 0) = L4_Myself().raw;				// Roottask
+    *(init_vars + 1) = L4_Myself().raw;				// Parent
+	*(init_vars + 2) = (vms$pointer) RUN_S_STOPPED	// Exit message
+			"PAGER.SYS process stopped";
+    *(--user_stack) = 3;                            // argc
     *(--user_stack) = (vms$pointer) init_vars;      // arguments
 
     sys$thread_start(thread, init->entry, (vms$pointer) user_stack);

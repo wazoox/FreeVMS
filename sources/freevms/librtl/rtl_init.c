@@ -26,16 +26,95 @@
  * argv[1] = parent_tid;
  */
 
-L4_ThreadId_t       roottask_tid;
-L4_ThreadId_t       parent_tid;
+L4_ThreadId_t       			roottask_tid;
+L4_ThreadId_t       			parent_tid;
+
+static struct vms$string		message;
+
+/*
+ * Start a thread with a pre-existing pager
+ */
 
 void
 __bootstrap(int argc, char **argv)
 {
-    int         v;
+	int					l;
+    int        			v;
+
+	unsigned char		*p;
 
     roottask_tid.raw = (vms$pointer) argv[0];
     parent_tid.raw = (vms$pointer) argv[1];
+
+	p = (unsigned char *) argv[2];
+
+	if (p != NULL)
+	{
+		l = 0;
+
+		while(*p)
+		{
+			p++;
+			l++;
+		}
+	}
+	else
+	{
+		l = 0;
+	}
+
+	message.c = (unsigned char *) argv[2];
+	message.length = l;
+	message.length_trim = l;
+
+	argc -= 3;
+	argv += 3;
+
+    v = main(argc, argv);
+    exit(v);
+}
+
+/*
+ * Start a process
+ * - create an address space
+ * - launch pager
+ * - launch executable as child thread
+ */
+
+void
+__bootstrap_process(int argc, char **argv)
+{
+	int					l;
+    int        			v;
+
+	unsigned char		*p;
+
+    roottask_tid.raw = (vms$pointer) argv[0];
+    parent_tid.raw = (vms$pointer) argv[1];
+
+	p = (unsigned char *) argv[2];
+
+	if (p != NULL)
+	{
+		l = 0;
+
+		while(*p)
+		{
+			p++;
+			l++;
+		}
+	}
+	else
+	{
+		l = 0;
+	}
+
+	message.c = (unsigned char *) argv[2];
+	message.length = l;
+	message.length_trim = l;
+
+	argc -= 3;
+	argv += 3;
 
     v = main(argc, argv);
     exit(v);
@@ -54,7 +133,14 @@ exit(int v)
     L4_Load(&msg);
     L4_Call(parent_tid);
 
-    // Send IPC to roottask stop thread.
+	// Print message
+
+	if (message.length_trim != 0)
+	{
+		rtl$print(&message, NULL);
+	}
+
+    // Send IPC to roottask to stop thread.
 
     L4_Clear(&msg);
     L4_Append(&msg, L4_Myself().raw);
