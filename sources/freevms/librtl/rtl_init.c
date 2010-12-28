@@ -26,10 +26,10 @@
  * argv[1] = parent_tid;
  */
 
-L4_ThreadId_t       			roottask_tid;
-L4_ThreadId_t       			parent_tid;
+L4_ThreadId_t                   roottask_tid;
+L4_ThreadId_t                   parent_tid;
 
-static struct vms$string		message;
+static struct vms$string        message;
 
 /*
  * Start a thread with a pre-existing pager
@@ -38,37 +38,37 @@ static struct vms$string		message;
 void
 __bootstrap(int argc, char **argv)
 {
-	int					l;
-    int        			v;
+    int                 l;
+    int                 v;
 
-	unsigned char		*p;
+    unsigned char       *p;
 
     roottask_tid.raw = (vms$pointer) argv[0];
     parent_tid.raw = (vms$pointer) argv[1];
 
-	p = (unsigned char *) argv[2];
+    p = (unsigned char *) argv[2];
 
-	if (p != NULL)
-	{
-		l = 0;
+    if (p != NULL)
+    {
+        l = 0;
 
-		while(*p)
-		{
-			p++;
-			l++;
-		}
-	}
-	else
-	{
-		l = 0;
-	}
+        while(*p)
+        {
+            p++;
+            l++;
+        }
+    }
+    else
+    {
+        l = 0;
+    }
 
-	message.c = (unsigned char *) argv[2];
-	message.length = l;
-	message.length_trim = l;
+    message.c = (unsigned char *) argv[2];
+    message.length = l;
+    message.length_trim = l;
 
-	argc -= 3;
-	argv += 3;
+    argc -= 3;
+    argv += 3;
 
     v = main(argc, argv);
     exit(v);
@@ -84,37 +84,37 @@ __bootstrap(int argc, char **argv)
 void
 __bootstrap_process(int argc, char **argv)
 {
-	int					l;
-    int        			v;
+    int                 l;
+    int                 v;
 
-	unsigned char		*p;
+    unsigned char       *p;
 
     roottask_tid.raw = (vms$pointer) argv[0];
     parent_tid.raw = (vms$pointer) argv[1];
 
-	p = (unsigned char *) argv[2];
+    p = (unsigned char *) argv[2];
 
-	if (p != NULL)
-	{
-		l = 0;
+    if (p != NULL)
+    {
+        l = 0;
 
-		while(*p)
-		{
-			p++;
-			l++;
-		}
-	}
-	else
-	{
-		l = 0;
-	}
+        while(*p)
+        {
+            p++;
+            l++;
+        }
+    }
+    else
+    {
+        l = 0;
+    }
 
-	message.c = (unsigned char *) argv[2];
-	message.length = l;
-	message.length_trim = l;
+    message.c = (unsigned char *) argv[2];
+    message.length = l;
+    message.length_trim = l;
 
-	argc -= 3;
-	argv += 3;
+    argc -= 3;
+    argv += 3;
 
     v = main(argc, argv);
     exit(v);
@@ -133,12 +133,12 @@ exit(int v)
     L4_Load(&msg);
     L4_Call(parent_tid);
 
-	// Print message
+    // Print message
 
-	if (message.length_trim != 0)
-	{
-		rtl$print(&message, NULL);
-	}
+    if (message.length_trim != 0)
+    {
+        rtl$print(&message, NULL);
+    }
 
     // Send IPC to roottask to stop thread.
 

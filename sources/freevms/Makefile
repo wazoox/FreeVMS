@@ -19,6 +19,7 @@ OBJ_SYS=\
 	$(DESTDIR)/sys/dbg_backtrace.o \
     $(DESTDIR)/sys/dbg_sigma0.o \
     $(DESTDIR)/sys/dev_tables.o \
+    $(DESTDIR)/sys/names_tables.o \
 	$(DESTDIR)/sys/sec_caps.o \
 	$(DESTDIR)/sys/sec_rand.o \
 	$(DESTDIR)/sys/sys_alloc.o \

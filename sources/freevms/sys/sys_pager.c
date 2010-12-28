@@ -129,12 +129,12 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
     }
 
     init_vars = (vms$pointer *) (heap->base);
-    *(init_vars + 0) = L4_Myself().raw;				// Roottask
-    *(init_vars + 1) = L4_Myself().raw;				// Parent
-	*(init_vars + 2) = (vms$pointer) RUN_S_STOPPED	// Exit message
-			"PAGER.SYS process stopped";
-	*(init_vars + 3) = meminfo->swapper_base;
-	*(init_vars + 4) = NULL;
+    *(init_vars + 0) = L4_Myself().raw;             // Roottask
+    *(init_vars + 1) = L4_Myself().raw;             // Parent
+    *(init_vars + 2) = (vms$pointer) RUN_S_STOPPED  // Exit message
+            "PAGER.SYS process stopped";
+    *(init_vars + 3) = meminfo->swapper_base;
+    *(init_vars + 4) = NULL;
     *(--user_stack) = 4;                            // argc
     *(--user_stack) = (vms$pointer) init_vars;      // arguments
 

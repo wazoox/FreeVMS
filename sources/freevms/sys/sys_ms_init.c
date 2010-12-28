@@ -427,17 +427,17 @@ sys$mem_init(L4_KernelInterfacePage_t *kip, struct vms$meminfo *mem_info,
     }
 
     sys$set_flags(mem_info, VMS$IOF_APP, VMS$IOF_VIRT);
-	mem_info->swapper_base = 0;
+    mem_info->swapper_base = 0;
 
     for(i = 0; i < mem_info->num_regions; i++)
     {
         notice(MEM_I_AREA "$%016lX - $%016lX: physical memory\n",
                 mem_info->regions[i].base, mem_info->regions[i].end);
 
-		if (mem_info->swapper_base < mem_info->regions[i].end)
-		{
-			mem_info->swapper_base = mem_info->regions[i].end + 1;
-		}
+        if (mem_info->swapper_base < mem_info->regions[i].end)
+        {
+            mem_info->swapper_base = mem_info->regions[i].end + 1;
+        }
     }
 
     for(i = 0; i < mem_info->num_vm_regions; i++)

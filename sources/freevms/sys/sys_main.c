@@ -154,6 +154,8 @@ freevms_main(void)
     sys$populate_init_objects(&mem_info, pagesize);
 
     dev$init();
+    names$init();
+
     sys$pager(kip, &mem_info, pagesize, root_device);
     sys$init(kip, &mem_info, pagesize, root_device);
     sys$loop();

@@ -63,6 +63,7 @@ typedef L4_Word64_t     vms$pointer;
 // FreeVMS subsystems
 #include "freevms/sys_dev.h"
 #include "freevms/sys_mem.h"
+#include "freevms/sys_names.h"
 #include "freevms/sys_thread.h"
 #include "freevms/sys_mutex.h"
 #include "freevms/sys_quota.h"

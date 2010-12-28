@@ -39,8 +39,10 @@
 #define MOUNT_I_MOUNTED     "%%MOUNT-I-MOUNTED, "
 #define MOUNT_I_OPRQST      "%%MOUNT-I-OPRQST, "
 
-#define PAGER_I_SWPADDR		"%%PAGER-I-SWPADDR, "
-#define PAGER_I_SWPSIZE		"%%PAGER-I-SWPSIZE, "
+#define NSR_I_INIT          "%%NSR-I-INIT, "
+
+#define PAGER_I_SWPADDR     "%%PAGER-I-SWPADDR, "
+#define PAGER_I_SWPSIZE     "%%PAGER-I-SWPSIZE, "
 
 #define STDRV_I_STARTUP     "%%STDRV-I-STARTUP, "
 
