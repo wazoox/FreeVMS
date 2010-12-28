@@ -48,7 +48,7 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
 
     cap_t                           *clist;
 
-    notice(SYSBOOT_I_SYSBOOT "spawning PAGER.SYS with supervisor privileges\n");
+    notice(SYSBOOT_I_SYSBOOT "spawning PAGER.SYS with executive privileges\n");
 
     // Find INIT.EXE
     for(obj = meminfo->objects, i = 0; i < meminfo->num_objects; i++, obj++)
@@ -74,7 +74,6 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
     stack = sys$pd_create_memsection(pd, 2 * pagesize, 0, VMS$MEM_NORMAL,
             pagesize);
 
-    FIXME;
     heap = sys$pd_create_memsection(pd, 1 * 1024 * 1024, 0,
             VMS$MEM_NORMAL | VMS$MEM_USER, pagesize);
     PANIC(heap == NULL);
@@ -134,7 +133,9 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
     *(init_vars + 1) = L4_Myself().raw;				// Parent
 	*(init_vars + 2) = (vms$pointer) RUN_S_STOPPED	// Exit message
 			"PAGER.SYS process stopped";
-    *(--user_stack) = 3;                            // argc
+	*(init_vars + 3) = meminfo->swapper_base;
+	*(init_vars + 4) = NULL;
+    *(--user_stack) = 4;                            // argc
     *(--user_stack) = (vms$pointer) init_vars;      // arguments
 
     sys$thread_start(thread, init->entry, (vms$pointer) user_stack);

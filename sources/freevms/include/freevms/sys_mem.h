@@ -41,6 +41,7 @@ struct vms$meminfo
     unsigned int        num_regions;
     unsigned int        max_regions;
     struct memdesc      *regions;
+	vms$pointer			swapper_base;
 
     unsigned int        num_io_regions;
     unsigned int        max_io_regions;

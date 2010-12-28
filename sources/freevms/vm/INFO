@@ -3,3 +3,34 @@
 -> vms$alloc() et vms$free()œ[doivent utiliser morecore du noyau]
 -> rtl$alloc() et rtl$free() [doivent utiliser morecore du pager]
 gcc -MM -MD
+
+
+Le noyau connaît les pages disponibles
+-> SYSCALL$PAGE_REQUEST (+ taille de page)
+-> renvoie une page ou une adresse invalide
+-> le noyau ne connaît pas l'ID du thread
+-> lorsque le noyau reçoit un SYSCALL$THREAD_EXIT, il renvoit l'ID au pager
+qui nettoie la mémoire.
+
+
+Si adresse invalide
+-> Le pager essaie d'utiliser le swap
+
+Seul le pager doit garder une table de correspondance:
+struct page
+{
+	espace mémoire
+	L4_Page_t	// adresse virtuelle dans le processus
+	L4_Page_t	// adresse physique (swap ou mémoire)
+}
+
+Si l'adresse physique est supérieure à l'adresse maximale de la mémoire, on
+est dans le swap.
+
+Un processus envoie un IPC de pagefault au task$pager() qui contient la mémoire
+mappable par le processus (mémoire physique).
+-> envoi d'un VMS$PAGE_REQUEST au pager VMS
+
+Le pager regarde si cette adresse est déjà mappée pour cet espace mémoire
+en balayant les structures. Si oui, il peut être mappé en mémoire ou sur le
+swap.
