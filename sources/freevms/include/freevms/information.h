@@ -46,4 +46,8 @@
 
 #define STDRV_I_STARTUP     "%%STDRV-I-STARTUP, "
 
+#define SYS_I_PAGEFLT       "%%SYS-I-PAGEFLT, "
+
 #define SYSBOOT_I_SYSBOOT   "%%SYSBOOT-I-SYSBOOT, "
+
+#define VMS_I_PAGEFLT       "%%VMS-I-PAGEFLT, "

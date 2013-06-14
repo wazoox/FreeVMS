@@ -1,4 +1,9 @@
-12 MB structures / GB pour la gestion des pages
+Lancement de INIT.EXE
+-> création d'un nouvel espace d'adressage
+-> lancement d'un thread
+--> le père envoie un strigItem contenant l'adresse à mapper puis un grantItem
+--> une fois le programme mappé dans le fils, celui-ci lance le thread réel
+et son pager.
 
 -> vms$alloc() et vms$free()œ[doivent utiliser morecore du noyau]
 -> rtl$alloc() et rtl$free() [doivent utiliser morecore du pager]

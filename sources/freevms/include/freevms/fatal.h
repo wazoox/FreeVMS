@@ -36,6 +36,3 @@
 #define PAGER_F_NOTFOUND    "%%PAGER-F-NOTFOUND, "
 
 #define SYS_F_HEAP          "%%SYS-F-HEAP, "
-#define SYS_F_PAGEFLT       "%%SYS-F-PAGEFLT, "
-
-#define VMS_F_PAGEFLT       "%%VMS-F-PAGEFLT, "

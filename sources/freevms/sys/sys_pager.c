@@ -50,7 +50,7 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
 
     notice(SYSBOOT_I_SYSBOOT "spawning PAGER.SYS with executive privileges\n");
 
-    // Find INIT.EXE
+    // Find PAGER.SYS in module list
     for(obj = meminfo->objects, i = 0; i < meminfo->num_objects; i++, obj++)
     {
         if (strstr(obj->name, "pager.sys") != NULL)

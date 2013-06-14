@@ -46,7 +46,7 @@ sys$pagefault(L4_ThreadId_t caller, vms$pointer addr, vms$pointer ip,
 
     if (dbg$sys_pagefault)
     {
-        notice(SYS_F_PAGEFLT "pagefault request from $%lX at $%016lX\n",
+        notice(SYS_I_PAGEFLT "pagefault request from $%lX at $%016lX\n",
                 L4_ThreadNo(caller), addr);
     }
 
