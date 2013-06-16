@@ -28,7 +28,7 @@ all:
 	@echo "and userland."
 
 clean:
-	rm -rf $(BUILDDIR)
+	 @rm -rf $(BUILDDIR)
 
 kernelconfig:
 	@rm -rf $(BUILDDIR)/pal
@@ -66,6 +66,7 @@ bootstrap: $(SRCDIR)/kernel/config.h.in $(BUILDDIR)/kernel/Makefile \
 
 bootstrap-install:
 	@make -C $(BUILDDIR)/kernel install
+	@make -C $(BUILDDIR)/bootloader install
 
 freevms-clean:
 	@make -C $(SRCDIR)/freevms clean
@@ -79,11 +80,6 @@ build/freevms/vmskernel.sys build/freevms/pager.sys build/freevms/init.exe: \
 image: build/freevms/vmskernel.sys \
 		build/freevms/pager.sys \
 		build/freevms/init.exe
-	mkdir -p ../mnt/boot/grub
-	cp -f build/bootloader/stage1/stage1 ../mnt/boot/grub
-	cp -f build/bootloader/stage2/stage2 ../mnt/boot/grub
-	cp -f build/bootloader/stage2/stage2_eltorito ../mnt/boot/grub
-	cp -f build/bootloader/stage2/*stage1_5 ../mnt/boot/grub
 	cp -f build/pal/x86-kernel ../mnt/boot/
 	cp -f build/kernel/util/kickstart/kickstart ../mnt/boot/
 	cp -f build/kernel/build/libexec/l4/sigma0 ../mnt/boot/

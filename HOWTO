@@ -4,6 +4,7 @@
 
 	make kernelconfig
 	-> and configure kernel for example with kernelconfig.example options
+	Warning : kernel must be built with gcc-4.6.
 	make kernel
 
 	At this point, microkernel is built
@@ -93,15 +94,14 @@ Root cauchy:[/home/bertrand/openvms] > losetup -o $((63*512)) /dev/loop0 \
 		image.img
 Root cauchy:[/home/bertrand/openvms] > mkfs.ext2 /dev/loop0
 Root cauchy:[/home/bertrand/openvms] > mount /dev/loop0 mnt
+Root cauchy:[/home/bertrand/openvms] > losetup /dev/loop1 image.img
 
-	Now, you only have to install grub on boot record:
+	Now, you only have to install grub2 on boot record. Grub2 is built
+into build/bootloader.
 
-grub --batch << EOF
-device (hd0) image.img
-root (hd0,0)
-setup --prefix=/local/grub (hd0)
-quit
-EOF
+Root riemann:[/home/bertrand/openvms/FreeVMS/build/bootloader/build/sbin] >
+./grub-install --boot-directory=/home/bertrand/openvms/mnt --target i386-pc
+--modules=part_msdos /dev/loop1
 
 	That's all, folks !
 
