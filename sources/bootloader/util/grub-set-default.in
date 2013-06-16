@@ -1,141 +1,137 @@
 #! /bin/sh
-
-# Set a default boot entry for GRUB
-#   Copyright (C) 2004 Free Software Foundation, Inc.
 #
-# This file is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# Set a default boot entry for GRUB.
+# Copyright (C) 2004,2009  Free Software Foundation, Inc.
+#
+# GRUB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
+# GRUB is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with GRUB.  If not, see <http://www.gnu.org/licenses/>.
 
 # Initialize some variables.
-PACKAGE=@PACKAGE@
-VERSION=@VERSION@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sysconfdir="@sysconfdir@"
+PACKAGE_NAME=@PACKAGE_NAME@
+PACKAGE_VERSION=@PACKAGE_VERSION@
+datarootdir="@datarootdir@"
+datadir="@datadir@"
+if [ "x$pkgdatadir" = x ]; then
+    pkgdatadir="${datadir}/@PACKAGE@"
+fi
 
+self=`basename $0`
+
+grub_editenv=${bindir}/@grub_editenv@
 rootdir=
-entry=
+bootdir=
+grubdir=`echo "/@bootdirname@/@grubdirname@" | sed 's,//*,/,g'`
+
+export TEXTDOMAIN=@PACKAGE@
+export TEXTDOMAINDIR="@localedir@"
+
+. "${pkgdatadir}/grub-mkconfig_lib"
 
 # Usage: usage
 # Print the usage.
 usage () {
-    cat <<EOF
-Usage: grub-set-default [OPTION] entry
-Set the default boot entry for GRUB.
+    gettext_printf "Usage: %s [OPTION] MENU_ENTRY\n" "$self"
+    gettext "Set the default boot menu entry for GRUB."; echo
+    gettext_printf "This requires setting GRUB_DEFAULT=saved in %s/default/grub.\n" "$sysconfdir"
+    echo
+    print_option_help "-h, --help" "$(gettext "print this message and exit")"
+    print_option_help "-v, --version" "$(gettext "print the version information and exit")"
+    dirmsg="$(gettext_printf "expect GRUB images under the directory DIR/%s instead of the %s directory" "@grubdirname@" "$grubdir")"
+    print_option_help "--boot-directory=$(gettext "DIR")" "$dirmsg"
+    echo
+    gettext "MENU_ENTRY is a number, a menu item title or a menu item identifier."; echo
+    echo
+    gettext "Report bugs to <bug-grub@gnu.org>."; echo
+}
 
-  -h, --help              print this message and exit
-  -v, --version           print the version information and exit
-  --root-directory=DIR    Use the directory DIR instead of the root directory
+argument () {
+  opt=$1
+  shift
 
-ENTRY is a number or the special keyword \`default\'.
-
-Report bugs to <bug-grub@gnu.org>.
-EOF
+  if test $# -eq 0; then
+      gettext_printf "%s: option requires an argument -- \`%s'\n" "$0" "$opt" 1>&2
+      exit 1
+  fi
+  echo $1
 }
 
 # Check the arguments.
-for option in "$@"; do
+while test $# -gt 0
+do
+    option=$1
+    shift
+
     case "$option" in
     -h | --help)
 	usage
 	exit 0 ;;
     -v | --version)
-	echo "grub-set-default (GNU GRUB ${VERSION})"
+	echo "$self (${PACKAGE_NAME}) ${PACKAGE_VERSION}"
 	exit 0 ;;
+
+# Accept for compatibility
+    --root-directory)
+	rootdir=`argument $option "$@"`; shift ;;
     --root-directory=*)
 	rootdir=`echo "$option" | sed 's/--root-directory=//'` ;;
+
+    --boot-directory)
+    bootdir=`argument $option "$@"`; shift;;
+    --boot-directory=*)
+    bootdir=`echo "$option" | sed 's/--boot-directory=//'` ;;
+
     -*)
-	echo "Unrecognized option \`$option'" 1>&2
+	gettext_printf "Unrecognized option \`%s'\n" "$option" 1>&2
 	usage
 	exit 1
 	;;
     *)
 	if test "x$entry" != x; then
-	    echo "More than one entries?" 1>&2
+	    gettext "More than one menu entry?" 1>&2
+	    echo >&2
 	    usage
 	    exit 1
 	fi
-	# We don't care about what the user specified actually.
 	entry="${option}" ;;
     esac
 done
 
 if test "x$entry" = x; then
-    echo "entry not specified." 1>&2
+    gettext "Menu entry not specified." 1>&2
+    echo >&2
     usage
     exit 1
 fi
 
-find_grub_dir ()
-{
-        echo  -n "Searching for GRUB installation directory ... " >&2
+if [ -z "$bootdir" ]; then
+    # Default bootdir if bootdir not initialized.
+    bootdir=/@bootdirname@
 
-        for d in $grub_dirs ; do
-                if [ -d "$d" ] ; then
-                        grub_dir="$d"
-                        break
-                fi
-        done
-
-        if [ -z "$grub_dir" ] ; then
-                abort "No GRUB directory found.\n###"
-        else
-                echo "found: $grub_dir" >&2
-        fi
-
-        echo $grub_dir
-}
-
-grub_dirs="/boot/grub /boot/boot/grub"
-
-# Determine the GRUB directory. This is different among OSes.
-# if rootdir has been informed use it or find grubdir otherwise
-if [ -n "${rootdir}" ]; then
-  grubdir=${rootdir}/boot/grub
-  if test -d ${grubdir}; then
-    :
-  else
-    grubdir=${rootdir}/grub
-    if test -d ${grubdir}; then
-        :
-    else
-        echo "No GRUB directory found under ${rootdir}/" 1>&2
-        exit 1
+    if [ -n "$rootdir" ] ; then
+        # Initialize bootdir if rootdir was initialized.
+        bootdir=${rootdir}/@bootdirname@
     fi
-  fi
-else
-  grubdir=$(find_grub_dir)
 fi
 
-file=${grubdir}/default
-if test -f ${file}; then
-    chmod 0600 ${file}
-    rm -f ${file}
-fi
-cat <<EOF > $file
-$entry
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-# WARNING: If you want to edit this file directly, do not remove any line
-# from this file, including this warning. Using \`grub-set-default\' is
-# strongly recommended.
-EOF
+grubdir=`echo "${bootdir}/@grubdirname@" | sed 's,//*,/,g'`
+
+$grub_editenv ${grubdir}/grubenv unset prev_saved_entry
+$grub_editenv ${grubdir}/grubenv unset next_entry
+$grub_editenv ${grubdir}/grubenv set saved_entry="$entry"
 
 # Bye.
 exit 0

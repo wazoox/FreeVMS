@@ -78,7 +78,7 @@ $(DESTDIR)/vmskernel.sys: $(OBJ_SYS)
 	@gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c sys/dbg_symbols.c \
 			-o $(DESTDIR)/sys/dbg_symbols.o
 	@echo  [LD] $@
-	@ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4 \
+	@ld -e_start -N -L$(DESTDIR)/../kernel/lib/l4 \
 			$+ -nostdlib -T linker/elf_x86_64_kernel -ll4 \
 			$(DESTDIR)/sys/dbg_symbols.o -static -o $@
 	@echo  [MK] sys/symbols.h
@@ -87,7 +87,7 @@ $(DESTDIR)/vmskernel.sys: $(OBJ_SYS)
 	@gcc -x c++ -O2 $(INCLUDES) $(CFLAGS) -c sys/dbg_symbols.c \
 			-o $(DESTDIR)/sys/dbg_symbols.o
 	@echo  [LD] $@
-	@ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4 \
+	@ld -e_start -N -L$(DESTDIR)/../kernel/lib/l4 \
 			$+ -nostdlib -T linker/elf_x86_64_kernel -ll4 \
 			$(DESTDIR)/sys/dbg_symbols.o -static -o $@
 
@@ -97,12 +97,12 @@ $(DESTDIR)/librtl/librtl.a: $(OBJ_LIBRTL)
 
 $(DESTDIR)/init.exe: $(OBJ_INIT) $(DESTDIR)/librtl/librtl.a
 	@echo  [LD] $@
-	@ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4\
+	@ld -e_start -N -L$(DESTDIR)/../kernel/lib/l4\
 	   		$+ -nostdlib -T linker/elf_x86_64 -ll4 -static -o $@
 
 $(DESTDIR)/pager.sys: $(OBJ_PAGER) $(DESTDIR)/librtl/librtl.a
 	@echo  [LD] $@
-	@ld -e_start -N -L$(DESTDIR)/../kernel/build/lib/l4\
+	@ld -e_start -N -L$(DESTDIR)/../kernel/lib/l4\
 	   		$+ -nostdlib -T linker/elf_x86_64_pager -ll4 -static -o $@
 
 directories:

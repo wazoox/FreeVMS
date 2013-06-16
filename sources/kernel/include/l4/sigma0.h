@@ -1,6 +1,6 @@
 /*********************************************************************
  *                
- * Copyright (C) 2001, 2002, 2003, 2010,  Karlsruhe University
+ * Copyright (C) 2001, 2002, 2003, 2010-2011,  Karlsruhe University
  *                
  * File path:     l4/sigma0.h
  * Description:   Sigma0 RPC protocol
@@ -37,9 +37,10 @@
 #include <l4/message.h>
 #include <l4/ipc.h>
 
-L4_INLINE L4_Fpage_t L4_Sigma0_GetPage_RcvWindow (L4_ThreadId_t s0,
-						  L4_Fpage_t f,
-						  L4_Fpage_t RcvWindow)
+L4_INLINE L4_Fpage_t L4_Sigma0_GetPage_RcvWindow_High (L4_ThreadId_t s0,
+                                                       L4_Fpage_t f,
+                                                       L4_Fpage_t RcvWindow,
+                                                       L4_Word_t high)
 {
     L4_MsgTag_t tag;
     L4_Msg_t msg;
@@ -54,6 +55,9 @@ L4_INLINE L4_Fpage_t L4_Sigma0_GetPage_RcvWindow (L4_ThreadId_t s0,
     L4_MsgClear (&msg);
     L4_MsgAppendWord (&msg, f.raw);
     L4_MsgAppendWord (&msg, 0);
+    if (f.X.extended == 1) {
+    	L4_MsgAppendWord (&msg, high);
+    }
     L4_Set_MsgLabel (&msg, (L4_Word_t) -6UL << 4);
     L4_MsgLoad (&msg);
     L4_Accept (L4_MapGrantItems (RcvWindow));
@@ -66,19 +70,36 @@ L4_INLINE L4_Fpage_t L4_Sigma0_GetPage_RcvWindow (L4_ThreadId_t s0,
     return f;
 }
 
-#if defined(__cplusplus)
-L4_INLINE L4_Fpage_t L4_Sigma0_GetPage (L4_ThreadId_t s0,
-					L4_Fpage_t f,
-					L4_Fpage_t RcvWindow)
+L4_INLINE L4_Fpage_t L4_Sigma0_GetPage_RcvWindow (L4_ThreadId_t s0,
+                                                  L4_Fpage_t f,
+                                                  L4_Fpage_t RcvWindow)
 {
-    return L4_Sigma0_GetPage_RcvWindow (s0, f, RcvWindow);
+    return L4_Sigma0_GetPage_RcvWindow_High (s0, f, RcvWindow, 0);
 }
-#endif
 
 L4_INLINE L4_Fpage_t L4_Sigma0_GetPage (L4_ThreadId_t s0, L4_Fpage_t f)
 {
     return L4_Sigma0_GetPage_RcvWindow (s0, f, L4_CompleteAddressSpace);
 }
+
+#if defined(__cplusplus)
+L4_INLINE L4_Fpage_t L4_Sigma0_GetPage (L4_ThreadId_t s0,
+					L4_Fpage_t f,
+					L4_Word_t high)
+{
+	f.X.extended = 1;
+	return L4_Sigma0_GetPage_RcvWindow_High (s0, f, L4_CompleteAddressSpace, high);
+}
+
+L4_INLINE L4_Fpage_t L4_Sigma0_GetPage (L4_ThreadId_t s0,
+					L4_Fpage_t f,
+					L4_Word_t high,
+					L4_Fpage_t RcvWindow)
+{
+	f.X.extended = 1;
+	return L4_Sigma0_GetPage_RcvWindow_High (s0, f, RcvWindow, high);
+}
+#endif
 
 L4_INLINE L4_Fpage_t L4_Sigma0_GetAny (L4_ThreadId_t s0,
 				      L4_Word_t	s,

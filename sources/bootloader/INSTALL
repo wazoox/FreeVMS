@@ -11,46 +11,41 @@ GRUB depends on some software packages installed into your system. If
 you don't have any of them, please obtain and install them before
 configuring the GRUB.
 
-* GCC
-
-  Probably every recent GCC should work, but we recommend GCC 2.95 and
-  later, since you can create smaller binary images. See the web page
-  <http://gcc.gnu.org/>.
-
+* GCC 4.1.3 or later
 * GNU Make
-
-  For now, the Makefiles produced by Automake depends on GNU Make. See
-  the web page <http://www.gnu.org/software/make/make.html>.
-
+* GNU Bison 2.3 or later
+* GNU gettext 0.17 or later
 * GNU binutils 2.9.1.0.23 or later
+* Flex 2.5.35 or later
+* Other standard GNU/Unix tools
 
-  Binutils has changed the behavior of 16bit assembler between 2.9.1
-  and 2.9.1.0.x, and we support only 2.9.1.0.x and higher. In
-  particular, we recommend using binutils 2.10, since it is the only
-  public release that supports real 16bit mode. Please take a look at
-  the web page <http://sourceware.cygnus.com/binutils/>, for more
-  information. Note that you don't have to install it into any system
-  directory. See the section "Operation Controls", if you want to
-  install binutils into your own directory.
+On GNU/Linux, you also need:
 
-If you'd like to develop GRUB, these below are also required. Don't
-forget to specify the option `--enable-maintainer-mode' when running the
-configure script.
+* libdevmapper 1.02.34 or later (recommended)
 
-* Texinfo 4.0 or later
+For optional grub-emu features, you need:
 
-  We use some new macros in the documents, so you need a recent
-  Texinfo release. See the web page
-  <http://www.gnu.org/software/texinfo/texinfo.html>.
+* SDL (recommended)
+* libpciaccess (optional)
+* libusb (optional)
 
-* Developers: GNU Autoconf 2.5x and GNU Automake 1.7 or later
+To build GRUB's graphical terminal (gfxterm), you need:
 
-  You should not need Automake just to compile GRUB, but you will need
-  it if you edit any of the build files (Makefile.am, configure.in,
-  etc).  We use the new "per-executable flags" feature found in the
-  latest release of automake.  See the web page
-  <http://www.gnu.org/software/automake/automake.html>.
+* FreeType 2 or later
+* GNU Unifont
 
+If you use a development snapshot or want to hack on GRUB you may
+need the following.
+
+* Python 2.5.2 or later
+* Autoconf 2.60 or later
+* Automake 1.10.1 or later
+* Autogen 5.10 or later
+
+Prerequisites for make-check:
+
+* qemu, specifically the binary 'qemu-system-i386'
+* xorriso 1.2.9 or later, for grub-mkrescue and grub-shell
 
 Configuring the GRUB
 ====================
@@ -71,7 +66,7 @@ diffs or instructions to the address given in the `README' so they can
 be considered for the next release.  If at some point `config.cache'
 contains results you don't want to keep, you may remove or edit it.
 
-The file `configure.in' is used to create `configure' by a program
+The file `configure.ac' is used to create `configure' by a program
 called `autoconf'.  You only need `configure.in' if you want to change
 it or regenerate `configure' using a newer version of `autoconf'.
 
@@ -81,24 +76,30 @@ Building the GRUB
 
 The simplest way to compile this package is:
 
-  1. `cd' to the directory containing the package's source code and
-     type `./configure' to configure the package for your system.  If
-     you're using `csh' on an old version of System V, you might need
-     to type `sh ./configure' instead to prevent `csh' from trying to
-     execute `configure' itself.
+  1. `cd' to the directory containing the package's source code.
+
+  2. Skip this and following step if you use release tarball and proceed to
+     step 4. If you want translations type `./linguas.sh'.
+  
+  3. Type `./autogen.sh'.
+
+  4. Type `./configure' to configure the package for your system.
+     If you're using `csh' on an old version of System V, you might
+     need to type `sh ./configure' instead to prevent `csh' from trying
+     to execute `configure' itself.
 
      Running `configure' takes awhile.  While running, it prints some
      messages telling which features it is checking for.
 
-  2. Type `make' to compile the package.
+  6. Type `make' to compile the package.
 
-  3. Optionally, type `make check' to run any self-tests that come with
+  7. Optionally, type `make check' to run any self-tests that come with
      the package.
 
-  4. Type `make install' to install the programs and any data files and
+  8. Type `make install' to install the programs and any data files and
      documentation.
 
-  5. You can remove the program binaries and object files from the
+  9. You can remove the program binaries and object files from the
      source code directory by typing `make clean'.  To also remove the
      files that `configure' created (so you can compile the package for
      a different kind of computer), type `make distclean'.  There is
@@ -186,81 +187,3 @@ operates.
 `--version'
      Print the version of Autoconf used to generate the `configure'
      script, and exit.
-
-`--enable-maintainer-mode'
-     Enable make rules and dependencies not useful (and sometimes
-     confusing) to the casual installer. If you are a GRUB developer,
-     it is a good idea to specify this option.
-
-`--disable-ext2fs'
-     Omit the ext2fs support in Stage 2.
-
-`--disable-fat'
-     Omit the FAT support in Stage 2.
-
-`--disable-ffs'
-     Omit the FFS support in Stage 2.
-
-`--disable-minix'
-     Omit the Minix fs support in Stage 2.
-
-`--disable-reiserfs'
-     Omit the ReiserFS support in Stage 2.
-
-`--disable-vstafs'
-     Omit the VSTa filesystem support in Stage 2.
-
-`--disable-jfs'
-     Omit the JFS support in Stage 2.
-
-`--disable-xfs'
-     Omit the XFS support in Stage 2.
-
-`--disable-ufs2'
-     Omit the UFS2 support in Stage 2.
-
-`--disable-iso9660'
-     Omit the ISO9660 support in Stage 2.
-
-`--disable-gunzip'
-     Omit the decompression support in Stage 2.
-
-`--disable-md5-password'
-     Omit the MD5 password support in Stage2.
-
-`--with-binutils=PATH'
-     Search the path PATH to find binutils. If you have installed your
-     binutils executables into an unusual location where GCC doesn't
-     search by default, use this option.
-
-`--without-curses'
-     Don't use the curses library.
-
-`--disable-hercules'
-     Omit the hercules console support in Stage 2.
-
-`--disable-serial'
-     Omit the serial terminal support in Stage 2.
-
-`--enable-serial-speed-simulation'
-     Simulate the slowness of a serial device in the grub shell. This
-     option is useful for GRUB developers, as you can test the
-     performance of a terminal emulation even on pseudo terminals.
-
-`--enable-preset-menu=FILE'
-     Preset a menu file FILE in Stage 2. This is useful, if you cannot
-     put a configuration file on a filesystem for some reason (e.g. when
-     you need to set the default terminal to a serial terminal in an
-     embedded system).
-
-`--enable-example-kernel'
-     Build the example Multiboot kernel in the directory "docs". You
-     will be able to boot the image "kernel" with GRUB.
-
-`--disable-auto-linux-mem-opt'
-     Don't pass the "mem=" option automatically, when booting Linux.
-     You can also disable the feature at run time.
-
-
-`configure' also accepts several options for the network support. See
-the file `netboot/README.netboot', for more information.

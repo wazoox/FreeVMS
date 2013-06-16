@@ -56,7 +56,7 @@ include/version.h: $(VERSIONFILE)
 //							\n\
 							\n' > $@
 
-	@VERSION=`grep AC_INIT $(SRCDIR)/../kernel/configure.in | \
+	@VERSION=`grep AC_INIT $(SRCDIR)/../user/configure.in | \
 	    sed 's/[^0-9.]*\([0-9.]*\)[^0-9.]*/\1/'` ;\
 	$(PRINTF) '\
 #define KERNEL_VERSION         %d			\n\

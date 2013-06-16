@@ -158,9 +158,9 @@ bool load_modules (void)
                 }                                                           \
             } while(0)
 
-            LOADIT(0, " L4/X2 kernel  ", NULL);
-            LOADIT(1, " sigma0        ", &sigma0_type);
-            LOADIT(2, " vmskernel.sys ", &root_task_type);
+            LOADIT(0, " kernel  ", NULL);
+            LOADIT(1, " sigma0  ", &sigma0_type);
+            LOADIT(2, " roottask", &root_task_type);
         }
         else
         {
@@ -399,10 +399,10 @@ L4_Word_t mbi_init (void)
                  "Reserving %d%sB for kernel memory\n",
                  additional_kmem_size &= ~(kip.get_min_pagesize()-1));
 
-		PARSEBOOL ("bootinfo", use_bootinfo, "generic bootinfo");
-		PARSEBOOL ("mbi", use_mbi, "multiboot info");
-		PARSEBOOL ("decode-all", decode_all_executables,
-			   "decoding of all executables");
+	PARSEBOOL ("bootinfo", use_bootinfo, "generic bootinfo");
+	PARSEBOOL ("mbi", use_mbi, "multiboot info");
+	PARSEBOOL ("decode-all", decode_all_executables,
+		   "decoding of all executables");
     }
 
     if (mbi->flags.mods)

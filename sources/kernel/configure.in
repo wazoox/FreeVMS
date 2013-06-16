@@ -62,6 +62,7 @@ case $HOST in
   ia32|x86|i386*|i486*|i586*|i686*)
 	ARCH=ia32
 	KERNEL=x86-kernel
+	LIBGCCFLAGS=-m32
 	;;
   powerpc64*|ppc64*)
 	ARCH=powerpc64
@@ -71,7 +72,7 @@ case $HOST in
 	ARCH=powerpc
 	KERNEL=$ARCH-kernel
 	;;
-  amd64|x86_64*)
+  amd64*|x86_64*)
 	ARCH=amd64
 	KERNEL=x86-kernel
 	LIBGCCFLAGS=-m64
@@ -282,13 +283,19 @@ case $ARCH in
 	;;
   amd64)
   	default_kickstart_linkbase=00100000
-	default_sigma0_linkbase=00040000
-	default_roottask_linkbase=00060000
+	default_sigma0_linkbase=00f00000
+	default_roottask_linkbase=01000000
 	;;
 esac
 
 dnl Platform dependent settings.
-case $HOST in
+case $ARCH in
+  ia32*)
+	PLAT=amd64-pc99
+	CFLAGS="$CFLAGS -m32"
+	LDFLAGS="$LDFLAGS -melf_i386"
+	AC_SUBST([PLAT])
+	;;
   amd64*)
 	PLAT=amd64-pc99
 	CFLAGS="$CFLAGS -m64 -mno-red-zone"

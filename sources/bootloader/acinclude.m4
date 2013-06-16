@@ -1,12 +1,48 @@
+dnl Redefine AC_LANG_PROGRAM with a "-Wstrict-prototypes -Werror"-friendly
+dnl version.  Patch submitted to bug-autoconf in 2009-09-16.
+m4_define([AC_LANG_PROGRAM(C)],
+[$1
+int
+main (void)
+{
+dnl Do *not* indent the following line: there may be CPP directives.
+dnl Don't move the `;' right after for the same reason.
+$2
+  ;
+  return 0;
+}])
+
+
+dnl Check whether target compiler is working
+AC_DEFUN([grub_PROG_TARGET_CC],
+[AC_MSG_CHECKING([whether target compiler is working])
+AC_CACHE_VAL(grub_cv_prog_target_cc,
+[AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+asm (".globl start; start:");
+int main (void);
+]], [[]])],
+  		[grub_cv_prog_target_cc=yes],
+		[grub_cv_prog_target_cc=no])
+])
+AC_MSG_RESULT([$grub_cv_prog_target_cc])
+
+if test "x$grub_cv_prog_target_cc" = xno; then
+  AC_MSG_ERROR([cannot compile for the target])
+fi
+])
+
+
 dnl grub_ASM_USCORE checks if C symbols get an underscore after
 dnl compiling to assembler.
 dnl Written by Pavel Roskin. Based on grub_ASM_EXT_C written by
-dnl Erich Boleyn and modified by OKUJI Yoshinori
+dnl Erich Boleyn and modified by Yoshinori K. Okuji.
 AC_DEFUN([grub_ASM_USCORE],
 [AC_REQUIRE([AC_PROG_CC])
+AC_REQUIRE([AC_PROG_EGREP])
 AC_MSG_CHECKING([if C symbols get an underscore after compilation])
 AC_CACHE_VAL(grub_cv_asm_uscore,
 [cat > conftest.c <<\EOF
+int func (int *);
 int
 func (int *list)
 {
@@ -21,18 +57,15 @@ else
   AC_MSG_ERROR([${CC-cc} failed to produce assembly code])
 fi
 
-if grep _func conftest.s >/dev/null 2>&1; then
+if $EGREP '(^|[^_[:alnum]])_func' conftest.s >/dev/null 2>&1; then
+  HAVE_ASM_USCORE=1
   grub_cv_asm_uscore=yes
 else
+  HAVE_ASM_USCORE=0
   grub_cv_asm_uscore=no
 fi
 
 rm -f conftest*])
-
-if test "x$grub_cv_asm_uscore" = xyes; then
-  AC_DEFINE_UNQUOTED([HAVE_ASM_USCORE], $grub_cv_asm_uscore,
-    [Define if C symbols get an underscore after compilation])
-fi
 
 AC_MSG_RESULT([$grub_cv_asm_uscore])
 ])
@@ -44,6 +77,7 @@ AC_DEFUN([grub_PROG_OBJCOPY_ABSOLUTE],
 [AC_MSG_CHECKING([whether ${OBJCOPY} works for absolute addresses])
 AC_CACHE_VAL(grub_cv_prog_objcopy_absolute,
 [cat > conftest.c <<\EOF
+void cmain (void);
 void
 cmain (void)
 {
@@ -56,12 +90,12 @@ else
   AC_MSG_ERROR([${CC-cc} cannot compile C source code])
 fi
 grub_cv_prog_objcopy_absolute=yes
-for link_addr in 2000 8000 7C00; do
-  if AC_TRY_COMMAND([${CC-cc} ${CFLAGS} ${LDFLAGS} -nostdlib -Wl,-N -Wl,-Ttext -Wl,$link_addr conftest.o -o conftest.exec]); then :
+for link_addr in 0x2000 0x8000 0x7C00; do
+  if AC_TRY_COMMAND([${CC-cc} ${CFLAGS} -nostdlib ${TARGET_IMG_LDFLAGS_AC} ${TARGET_IMG_BASE_LDOPT},$link_addr conftest.o -o conftest.exec]); then :
   else
     AC_MSG_ERROR([${CC-cc} cannot link at address $link_addr])
   fi
-  if AC_TRY_COMMAND([${OBJCOPY-objcopy} -O binary conftest.exec conftest]); then :
+  if AC_TRY_COMMAND([${OBJCOPY-objcopy} --only-section=.text -O binary conftest.exec conftest]); then :
   else
     AC_MSG_ERROR([${OBJCOPY-objcopy} cannot create binary files])
   fi
@@ -73,7 +107,33 @@ for link_addr in 2000 8000 7C00; do
   fi
 done
 rm -f conftest*])
-AC_MSG_RESULT([$grub_cv_prog_objcopy_absolute])])
+AC_MSG_RESULT([$grub_cv_prog_objcopy_absolute])
+
+if test "x$grub_cv_prog_objcopy_absolute" = xno; then
+  AC_MSG_ERROR([GRUB requires a working absolute objcopy; upgrade your binutils])
+fi
+])
+
+
+dnl Supply --build-id=none to ld if building modules.
+dnl This suppresses warnings from ld on some systems
+AC_DEFUN([grub_PROG_LD_BUILD_ID_NONE],
+[AC_MSG_CHECKING([whether linker accepts --build-id=none])
+AC_CACHE_VAL(grub_cv_prog_ld_build_id_none,
+[save_LDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS -Wl,--build-id=none"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[]])],
+	       [grub_cv_prog_ld_build_id_none=yes],
+	       [grub_cv_prog_ld_build_id_none=no])
+LDFLAGS="$save_LDFLAGS"
+])
+AC_MSG_RESULT([$grub_cv_prog_ld_build_id_none])
+
+if test "x$grub_cv_prog_ld_build_id_none" = xyes; then
+  TARGET_LDFLAGS="$TARGET_LDFLAGS -Wl,--build-id=none"
+fi
+])
+
 
 dnl Mass confusion!
 dnl Older versions of GAS interpret `.code16' to mean ``generate 32-bit
@@ -87,56 +147,86 @@ dnl them.
 dnl
 dnl We only support the newer versions, because the old versions cause
 dnl major pain, by requiring manual assembly to get 16-bit instructions into
-dnl stage1/stage1.S.
-AC_DEFUN([grub_ASM_ADDR32],
+dnl asm files.
+AC_DEFUN([grub_I386_ASM_ADDR32],
 [AC_REQUIRE([AC_PROG_CC])
-AC_REQUIRE([grub_ASM_PREFIX_REQUIREMENT])
+AC_REQUIRE([grub_I386_ASM_PREFIX_REQUIREMENT])
 AC_MSG_CHECKING([for .code16 addr32 assembler support])
-AC_CACHE_VAL(grub_cv_asm_addr32,
+AC_CACHE_VAL(grub_cv_i386_asm_addr32,
 [cat > conftest.s.in <<\EOF
 	.code16
 l1:	@ADDR32@	movb	%al, l1
 EOF
 
-if test "x$grub_cv_asm_prefix_requirement" = xyes; then
+if test "x$grub_cv_i386_asm_prefix_requirement" = xyes; then
   sed -e s/@ADDR32@/addr32/ < conftest.s.in > conftest.s
 else
   sed -e s/@ADDR32@/addr32\;/ < conftest.s.in > conftest.s
 fi
 
 if AC_TRY_COMMAND([${CC-cc} ${CFLAGS} -c conftest.s]) && test -s conftest.o; then
-  grub_cv_asm_addr32=yes
+  grub_cv_i386_asm_addr32=yes
 else
-  grub_cv_asm_addr32=no
+  grub_cv_i386_asm_addr32=no
 fi
 
 rm -f conftest*])
 
-AC_MSG_RESULT([$grub_cv_asm_addr32])])
+AC_MSG_RESULT([$grub_cv_i386_asm_addr32])])
 
-dnl
+dnl check if our compiler is apple cc
+dnl because it requires numerous workarounds
+AC_DEFUN([grub_apple_cc],
+[AC_REQUIRE([AC_PROG_CC])
+AC_MSG_CHECKING([whether our compiler is apple cc])
+AC_CACHE_VAL(grub_cv_apple_cc,
+[if $CC -v 2>&1 | grep "Apple Inc." > /dev/null; then
+  grub_cv_apple_cc=yes
+else
+  grub_cv_apple_cc=no
+fi
+])
+
+AC_MSG_RESULT([$grub_cv_apple_cc])])
+
+dnl check if our target compiler is apple cc
+dnl because it requires numerous workarounds
+AC_DEFUN([grub_apple_target_cc],
+[AC_REQUIRE([AC_PROG_CC])
+AC_MSG_CHECKING([whether our target compiler is apple cc])
+AC_CACHE_VAL(grub_cv_apple_target_cc,
+[if $CC -v 2>&1 | grep "Apple Inc." > /dev/null; then
+  grub_cv_apple_target_cc=yes
+else
+  grub_cv_apple_target_cc=no
+fi
+])
+
+AC_MSG_RESULT([$grub_cv_apple_target_cc])])
+
+
 dnl Later versions of GAS requires that addr32 and data32 prefixes
 dnl appear in the same lines as the instructions they modify, while
 dnl earlier versions requires that they appear in separate lines.
-AC_DEFUN([grub_ASM_PREFIX_REQUIREMENT],
+AC_DEFUN([grub_I386_ASM_PREFIX_REQUIREMENT],
 [AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING(dnl
 [whether addr32 must be in the same line as the instruction])
-AC_CACHE_VAL(grub_cv_asm_prefix_requirement,
+AC_CACHE_VAL(grub_cv_i386_asm_prefix_requirement,
 [cat > conftest.s <<\EOF
 	.code16
 l1:	addr32	movb	%al, l1
 EOF
 
 if AC_TRY_COMMAND([${CC-cc} ${CFLAGS} -c conftest.s]) && test -s conftest.o; then
-  grub_cv_asm_prefix_requirement=yes
+  grub_cv_i386_asm_prefix_requirement=yes
 else
-  grub_cv_asm_prefix_requirement=no
+  grub_cv_i386_asm_prefix_requirement=no
 fi
 
 rm -f conftest*])
 
-if test "x$grub_cv_asm_prefix_requirement" = xyes; then
+if test "x$grub_cv_i386_asm_prefix_requirement" = xyes; then
   grub_tmp_addr32="addr32"
   grub_tmp_data32="data32"
 else
@@ -144,223 +234,201 @@ else
   grub_tmp_data32="data32;"
 fi
 
-AC_DEFINE_UNQUOTED([ADDR32], $grub_tmp_addr32,
-  [Define it to \"addr32\" or \"addr32;\" to make GAS happy])
-AC_DEFINE_UNQUOTED([DATA32], $grub_tmp_data32,
-  [Define it to \"data32\" or \"data32;\" to make GAS happy])
+ADDR32=$grub_tmp_addr32
+DATA32=$grub_tmp_data32
 
-AC_MSG_RESULT([$grub_cv_asm_prefix_requirement])])
+AC_MSG_RESULT([$grub_cv_i386_asm_prefix_requirement])])
 
-dnl
-dnl Older versions of GAS require that absolute indirect calls/jumps are
-dnl not prefixed with `*', while later versions warn if not prefixed.
-AC_DEFUN([grub_ASM_ABSOLUTE_WITHOUT_ASTERISK],
-[AC_REQUIRE([AC_PROG_CC])
-AC_MSG_CHECKING(dnl
-[whether an absolute indirect call/jump must not be prefixed with an asterisk])
-AC_CACHE_VAL(grub_cv_asm_absolute_without_asterisk,
-[cat > conftest.s <<\EOF
-	lcall	*(offset)	
-offset:
-	.long	0
-	.word	0
-EOF
 
-if AC_TRY_COMMAND([${CC-cc} ${CFLAGS} -c conftest.s]) && test -s conftest.o; then
-  grub_cv_asm_absolute_without_asterisk=no
-else
-  grub_cv_asm_absolute_without_asterisk=yes
-fi
-
-rm -f conftest*])
-
-if test "x$grub_cv_asm_absolute_without_asterisk" = xyes; then
-  AC_DEFINE(ABSOLUTE_WITHOUT_ASTERISK, 1, [Define if an absolute indirect call/jump must NOT be prefixed with `*'])
-fi
-
-AC_MSG_RESULT([$grub_cv_asm_absolute_without_asterisk])])
-
-dnl
-dnl grub_CHECK_START_SYMBOL checks if start is automatically defined by
-dnl the compiler.
-dnl Written by OKUJI Yoshinori
-AC_DEFUN([grub_CHECK_START_SYMBOL],
-[AC_REQUIRE([AC_PROG_CC])
-AC_MSG_CHECKING([if start is defined by the compiler])
-AC_CACHE_VAL(grub_cv_check_start_symbol,
-[AC_TRY_LINK([], [asm ("incl start")],
-   grub_cv_check_start_symbol=yes,
-   grub_cv_check_start_symbol=no)])
-
-if test "x$grub_cv_check_start_symbol" = xyes; then
-  AC_DEFINE(HAVE_START_SYMBOL, 1, [Define if start is defined])
-fi
-
-AC_MSG_RESULT([$grub_cv_check_start_symbol])
-])
-
-dnl
-dnl grub_CHECK_USCORE_START_SYMBOL checks if _start is automatically
-dnl defined by the compiler.
-dnl Written by OKUJI Yoshinori
-AC_DEFUN([grub_CHECK_USCORE_START_SYMBOL],
-[AC_REQUIRE([AC_PROG_CC])
-AC_MSG_CHECKING([if _start is defined by the compiler])
-AC_CACHE_VAL(grub_cv_check_uscore_start_symbol,
-[AC_TRY_LINK([], [asm ("incl _start")],
-   grub_cv_check_uscore_start_symbol=yes,
-   grub_cv_check_uscore_start_symbol=no)])
-
-if test "x$grub_cv_check_uscore_start_symbol" = xyes; then
-  AC_DEFINE(HAVE_USCORE_START_SYMBOL, 1, [Define if _start is defined])
-fi
-
-AC_MSG_RESULT([$grub_cv_check_uscore_start_symbol])
-])
-
-dnl
-dnl grub_CHECK_USCORE_USCORE_BSS_START_SYMBOL checks if __bss_start is
-dnl automatically defined by the compiler.
-dnl Written by Michael Hohmoth.
-AC_DEFUN([grub_CHECK_USCORE_USCORE_BSS_START_SYMBOL],
+dnl Check what symbol is defined as a bss start symbol.
+dnl Written by Michael Hohmoth and Yoshinori K. Okuji.
+AC_DEFUN([grub_CHECK_BSS_START_SYMBOL],
 [AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if __bss_start is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_uscore_uscore_bss_start_symbol,
-[AC_TRY_LINK([], [asm ("incl __bss_start")],
-   grub_cv_check_uscore_uscore_bss_start_symbol=yes,
-   grub_cv_check_uscore_uscore_bss_start_symbol=no)])
-
-if test "x$grub_cv_check_uscore_uscore_bss_start_symbol" = xyes; then
-  AC_DEFINE(HAVE_USCORE_USCORE_BSS_START_SYMBOL, 1, [Define if __bss_start is defined])
-fi
+[AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+		[[asm ("incl __bss_start")]])],
+		[grub_cv_check_uscore_uscore_bss_start_symbol=yes],
+		[grub_cv_check_uscore_uscore_bss_start_symbol=no])])
 
 AC_MSG_RESULT([$grub_cv_check_uscore_uscore_bss_start_symbol])
-])
 
-dnl
-dnl grub_CHECK_EDATA_SYMBOL checks if edata is automatically defined by the
-dnl compiler.
-dnl Written by Michael Hohmuth.
-AC_DEFUN([grub_CHECK_EDATA_SYMBOL],
-[AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if edata is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_edata_symbol,
-[AC_TRY_LINK([], [asm ("incl edata")],
-   grub_cv_check_edata_symbol=yes,
-   grub_cv_check_edata_symbol=no)])
-
-if test "x$grub_cv_check_edata_symbol" = xyes; then
-  AC_DEFINE(HAVE_EDATA_SYMBOL, 1, [Define if edata is defined])
-fi
+[AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+		[[asm ("incl edata")]])],
+		[grub_cv_check_edata_symbol=yes],
+		[grub_cv_check_edata_symbol=no])])
 
 AC_MSG_RESULT([$grub_cv_check_edata_symbol])
-])
 
-dnl
-dnl grub_CHECK_USCORE_EDATA_SYMBOL checks if _edata is automatically
-dnl defined by the compiler.
-dnl Written by Michael Hohmuth.
-AC_DEFUN([grub_CHECK_USCORE_EDATA_SYMBOL],
-[AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if _edata is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_uscore_edata_symbol,
-[AC_TRY_LINK([], [asm ("incl _edata")],
-   grub_cv_check_uscore_edata_symbol=yes,
-   grub_cv_check_uscore_edata_symbol=no)])
-
-if test "x$grub_cv_check_uscore_edata_symbol" = xyes; then
-  AC_DEFINE(HAVE_USCORE_EDATA_SYMBOL, 1, [Define if _edata is defined])
-fi
+[AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+		[[asm ("incl _edata")]])],
+		[grub_cv_check_uscore_edata_symbol=yes],
+		[grub_cv_check_uscore_edata_symbol=no])])
 
 AC_MSG_RESULT([$grub_cv_check_uscore_edata_symbol])
+
+if test "x$grub_cv_check_uscore_uscore_bss_start_symbol" = xyes; then
+  BSS_START_SYMBOL=__bss_start
+elif test "x$grub_cv_check_edata_symbol" = xyes; then
+  BSS_START_SYMBOL=edata
+elif test "x$grub_cv_check_uscore_edata_symbol" = xyes; then
+  BSS_START_SYMBOL=_edata
+else
+  AC_MSG_ERROR([none of __bss_start, edata or _edata is defined])
+fi
 ])
 
-dnl
-dnl grub_CHECK_END_SYMBOL checks if end is automatically defined by the
-dnl compiler.
-dnl Written by OKUJI Yoshinori
+dnl Check what symbol is defined as an end symbol.
+dnl Written by Yoshinori K. Okuji.
 AC_DEFUN([grub_CHECK_END_SYMBOL],
 [AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if end is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_end_symbol,
-[AC_TRY_LINK([], [asm ("incl end")],
-   grub_cv_check_end_symbol=yes,
-   grub_cv_check_end_symbol=no)])
-
-if test "x$grub_cv_check_end_symbol" = xyes; then
-  AC_DEFINE(HAVE_END_SYMBOL, 1, [Define if end is defined])
-fi
+[AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+		[[asm ("incl end")]])],
+		[grub_cv_check_end_symbol=yes],
+		[grub_cv_check_end_symbol=no])])
 
 AC_MSG_RESULT([$grub_cv_check_end_symbol])
-])
 
-dnl
-dnl grub_CHECK_USCORE_END_SYMBOL checks if _end is automatically defined
-dnl by the compiler.
-dnl Written by OKUJI Yoshinori
-AC_DEFUN([grub_CHECK_USCORE_END_SYMBOL],
-[AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if _end is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_uscore_end_symbol,
-[AC_TRY_LINK([], [asm ("incl _end")],
-   grub_cv_check_uscore_end_symbol=yes,
-   grub_cv_check_uscore_end_symbol=no)])
-
-if test "x$grub_cv_check_uscore_end_symbol" = xyes; then
-  AC_DEFINE(HAVE_USCORE_END_SYMBOL, 1, [Define if end is defined])
-fi
+[AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+		[[asm ("incl _end")]])],
+		[grub_cv_check_uscore_end_symbol=yes],
+		[grub_cv_check_uscore_end_symbol=no])])
 
 AC_MSG_RESULT([$grub_cv_check_uscore_end_symbol])
+
+if test "x$grub_cv_check_end_symbol" = xyes; then
+  END_SYMBOL=end
+elif test "x$grub_cv_check_uscore_end_symbol" = xyes; then
+  END_SYMBOL=_end
+else
+  AC_MSG_ERROR([neither end nor _end is defined])
+fi
 ])
 
-dnl grub_DEFINE_FILE(MACRO_NAME, FILE_NAME, DESCRIPTION)
-dnl grub_DEFINE_FILE defines a macro as the contents of a file safely.
-dnl Replace some escape sequences, because autoconf doesn't handle them
-dnl gracefully.
-dnl Written by OKUJI Yoshinori.
-AC_DEFUN([grub_DEFINE_FILE],
-[AC_REQUIRE([AC_PROG_CC])
-# Because early versions of GNU sed 3.x are too buggy, use a C program
-# instead of shell commands. *sigh*
-cat >conftest.c <<\EOF
-#include <stdio.h>
-
-int
-main (void)
-{
-  int c;
-
-  while ((c = getchar ()) != EOF)
-    {
-      switch (c)
-        {
-	case '\n':
-	  fputs ("\\n", stdout);
-	  break;
-	case '\r':
-	  fputs ("\\r", stdout);
-	  break;
-	case '\\':
-	  fputs ("\\\\", stdout);
-	  break;
-	case '"':
-	  fputs ("\\\"", stdout);
-	  break;
-	default:
-	  putchar (c);
-	}
-    }
-
-  return 0;
-}
-EOF
-
-if AC_TRY_COMMAND([${CC-cc} ${CFLAGS} conftest.c -o conftest]) && test -s conftest; then
-  grub_tmp_value=`./conftest < "[$2]"`
+
+dnl Check if the C compiler supports `-fstack-protector'.
+AC_DEFUN([grub_CHECK_STACK_PROTECTOR],[
+[# Smashing stack protector.
+ssp_possible=yes]
+AC_MSG_CHECKING([whether `$CC' accepts `-fstack-protector'])
+# Is this a reliable test case?
+AC_LANG_CONFTEST([AC_LANG_SOURCE([[
+void foo (void) { volatile char a[8]; a[3]; }
+]])])
+[# `$CC -c -o ...' might not be portable.  But, oh, well...  Is calling
+# `ac_compile' like this correct, after all?
+if eval "$ac_compile -S -fstack-protector -o conftest.s" 2> /dev/null; then]
+  AC_MSG_RESULT([yes])
+  [# Should we clear up other files as well, having called `AC_LANG_CONFTEST'?
+  rm -f conftest.s
 else
-  AC_MSG_ERROR([${CC-cc} failed to produce an executable file])
-fi
+  ssp_possible=no]
+  AC_MSG_RESULT([no])
+[fi]
+])
 
-AC_DEFINE_UNQUOTED([$1], "$grub_tmp_value", [$3])
-rm -f conftest*
+dnl Check if the C compiler supports `-mstack-arg-probe' (Cygwin).
+AC_DEFUN([grub_CHECK_STACK_ARG_PROBE],[
+[# Smashing stack arg probe.
+sap_possible=yes]
+AC_MSG_CHECKING([whether `$CC' accepts `-mstack-arg-probe'])
+AC_LANG_CONFTEST([AC_LANG_SOURCE([[
+void foo (void) { volatile char a[8]; a[3]; }
+]])])
+[if eval "$ac_compile -S -mstack-arg-probe -o conftest.s" 2> /dev/null; then]
+  AC_MSG_RESULT([yes])
+  [# Should we clear up other files as well, having called `AC_LANG_CONFTEST'?
+  rm -f conftest.s
+else
+  sap_possible=no]
+  AC_MSG_RESULT([no])
+[fi]
+])
+
+dnl Check if ln can handle directories properly (mingw).
+AC_DEFUN([grub_CHECK_LINK_DIR],[
+AC_MSG_CHECKING([whether ln can handle directories properly])
+[mkdir testdir 2>/dev/null
+case $srcdir in
+[\\/$]* | ?:[\\/]* ) reldir=$srcdir/include/grub/util ;;
+    *) reldir=../$srcdir/include/grub/util ;;
+esac
+if ln -s $reldir testdir/util 2>/dev/null ; then]
+  AC_MSG_RESULT([yes])
+  [link_dir=yes
+else
+  link_dir=no]
+  AC_MSG_RESULT([no])
+[fi
+rm -rf testdir]
+])
+
+dnl Check if the C compiler supports `-fPIE'.
+AC_DEFUN([grub_CHECK_PIE],[
+[# Position independent executable.
+pie_possible=yes]
+AC_MSG_CHECKING([whether `$CC' has `-fPIE' as default])
+# Is this a reliable test case?
+AC_LANG_CONFTEST([AC_LANG_SOURCE([[
+#ifdef __PIE__
+int main() {
+	return 0;
+}
+#else
+#error NO __PIE__ DEFINED
+#endif
+]])])
+
+[# `$CC -c -o ...' might not be portable.  But, oh, well...  Is calling
+# `ac_compile' like this correct, after all?
+if eval "$ac_compile -S -o conftest.s" 2> /dev/null; then]
+  AC_MSG_RESULT([yes])
+  [# Should we clear up other files as well, having called `AC_LANG_CONFTEST'?
+  rm -f conftest.s
+else
+  pie_possible=no]
+  AC_MSG_RESULT([no])
+[fi]
+])
+
+dnl Check if the C compiler supports `-fPIC'.
+AC_DEFUN([grub_CHECK_PIC],[
+[# Position independent executable.
+pic_possible=yes]
+AC_MSG_CHECKING([whether `$CC' has `-fPIC' as default])
+# Is this a reliable test case?
+AC_LANG_CONFTEST([AC_LANG_SOURCE([[
+#ifdef __PIC__
+int main() {
+	return 0;
+}
+#else
+#error NO __PIC__ DEFINED
+#endif
+]])])
+
+[# `$CC -c -o ...' might not be portable.  But, oh, well...  Is calling
+# `ac_compile' like this correct, after all?
+if eval "$ac_compile -S -o conftest.s" 2> /dev/null; then]
+  AC_MSG_RESULT([yes])
+  [# Should we clear up other files as well, having called `AC_LANG_CONFTEST'?
+  rm -f conftest.s
+else
+  pic_possible=no]
+  AC_MSG_RESULT([no])
+[fi]
+])
+
+dnl Create an output variable with the transformed name of a GRUB utility
+dnl program.
+AC_DEFUN([grub_TRANSFORM],[dnl
+AC_SUBST(AS_TR_SH([$1]), [`AS_ECHO([$1]) | sed "$program_transform_name"`])dnl
 ])

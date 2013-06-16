@@ -31,6 +31,8 @@ sys$parsing(char *line, char *command, char *argument, int length)
     for(i = 0; i < length; argument[i++] = 0);
     PANIC((ptr = strstr(line, command)) == NULL,
             notice(SYSBOOT_F_PARAM "%s parameter not found", command));
+	PANIC((ptr != line) && ((*(ptr - 1)) != ' '),
+            notice(SYSBOOT_F_PARAM "%s parameter not found", command));
 
     i = 0; while((*ptr) != '=') { ptr++; PANIC(i >= length); }
     ptr++; while((*ptr) == ' ') { ptr++; PANIC(i >= length); }
