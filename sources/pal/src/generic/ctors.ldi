@@ -44,6 +44,8 @@
 		/* global static initializers */
                 __ctors_GLOBAL__ = .;
 		*(SORT(.ctors.1*))
+		*(.init_array)
+		*(SORT(.init_array.*))
 		*(SORT(.ctors.*))
                 *(.ctors)
                 QUAD(0)
