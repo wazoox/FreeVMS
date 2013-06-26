@@ -27,6 +27,7 @@ sys$mutex_init(mutex_t mutex)
     mutex->holder = 0;
     mutex->needed = 0;
     mutex->count = 0;
+	mutex->internal = 0;
 
     return;
 }
@@ -34,8 +35,19 @@ sys$mutex_init(mutex_t mutex)
 void
 sys$mutex_count_lock(mutex_t mutex)
 {
-    mutex_lock(mutex);
+	L4_Word_t		me;
+
+	me = L4_Myself().raw;
+
+    mutex_lock((mutex_t) &(mutex->internal));
+
+	if ((me == mutex->holder) || (mutex->holder == 0))
+	{
+		mutex_lock(mutex);
+	}
+
     mutex->count++;
+	mutex_unlock((mutex_t) &(mutex->internal));
 
     return;
 }
@@ -43,12 +55,23 @@ sys$mutex_count_lock(mutex_t mutex)
 void
 sys$mutex_count_unlock(mutex_t mutex)
 {
-    mutex->count--;
+	L4_Word_t		me;
 
-    if (mutex->count == 0)
-    {
-        mutex_unlock(mutex);
-    }
+	me = L4_Myself().raw;
+
+	mutex_lock((mutex_t) &(mutex->internal));
+
+	if (me == mutex->holder)
+	{
+		mutex->count--;
+
+		if (mutex->count == 0)
+		{
+			mutex_unlock(mutex);
+		}
+	}
+
+	mutex_unlock((mutex_t) &(mutex->internal));
 
     return;
 }

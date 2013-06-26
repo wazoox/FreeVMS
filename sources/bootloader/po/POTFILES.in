@@ -774,7 +774,6 @@
 ./include/grub/fs.h
 ./include/grub/fshelp.h
 ./include/grub/gcry/types.h
-./include/grub/gcrypt/g10lib.h
 ./include/grub/gcrypt/gcrypt.h
 ./include/grub/gcrypt/gpg-error.h
 ./include/grub/gdb.h

@@ -24,6 +24,7 @@ struct mutex
     L4_Word_t       holder;
     L4_Word_t       needed;
     L4_Word_t       count;
+	L4_Word_t		internal;
 };
 
 typedef struct mutex    *mutex_t;
