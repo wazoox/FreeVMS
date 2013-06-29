@@ -39,15 +39,24 @@ sys$mutex_count_lock(mutex_t mutex)
 
 	me = L4_Myself().raw;
 
+notice("mutex before mutex_lock((mutex_t) &(mutex->internal)) %lu\n", mutex->holder);
     mutex_lock((mutex_t) &(mutex->internal));
+notice("mutex after mutex_lock((mutex_t) &(mutex->internal)) %lu\n", mutex->holder);
 
-	if ((me == mutex->holder) || (mutex->holder == 0))
+	if (mutex->holder == L4_nilthread.raw)
 	{
+notice("mutex before mutex_lock(mutex)\n");
 		mutex_lock(mutex);
+notice("mutex after mutex_lock(mutex)\n");
 	}
 
-    mutex->count++;
+	if (me == mutex->holder)
+	{
+    	mutex->count++;
+	}
+
 	mutex_unlock((mutex_t) &(mutex->internal));
+notice("mutex after mutex_unlock((mutex_t) &(mutex->internal))\n");
 
     return;
 }
@@ -59,19 +68,26 @@ sys$mutex_count_unlock(mutex_t mutex)
 
 	me = L4_Myself().raw;
 
+notice("<1>\n");
 	mutex_lock((mutex_t) &(mutex->internal));
+notice("<2>\n");
 
 	if (me == mutex->holder)
 	{
+notice("<2a>\n");
 		mutex->count--;
 
 		if (mutex->count == 0)
 		{
+notice("<2b>\n");
 			mutex_unlock(mutex);
+notice("<2c>\n");
 		}
 	}
 
+notice("<3>\n");
 	mutex_unlock((mutex_t) &(mutex->internal));
+notice("<4>\n");
 
     return;
 }

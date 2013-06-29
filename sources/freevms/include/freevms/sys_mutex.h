@@ -39,20 +39,22 @@ mutex_lock(mutex_t m)
 {
     L4_Word_t       me;
 
-    me = L4_Myself().raw;
+    me = L4_Myself().raw - L4_nilthread.raw;
+	m->holder = m->holder - L4_nilthread.raw;
 
     while(!arch_specific(try_lock)((vms$pointer) m, (vms$pointer) me))
     {
         L4_ThreadSwitch(L4_nilthread);
     }
 
+	m->holder = m->holder + L4_nilthread.raw;
     return;
 }
 
 static inline void
 mutex_unlock(mutex_t mutex)
 {
-    mutex->holder = 0;
+    mutex->holder = L4_nilthread.raw;
 
     if (mutex->needed)
     {
