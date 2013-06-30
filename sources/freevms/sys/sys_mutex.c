@@ -39,15 +39,16 @@ sys$mutex_count_lock(mutex_t mutex)
 
 	me = L4_Myself().raw;
 
-notice("mutex before mutex_lock((mutex_t) &(mutex->internal)) %lu\n", mutex->holder);
+notice("me=%lu sizeof(me)=%d\n", me, sizeof me);
+notice("mutex before mutex_lock((mutex_t) &(mutex->internal)) %lu\n", mutex->internal);
     mutex_lock((mutex_t) &(mutex->internal));
-notice("mutex after mutex_lock((mutex_t) &(mutex->internal)) %lu\n", mutex->holder);
+notice("mutex after mutex_lock((mutex_t) &(mutex->internal)) %lu\n", mutex->internal);
 
 	if (mutex->holder == L4_nilthread.raw)
 	{
-notice("mutex before mutex_lock(mutex)\n");
+notice("mutex before mutex_lock(mutex) %lu\n", mutex->holder);
 		mutex_lock(mutex);
-notice("mutex after mutex_lock(mutex)\n");
+notice("mutex after mutex_lock(mutex) %lu\n", mutex->holder);
 	}
 
 	if (me == mutex->holder)
@@ -56,7 +57,7 @@ notice("mutex after mutex_lock(mutex)\n");
 	}
 
 	mutex_unlock((mutex_t) &(mutex->internal));
-notice("mutex after mutex_unlock((mutex_t) &(mutex->internal))\n");
+notice("mutex after mutex_unlock((mutex_t) &(mutex->internal)) %lu\n", mutex->internal);
 
     return;
 }
