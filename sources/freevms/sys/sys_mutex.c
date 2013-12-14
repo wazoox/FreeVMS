@@ -25,7 +25,6 @@ void
 sys$mutex_init(mutex_t mutex)
 {
     mutex->holder = 0;
-    mutex->needed = 0;
     mutex->count = 0;
 	mutex->internal = 0;
 
@@ -35,29 +34,10 @@ sys$mutex_init(mutex_t mutex)
 void
 sys$mutex_count_lock(mutex_t mutex)
 {
-	L4_Word_t		me;
-
-	me = L4_Myself().raw;
-
-notice("me=%lu sizeof(me)=%d\n", me, sizeof me);
-notice("mutex before mutex_lock((mutex_t) &(mutex->internal)) %lu\n", mutex->internal);
     mutex_lock((mutex_t) &(mutex->internal));
-notice("mutex after mutex_lock((mutex_t) &(mutex->internal)) %lu\n", mutex->internal);
-
-	if (mutex->holder == L4_nilthread.raw)
-	{
-notice("mutex before mutex_lock(mutex) %lu\n", mutex->holder);
-		mutex_lock(mutex);
-notice("mutex after mutex_lock(mutex) %lu\n", mutex->holder);
-	}
-
-	if (me == mutex->holder)
-	{
-    	mutex->count++;
-	}
-
+	mutex->count++;
+	mutex->holder = mutex->internal;
 	mutex_unlock((mutex_t) &(mutex->internal));
-notice("mutex after mutex_unlock((mutex_t) &(mutex->internal)) %lu\n", mutex->internal);
 
     return;
 }
@@ -65,30 +45,12 @@ notice("mutex after mutex_unlock((mutex_t) &(mutex->internal)) %lu\n", mutex->in
 void
 sys$mutex_count_unlock(mutex_t mutex)
 {
-	L4_Word_t		me;
+    mutex->count--;
 
-	me = L4_Myself().raw;
-
-notice("<1>\n");
-	mutex_lock((mutex_t) &(mutex->internal));
-notice("<2>\n");
-
-	if (me == mutex->holder)
-	{
-notice("<2a>\n");
-		mutex->count--;
-
-		if (mutex->count == 0)
-		{
-notice("<2b>\n");
-			mutex_unlock(mutex);
-notice("<2c>\n");
-		}
-	}
-
-notice("<3>\n");
-	mutex_unlock((mutex_t) &(mutex->internal));
-notice("<4>\n");
+    if (mutex->count == 0)
+    {
+        mutex_unlock(mutex);
+    }
 
     return;
 }
