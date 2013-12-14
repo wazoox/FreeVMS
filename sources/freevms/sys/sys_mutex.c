@@ -45,12 +45,15 @@ sys$mutex_count_lock(mutex_t mutex)
 void
 sys$mutex_count_unlock(mutex_t mutex)
 {
+    mutex_lock((mutex_t) &(mutex->internal));
     mutex->count--;
 
     if (mutex->count == 0)
     {
-        mutex_unlock(mutex);
+        mutex->holder = 0;
     }
+
+	mutex_unlock((mutex_t) &(mutex->internal));
 
     return;
 }
