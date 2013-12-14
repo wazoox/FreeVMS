@@ -19,7 +19,7 @@
 ================================================================================
 */
 
-/* int try_lock(mutex_t m, vms$pointer me) 
+/* int try_lock(mutex_t m, vms$pointer me, vms$pointer L4_nilthread) 
  *  - m: the mutex we are trying to grab
  *  - me: the thread id of the thread trying to aquire the lock
  *  => true if the lock was aquired, false otherwise
@@ -37,19 +37,23 @@ try_lock_amd64:
     // Setup the local variables
     pushq       %rbp
     movq        %rsp, %rbp
-    movq        24(%rbp), %rcx      /* %rcx = &m->holder        */
-    movq        16(%rbp), %rdx      /* %rdx = me                */
+
+	movq		%rdi, -8(%rbp)
+	movq		%rsi, -16(%rbp)
+    movq        -8(%rbp), %rcx      /* %rcx = &m->holder        */
+    movq        -16(%rbp), %rdx     /* %rdx = me                */
 
     // Test the lock :
-    // if (%rcx) == $0, write %rdx into (%rcx)
-    // if not, write (%rcx) into %rax.
+    // if (%rcx) == $0, write %rdx [me] into (%rcx)
+    // if not, write (%rcx) [m->holder] into %rax.
     movq        $0, %rax
     lock
     cmpxchgq    %rdx, (%rcx)
 
-    // What is the result
-    movq        (%rcx), %rcx        /* %rcx = m->holder         */
-    cmpq        16(%rbp), %rcx      /* m->holder == me          */
+    // What is the result ?
+	// If rax != $0, m->holder != 0.
+    movq        (%rcx), %rcx        /* %rcx = m->holder */
+    cmpq        -16(%rbp), %rcx     /* m->holder == me  */
     sete        %al
     andq        $0xff, %rax
 

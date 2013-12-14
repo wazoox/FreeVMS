@@ -63,7 +63,7 @@ sys$pager(L4_KernelInterfacePage_t *kip, struct vms$meminfo *meminfo,
             notice(PAGER_F_NOTFOUND "PAGER.SYS not found\n"));
     init = obj;
 
-    // Start VMS$INIT in a new address space
+    // Start PAGER.SYS in a new address space
     pd = sys$pd_create(&freevms_pd, 1, pagesize);
 
     notice(SYSBOOT_I_SYSBOOT "creating PAGER.SYS UTCB pages\n");

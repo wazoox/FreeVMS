@@ -4,7 +4,6 @@
 
 	make kernelconfig
 	-> and configure kernel for example with kernelconfig.example options
-	Warning : kernel must be built with gcc-4.6.
 	make kernel
 
 	At this point, microkernel is built

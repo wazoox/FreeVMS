@@ -35,6 +35,8 @@ sys$alloc_init(vms$pointer bss_p, vms$pointer top_p)
 {
     vms$bss = bss_p;
     vms$top = top_p;
+notice("vms$bss=$%016lX\n", vms$bss);
+notice("vms$top=$%016lX\n", vms$top);
 
     sys$mutex_init(&alloc_mutex);
     return;
@@ -76,9 +78,12 @@ sys$morecore(unsigned int nu)
     }
 
     vms$bss += (nu * sizeof(Header));
+notice("vms$bss=$%016lX\n", vms$bss);
     up->s.size = nu;
 
+notice("<c1>\n");
     sys$free((void *) (up + 1));
+notice("<c2>\n");
     return(_kr_alloc_freep);
 }
 
@@ -90,30 +95,37 @@ sys$alloc(vms$pointer nbytes)
 
     unsigned int            nunits;
 
+notice("<a1>\n");
     sys$mutex_count_lock(&alloc_mutex);
 
     nunits = ((nbytes + sizeof(Header) - 1) / sizeof(Header)) + 1;
 
     if ((prevp = freep) == NULL) // No free list yet
     {
+notice("<a1.1>\n");
         prevp = &base;
         freep = prevp;
         base.s.ptr = freep;
         base.s.size = 0;
     }
 
+notice("<a2>\n");
     for(p = prevp->s.ptr;; prevp = p, p = p->s.ptr)
     {
+notice("<a2.1> %p\n", p);
         if (p->s.size >= nunits)
         {
+notice("<a2.2>\n");
             // big enough
             if (p->s.size == nunits)
             {
+notice("<a2.3>\n");
                 // exactly
                 prevp->s.ptr = p->s.ptr;
             }
             else
             {   // allocate tail end
+notice("<a2.4>\n");
                 p->s.size -= nunits;
                 p += p->s.size;
                 p->s.size = nunits;
@@ -121,22 +133,27 @@ sys$alloc(vms$pointer nbytes)
 
             freep = prevp;
             sys$mutex_count_unlock(&alloc_mutex);
+notice("sys$alloc %ld %p\n", nbytes, (void *) (p + 1));
             return((void *) (p + 1));
         }
 
+notice("<a3>\n");
         if (p == freep)
         {
+notice("<a4>\n");
             // wrapped around free list
             if ((p = (Header *) sys$morecore(nunits)) == NULL)
             {
+notice("<a4.1>\n");
                 sys$mutex_count_unlock(&alloc_mutex);
                 return(NULL);
             }
+notice("<a5>\n");
         }
     }
 
     sys$mutex_count_unlock(&alloc_mutex);
-    return(NULL);
+	PANIC(1);
 }
 
 void
@@ -150,11 +167,14 @@ sys$free(void *ap)
         return;
     }
 
+notice("<b1>\n");
     sys$mutex_count_lock(&alloc_mutex);
+notice("<b2>\n");
     bp = (Header *) ap - 1;     // point to block header
 
     for(p = freep; !(bp > p && bp < p->s.ptr); p = p->s.ptr)
     {
+//notice("p=%lu\n", p);
         if (p >= p->s.ptr && (bp > p || bp < p->s.ptr))
         {
             // freed block at start or end of arena
@@ -162,6 +182,7 @@ sys$free(void *ap)
         }
     }
 
+notice("<b3>\n");
     if ((bp + bp->s.size) == p->s.ptr)
     {
         // join to upper nbr
@@ -173,6 +194,7 @@ sys$free(void *ap)
         bp->s.ptr = p->s.ptr;
     }
 
+notice("<b4>\n");
     if ((p + p->s.size) == bp)
     {
         // join to lower nbr
@@ -184,6 +206,7 @@ sys$free(void *ap)
         p->s.ptr = bp;
     }
 
+notice("<b5>\n");
     freep = p;
     sys$mutex_count_unlock(&alloc_mutex);
 
