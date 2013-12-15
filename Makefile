@@ -62,6 +62,7 @@ bootstrap-clean: $(BUILDDIR)/kernel/Makefile $(BUILDDIR)/bootloader/Makefile
 bootstrap: $(SRCDIR)/kernel/config.h.in $(BUILDDIR)/kernel/Makefile \
 		$(BUILDDIR)/bootloader/Makefile
 	@make -C $(BUILDDIR)/kernel
+	@$(BUILDDIR)/bootloader/autogen.sh
 	@make -C $(BUILDDIR)/bootloader
 
 bootstrap-install:
